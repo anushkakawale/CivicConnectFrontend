@@ -1,0 +1,79 @@
+/* PMC THEME COLORS */
+:root {
+  --pmc-blue: #0d47a1;
+  --pmc-light: #f4f6f9;
+  --pmc-text: #2c2c2c;
+}
+
+/* HEADER */
+.pmc-navbar {
+  height: 56px;
+  background: var(--pmc-blue);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  font-weight: 600;
+}
+
+/* LAYOUT */
+.pmc-layout {
+  display: flex;
+  height: calc(100vh - 56px);
+}
+
+/* SIDEBAR */
+.pmc-sidebar {
+  width: 230px;
+  background: white;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+}
+
+.pmc-sidebar a {
+  display: block;
+  color: var(--pmc-text);
+  text-decoration: none;
+  padding: 10px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+}
+
+.pmc-sidebar a:hover {
+  background: var(--pmc-light);
+}
+
+.sidebar-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* CONTENT */
+.pmc-content {
+  flex: 1;
+  padding: 30px;
+  background: var(--pmc-light);
+}
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 5px solid var(--pmc-blue);
+}
+
+.stat-card h3 {
+  margin: 0;
+  font-size: 20px;
+}
