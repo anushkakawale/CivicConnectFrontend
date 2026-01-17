@@ -1,18 +1,39 @@
-import Dashboard from "./pages/Dashboard";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Header from "./components/layout/Header";
+
+// Public pages
 import Home from "./pages/Home";
-import CitizenRegister from "./pages/CitizenRegister";
-import WardOfficerRegister from "./pages/WardOfficerRegister";
-import DepartmentOfficerRegister from "./pages/DepartmentOfficerRegister";
+import CitizenRegistration from "./pages/CitizenRegistration";
+import WardOfficerRegistration from "./pages/WardOfficerRegistration";
+import DepartmentOfficerRegistration from "./pages/DepartmentOfficerRegistration";
 
-function App() {
-  const path = window.location.pathname;
+// Citizen pages
+import CitizenDashboard from "./pages/CitizenDashboard";
+import RegisterComplaint from "./pages/RegisterComplaint";
+import MyComplaints from "./pages/MyComplaints";
+import TrackComplaint from "./pages/TrackComplaint";
 
-  if (path === "/dashboard") return <Dashboard />;
-  if (path === "/citizen") return <CitizenRegister />;
-  if (path === "/admin/ward-officer") return <WardOfficerRegister />;
-  if (path === "/ward/department-officer") return <DepartmentOfficerRegister />;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Header />
 
-  return <Home />;
+      <Routes>
+        {/* PUBLIC / REGISTRATION */}
+        <Route path="/" element={<Home />} />
+        <Route path="/citizen-register" element={<CitizenRegistration />} />
+        <Route path="/ward-officer-register" element={<WardOfficerRegistration />} />
+        <Route path="/department-officer-register" element={<DepartmentOfficerRegistration />} />
+
+        {/* CITIZEN MODULE */}
+        <Route path="/citizen" element={<CitizenDashboard />} />
+        <Route path="/citizen/complaints/new" element={<RegisterComplaint />} />
+        <Route path="/citizen/complaints" element={<MyComplaints />} />
+        <Route
+          path="/citizen/complaints/:citizenUserId/:complaintId"
+          element={<TrackComplaint />}
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
-
-export default App;

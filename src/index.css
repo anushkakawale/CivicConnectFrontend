@@ -1,4 +1,4 @@
-/* RESET DEFAULT VITE STYLES (PRODUCTION SAFE) */
+/* RESET DEFAULT VITE STYLES (PRODUCTION SAFE)
 
 * {
   box-sizing: border-box;
@@ -16,6 +16,64 @@ html, body {
 }
 
 /* REMOVE FLEX FROM BODY — BOOTSTRAP HANDLES LAYOUT */
-body {
+/* body {
   display: block;
+} */ 
+body {
+  background-color: #f4f6f9;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.gov-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gov-card {
+  background: white;
+  width: 100%;
+  max-width: 520px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.gov-header {
+  background: #0b5ed7;
+  color: white;
+  padding: 16px;
+}
+
+.gov-body {
+  padding: 20px;
+}
+
+.gov-field {
+  margin-bottom: 14px;
+}
+
+.gov-field label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gov-field input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+}
+
+.gov-error {
+  color: red;
+  font-size: 12px;
+}
+
+.gov-btn {
+  width: 100%;
+  padding: 10px;
+  background: #0b5ed7;
+  color: white;
+  border: none;
+  margin-top: 10px;
 }

@@ -1,0 +1,111 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #eef1f5;
+}
+
+.gov-header {
+  background: #0b3c5d;
+  color: white;
+  padding: 20px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gov-header h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.gov-header span {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.gov-tag {
+  background: #f4c430;
+  color: #0b3c5d;
+  padding: 6px 16px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.page-wrapper {
+  max-width: 600px;
+  margin: 50px auto;
+}
+
+.page-subtitle {
+  color: #555;
+  margin-bottom: 18px;
+}
+
+.gov-card {
+  background: white;
+  padding: 30px;
+  border-radius: 4px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+}
+
+.gov-field {
+  margin-bottom: 16px;
+}
+
+.gov-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.gov-field input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.gov-btn {
+  width: 100%;
+  background: #0b3c5d;
+  color: white;
+  padding: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.home {
+  text-align: center;
+  margin-top: 60px;
+}
+
+.tiles a {
+  display: block;
+  margin: 14px auto;
+  width: 300px;
+  padding: 14px;
+  background: white;
+  border: 1px solid #0b3c5d;
+  color: #0b3c5d;
+  text-decoration: none;
+  font-weight: bold;
+}
+.gov-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.gov-table th, .gov-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.status.OPEN { background: #ffecb3; }
+.status.ASSIGNED { background: #bbdefb; }
+.status.RESOLVED { background: #c8e6c9; }
