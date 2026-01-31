@@ -1,0 +1,233 @@
+/* Department Notifications Page Styles */
+
+.department-notifications-page {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-content h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.header-content h1 svg {
+    color: #4299e1;
+}
+
+.header-content p {
+    margin: 0;
+    color: #718096;
+    font-size: 1rem;
+}
+
+.btn-mark-all-read {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-mark-all-read:hover {
+    background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+.no-notifications {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.no-notifications svg {
+    color: #cbd5e0;
+    margin-bottom: 1rem;
+}
+
+.no-notifications h3 {
+    margin: 0 0 0.5rem 0;
+    color: #2d3748;
+    font-size: 1.5rem;
+}
+
+.no-notifications p {
+    margin: 0;
+    color: #718096;
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.notification-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    display: flex;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.notification-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border-color: #4299e1;
+    transform: translateY(-2px);
+}
+
+.notification-card.unread {
+    background: linear-gradient(135deg, #ebf8ff 0%, #f7fafc 100%);
+    border-color: #4299e1;
+}
+
+.notification-icon {
+    position: relative;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    color: white;
+    border-radius: 50%;
+}
+
+.unread-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 12px;
+    height: 12px;
+    background: #e53e3e;
+    border: 2px solid white;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-content h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.notification-content p {
+    margin: 0 0 0.75rem 0;
+    color: #4a5568;
+    line-height: 1.5;
+}
+
+.notification-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.notification-time {
+    font-size: 0.85rem;
+    color: #a0aec0;
+}
+
+.notification-reference {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4299e1;
+    background: #ebf8ff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+}
+
+.notification-actions {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #718096;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    background: rgba(66, 153, 225, 0.1);
+    color: #4299e1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .department-notifications-page {
+        padding: 1rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .notification-card {
+        padding: 1rem;
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+    }
+}

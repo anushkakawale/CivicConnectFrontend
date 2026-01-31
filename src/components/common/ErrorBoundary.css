@@ -1,0 +1,154 @@
+.error-boundary-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.error-boundary-content {
+    background: white;
+    border-radius: 16px;
+    padding: 48px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.error-icon {
+    color: #f44336;
+    margin-bottom: 24px;
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-10px);
+    }
+
+    75% {
+        transform: translateX(10px);
+    }
+}
+
+.error-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 16px 0;
+}
+
+.error-message {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    margin: 0 0 32px 0;
+}
+
+.error-details {
+    text-align: left;
+    margin: 24px 0;
+    padding: 16px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.error-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #666;
+    padding: 8px;
+    user-select: none;
+}
+
+.error-details summary:hover {
+    color: #333;
+}
+
+.error-stack {
+    margin-top: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #d32f2f;
+    overflow-x: auto;
+}
+
+.error-stack pre {
+    margin: 8px 0 0 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.error-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 120px;
+}
+
+.error-btn-primary {
+    background: #1976d2;
+    color: white;
+}
+
+.error-btn-primary:hover {
+    background: #1565c0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.error-btn-secondary {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.error-btn-secondary:hover {
+    background: #e0e0e0;
+    color: #333;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .error-boundary-content {
+        padding: 32px 24px;
+    }
+
+    .error-title {
+        font-size: 24px;
+    }
+
+    .error-message {
+        font-size: 14px;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+
+    .error-btn {
+        width: 100%;
+    }
+}

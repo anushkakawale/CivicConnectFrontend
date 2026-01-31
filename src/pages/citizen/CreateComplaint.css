@@ -1,0 +1,482 @@
+/**
+ * Create Complaint Page Styles
+ * Professional, modern design with smooth animations
+ */
+
+.create-complaint-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* ========== PAGE HEADER ========== */
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header .header-content {
+    text-align: center;
+}
+
+.page-header h1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 2rem;
+    color: var(--gov-primary);
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* ========== COMPLAINT FORM ========== */
+.complaint-form {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+/* ========== FORM SECTIONS ========== */
+.form-section {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--gov-primary);
+}
+
+.section-header h2 {
+    font-size: 1.5rem;
+    color: var(--gov-primary);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* ========== FORM GRID ========== */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+/* ========== FORM GROUPS ========== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.form-group label svg {
+    color: var(--gov-secondary);
+}
+
+/* ========== INPUTS ========== */
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--gov-secondary);
+    box-shadow: 0 0 0 3px rgba(28, 167, 166, 0.1);
+}
+
+.form-group input[type="text"].error,
+.form-group textarea.error,
+.form-group select.error {
+    border-color: var(--status-rejected);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Character Count */
+.char-count {
+    align-self: flex-end;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Error Message */
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--status-rejected);
+    font-size: 0.85rem;
+    margin-top: -0.25rem;
+}
+
+/* ========== GPS CONTAINER ========== */
+.gps-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.gps-display {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid var(--gov-secondary);
+    border-radius: var(--radius-md);
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: var(--gov-primary);
+}
+
+.gps-display span {
+    flex: 1;
+}
+
+.btn-get-location {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--gov-secondary) 0%, #2ec4c3 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-get-location:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-get-location:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-get-location svg.spinning {
+    animation: spin 1s linear infinite;
+}
+
+/* ========== IMAGE UPLOAD ========== */
+.image-upload-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* Upload Box */
+.image-upload-box {
+    aspect-ratio: 1;
+    border: 3px dashed var(--gov-secondary);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-upload-box:hover {
+    border-color: var(--gov-primary);
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.upload-content {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.upload-content svg {
+    color: var(--gov-secondary);
+    margin-bottom: 1rem;
+}
+
+.upload-content h3 {
+    font-size: 1.1rem;
+    color: var(--gov-primary);
+    margin-bottom: 0.5rem;
+}
+
+.upload-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.upload-hint {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+/* Image Preview */
+.image-preview {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    animation: fadeInScale 0.4s ease;
+}
+
+.image-preview:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-image {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--status-rejected);
+    color: white;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.image-preview:hover .remove-image {
+    opacity: 1;
+}
+
+.remove-image:hover {
+    transform: scale(1.1);
+    background: #dc2626;
+}
+
+.image-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    color: white;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    justify-content: center;
+}
+
+/* Upload Info */
+.image-upload-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border: 2px solid var(--status-resolved);
+    border-radius: var(--radius-md);
+    color: var(--gov-primary);
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+.image-upload-info svg {
+    color: var(--status-resolved);
+}
+
+/* ========== FORM ACTIONS ========== */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding: 2rem;
+    background: linear-gradient(to bottom, transparent, rgba(11, 60, 93, 0.02));
+}
+
+.btn-primary,
+.btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--gov-primary) 0%, #1a5a8a 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: white;
+    color: var(--gov-primary);
+    border: 2px solid var(--gov-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--gov-primary);
+    color: white;
+}
+
+/* Spinner */
+.spinner-small {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .create-complaint-page {
+        padding: 1rem;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .image-upload-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ========== LOADING STATE ========== */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 1rem;
+}
+
+.loading-container p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.spinner-enhanced {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(11, 60, 93, 0.1);
+    border-top-color: var(--gov-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
