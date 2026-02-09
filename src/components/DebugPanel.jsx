@@ -86,7 +86,7 @@ const DebugPanel = () => {
                 backgroundColor: '#1e1e1e',
                 color: '#fff',
                 padding: '15px',
-                borderRadius: '8px',
+                borderRadius: '0',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
                 zIndex: 9999,
                 fontSize: '12px',
@@ -111,24 +111,24 @@ const DebugPanel = () => {
 
             {authInfo && (
                 <div>
-                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '4px' }}>
+                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '0' }}>
                         <strong>Authentication Status:</strong>
                         <div style={{ color: authInfo.isAuthenticated ? '#4ade80' : '#f87171' }}>
                             {authInfo.isAuthenticated ? '✅ Authenticated' : '❌ Not Authenticated'}
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '4px' }}>
+                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '0' }}>
                         <strong>Role:</strong>
                         <div style={{ color: '#60a5fa' }}>{authInfo.role || 'NOT SET'}</div>
                     </div>
 
-                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '4px' }}>
+                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '0' }}>
                         <strong>User ID:</strong>
                         <div style={{ color: '#60a5fa' }}>{authInfo.userId || 'NOT SET'}</div>
                     </div>
 
-                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '4px' }}>
+                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '0' }}>
                         <strong>Token:</strong>
                         <div style={{ wordBreak: 'break-all', color: '#a78bfa' }}>{authInfo.token}</div>
                         <button
@@ -139,7 +139,7 @@ const DebugPanel = () => {
                                 backgroundColor: '#3b82f6',
                                 color: '#fff',
                                 border: 'none',
-                                borderRadius: '4px',
+                                borderRadius: '0',
                                 cursor: 'pointer',
                                 fontSize: '11px'
                             }}
@@ -149,7 +149,7 @@ const DebugPanel = () => {
                     </div>
 
                     {authInfo.decodedToken && (
-                        <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '4px' }}>
+                        <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '0' }}>
                             <strong>Decoded Token:</strong>
                             <pre style={{ margin: '5px 0 0 0', fontSize: '10px', overflow: 'auto' }}>
                                 {JSON.stringify(authInfo.decodedToken, null, 2)}
@@ -157,7 +157,7 @@ const DebugPanel = () => {
                         </div>
                     )}
 
-                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '4px' }}>
+                    <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '0' }}>
                         <strong>User Object:</strong>
                         <pre style={{ margin: '5px 0 0 0', fontSize: '10px', overflow: 'auto' }}>
                             {JSON.stringify(authInfo.user, null, 2)}
@@ -173,7 +173,7 @@ const DebugPanel = () => {
                                 backgroundColor: '#10b981',
                                 color: '#fff',
                                 border: 'none',
-                                borderRadius: '4px',
+                                borderRadius: '0',
                                 cursor: 'pointer',
                                 fontSize: '11px'
                             }}
@@ -188,7 +188,7 @@ const DebugPanel = () => {
                                 backgroundColor: '#ef4444',
                                 color: '#fff',
                                 border: 'none',
-                                borderRadius: '4px',
+                                borderRadius: '0',
                                 cursor: 'pointer',
                                 fontSize: '11px'
                             }}
@@ -197,7 +197,7 @@ const DebugPanel = () => {
                         </button>
                     </div>
 
-                    <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '4px', fontSize: '10px' }}>
+                    <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#2d2d2d', borderRadius: '0', fontSize: '10px' }}>
                         <strong>💡 Tips:</strong>
                         <ul style={{ margin: '5px 0 0 0', paddingLeft: '20px' }}>
                             <li>Check if role is "CITIZEN"</li>

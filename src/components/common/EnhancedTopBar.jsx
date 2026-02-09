@@ -147,7 +147,7 @@ export default function EnhancedTopBar({ title = "Dashboard" }) {
                                 padding: '0.5rem',
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 border: 'none',
-                                borderRadius: '0.5rem',
+                                borderRadius: '0',
                                 cursor: 'pointer',
                                 transition: 'all 0.3s ease',
                                 color: 'white'
@@ -163,7 +163,7 @@ export default function EnhancedTopBar({ title = "Dashboard" }) {
                                     right: '0',
                                     background: '#ef4444',
                                     color: 'white',
-                                    borderRadius: '50%',
+                                    borderRadius: '0',
                                     width: '18px',
                                     height: '18px',
                                     display: 'flex',
@@ -184,7 +184,7 @@ export default function EnhancedTopBar({ title = "Dashboard" }) {
                                 right: 0,
                                 top: 'calc(100% + 0.5rem)',
                                 background: 'white',
-                                borderRadius: '0.5rem',
+                                borderRadius: '0',
                                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                                 minWidth: '300px',
                                 maxHeight: '400px',
@@ -231,7 +231,7 @@ export default function EnhancedTopBar({ title = "Dashboard" }) {
                                 padding: '0.5rem 1rem',
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 border: 'none',
-                                borderRadius: '0.5rem',
+                                borderRadius: '0',
                                 cursor: 'pointer',
                                 transition: 'all 0.3s ease',
                                 color: 'white'
@@ -242,7 +242,7 @@ export default function EnhancedTopBar({ title = "Dashboard" }) {
                             <div style={{
                                 width: '32px',
                                 height: '32px',
-                                borderRadius: '50%',
+                                borderRadius: '0',
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -273,7 +273,7 @@ export default function EnhancedTopBar({ title = "Dashboard" }) {
                                 right: 0,
                                 top: 'calc(100% + 0.5rem)',
                                 background: 'white',
-                                borderRadius: '0.5rem',
+                                borderRadius: '0',
                                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                                 minWidth: '200px',
                                 zIndex: 1000
@@ -289,7 +289,7 @@ export default function EnhancedTopBar({ title = "Dashboard" }) {
                                         display: 'inline-block',
                                         marginTop: '0.5rem',
                                         padding: '0.25rem 0.75rem',
-                                        borderRadius: '9999px',
+                                        borderRadius: '0',
                                         fontSize: '0.75rem',
                                         fontWeight: '600'
                                     }}>

@@ -49,7 +49,7 @@ const StatusTimeline = ({ statusHistory }) => {
                                     {/* Icon */}
                                     <div className="me-3 position-relative">
                                         <div
-                                            className={`bg-${statusInfo.color} text-white rounded-circle d-flex align-items-center justify-content-center`}
+                                            className={`bg-${statusInfo.color} text-white rounded-0 d-flex align-items-center justify-content-center`}
                                             style={{ width: '40px', height: '40px', fontSize: '18px' }}
                                         >
                                             {statusInfo.icon}
@@ -88,7 +88,7 @@ const StatusTimeline = ({ statusHistory }) => {
                                         )}
 
                                         {history.remarks && (
-                                            <div className="mt-2 p-2 bg-light rounded">
+                                            <div className="mt-2 p-2 bg-light rounded-0">
                                                 <small className="text-dark">
                                                     <strong>Remarks:</strong> {history.remarks}
                                                 </small>

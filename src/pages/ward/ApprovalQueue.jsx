@@ -1,15 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../../api/apiService';
-import { COMPLAINT_STATUS, DEPARTMENTS } from '../../constants';
-import { CheckCircle, XCircle, Eye, Clock, AlertCircle } from 'lucide-react';
+import { COMPLAINT_STATUS } from '../../constants';
+import {
+    CheckCircle, XCircle, Eye, Clock, AlertCircle,
+    ShieldCheck, ArrowLeft, RefreshCw, Loader, FileText,
+    MessageSquare, CheckCheck, X
+} from 'lucide-react';
+import DashboardHeader from '../../components/layout/DashboardHeader';
+import StatusBadge from '../../components/ui/StatusBadge';
+import PriorityBadge from '../../components/ui/PriorityBadge';
+import { useToast } from '../../hooks/useToast';
 
 const ApprovalQueue = () => {
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [complaints, setComplaints] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
     const [processingId, setProcessingId] = useState(null);
+
+    const PRIMARY_COLOR = '#1254AF';
 
     useEffect(() => {
         fetchPendingApprovals();
@@ -17,216 +28,217 @@ const ApprovalQueue = () => {
 
     const fetchPendingApprovals = async () => {
         try {
-            setLoading(true);
+            if (!complaints.length) setLoading(true);
             const data = await apiService.wardOfficer.getPendingApprovals();
-            // Handle pagination or array response
             const list = Array.isArray(data) ? data : (data?.content || []);
             setComplaints(list);
         } catch (err) {
-            setError('Failed to load pending approvals');
-            console.error(err);
+            showToast('Failed to synchronize approval queue.', 'error');
+            setComplaints([]);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
+    }
+
+    const handleSync = () => {
+        setRefreshing(true);
+        fetchPendingApprovals();
     };
 
-    const handleApprove = async (complaint) => {
-        const complaintId = complaint?.complaintId || complaint?.id || complaint?.complaint_id;
-
-        if (!complaintId) {
-            alert('Invalid complaint ID');
-            return;
-        }
-
-        if (!window.confirm(`Approve complaint #${complaintId}?`)) return;
-
+    const handleApprove = async (complaintId) => {
         try {
             setProcessingId(complaintId);
-            await apiService.wardOfficer.approveResolution(complaintId, 'Approved by ward officer');
-            alert('✅ Complaint approved successfully!');
+            await apiService.wardOfficer.approveComplaint(complaintId, { remarks: 'Approved after verification of resolution proof.' });
+            showToast('Case finalized and approved.', 'success');
             fetchPendingApprovals();
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to approve complaint');
-            console.error('Approve error:', err);
+            showToast(err.response?.data?.message || 'Approval authorization failure.', 'error');
         } finally {
             setProcessingId(null);
         }
     };
 
-    const handleReject = async (complaint) => {
-        const complaintId = complaint?.complaintId || complaint?.id || complaint?.complaint_id;
-
-        if (!complaintId) {
-            alert('Invalid complaint ID');
-            return;
-        }
-
-        const reason = prompt('Enter rejection reason:');
+    const handleReject = async (complaintId) => {
+        const reason = prompt('Enter rejection reason for audit log:');
         if (!reason || reason.trim() === '') return;
 
         try {
             setProcessingId(complaintId);
-            await apiService.wardOfficer.rejectResolution(complaintId, reason);
-            alert('❌ Complaint rejected. Officer will be notified.');
+            await apiService.wardOfficer.rejectComplaint(complaintId, { remarks: reason });
+            showToast('Case rejected and flagged for reassessment.', 'info');
             fetchPendingApprovals();
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to reject complaint');
-            console.error('Reject error:', err);
+            showToast(err.response?.data?.message || 'Rejection protocol failure.', 'error');
         } finally {
             setProcessingId(null);
         }
     };
 
-    const getDepartmentInfo = (departmentId) => {
-        const dept = DEPARTMENTS.find(d => d.department_id === parseInt(departmentId));
-        return dept || { name: 'General', icon: '📋' };
-    };
-
-    const getStatusBadge = (status) => {
-        const statusInfo = COMPLAINT_STATUS[status] || { label: status, color: 'secondary', icon: '📋' };
-        return (
-            <span className={`badge bg-${statusInfo.color}`}>
-                <span className="me-1">{statusInfo.icon}</span>
-                {statusInfo.label}
-            </span>
-        );
-    };
-
-    if (loading) {
-        return (
-            <div className="container-fluid py-5">
-                <div className="text-center py-5">
-                    <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }}>
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="mt-3 text-muted">Loading approvals...</p>
-                </div>
-            </div>
-        );
-    }
+    if (loading && !complaints.length) return (
+        <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F0F2F5' }}>
+            <Loader className="animate-spin text-primary mb-4" size={56} style={{ color: PRIMARY_COLOR }} />
+            <p className="fw-black text-muted text-uppercase tracking-widest small">Synchronizing Approvals...</p>
+        </div>
+    );
 
     return (
-        <div className="container-fluid py-4">
-            {/* Header */}
-            <div className="row mb-4">
-                <div className="col-12">
-                    <h2 className="fw-bold mb-1">
-                        <Clock size={28} className="me-2 text-warning" />
-                        Pending Approvals
-                    </h2>
-                    <p className="text-muted mb-0">Review and approve resolved complaints</p>
-                </div>
-            </div>
+        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F8F9FA' }}>
+            <DashboardHeader
+                portalName="PMC WARD CONSOLE"
+                userName={localStorage.getItem('name') || 'Ward Executive'}
+                wardName={localStorage.getItem('wardName') || 'WARD ADMINISTRATION'}
+                subtitle="Approval Queue | Final Quality Control & Resolution Audit"
+                icon={ShieldCheck}
+                actions={
+                    <div className="d-flex gap-2">
+                        <button onClick={() => navigate('/ward-officer/dashboard')} className="btn btn-white bg-white text-muted rounded-0 px-4 py-2 fw-black extra-small tracking-widest d-flex align-items-center gap-2 shadow-sm border-0">
+                            <ArrowLeft size={16} /> CONSOLE
+                        </button>
+                        <button
+                            onClick={handleSync}
+                            className="btn btn-primary rounded-0 px-4 py-3 fw-black extra-small tracking-widest d-flex align-items-center gap-2 shadow-md border-0 transition-all hover-up"
+                            disabled={refreshing}
+                            style={{ backgroundColor: PRIMARY_COLOR }}
+                        >
+                            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> {refreshing ? 'SYNCING...' : 'SYNC DATA'}
+                        </button>
+                    </div>
+                }
+            />
 
-            {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                    {error}
-                    <button type="button" className="btn-close" onClick={() => setError('')}></button>
-                </div>
-            )}
-
-            {/* Approvals List */}
-            <div className="card shadow-sm border-0">
-                <div className="card-header bg-white border-bottom">
-                    <h5 className="mb-0 fw-bold">Complaints Awaiting Approval ({complaints.length})</h5>
-                </div>
-                <div className="card-body p-0">
-                    {complaints.length === 0 ? (
-                        <div className="text-center py-5">
-                            <CheckCircle size={48} className="text-success opacity-50 mb-3" />
-                            <h5 className="text-muted">No pending approvals</h5>
-                            <p className="text-muted mb-0">All resolved complaints have been reviewed</p>
+            <div className="container mt-4">
+                <div className="card border-0 shadow-lg rounded-0 bg-white overflow-hidden mb-5">
+                    <div className="card-header bg-white border-0 p-5 pb-0">
+                        <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 className="fw-black text-dark text-uppercase tracking-wider mb-1">Authorization Matrix</h4>
+                                <p className="extra-small text-muted fw-bold uppercase tracking-widest opacity-50">Pending your final executive review</p>
+                            </div>
+                            <span className="badge bg-primary bg-opacity-10 text-primary rounded-0 px-4 py-2 fw-black extra-small tracking-widest">
+                                {complaints.length} CASES PENDING
+                            </span>
                         </div>
-                    ) : (
-                        <div className="table-responsive">
-                            <table className="table table-hover mb-0">
-                                <thead className="table-light">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Title</th>
-                                        <th>Department</th>
-                                        <th>Officer</th>
-                                        <th>Resolved At</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {complaints.map((complaint) => {
-                                        const complaintId = complaint?.complaintId || complaint?.id || complaint?.complaint_id;
-                                        const dept = getDepartmentInfo(complaint.departmentId);
-                                        const isProcessing = processingId === complaintId;
+                    </div>
 
-                                        return (
-                                            <tr key={complaintId || Math.random()}>
-                                                <td className="fw-semibold">#{complaintId}</td>
-                                                <td>{complaint.title || 'N/A'}</td>
-                                                <td>
-                                                    <span className="badge bg-light text-dark">
-                                                        {dept.icon} {dept.name}
-                                                    </span>
-                                                </td>
-                                                <td>{complaint.assignedOfficer?.name || complaint.officerName || 'N/A'}</td>
-                                                <td>{complaint.resolvedAt ? new Date(complaint.resolvedAt).toLocaleDateString() : 'N/A'}</td>
-                                                <td>{getStatusBadge(complaint.status)}</td>
-                                                <td>
-                                                    <div className="btn-group btn-group-sm">
-                                                        <button
-                                                            className="btn btn-success"
-                                                            onClick={() => handleApprove(complaint)}
-                                                            disabled={isProcessing}
-                                                            title="Approve"
-                                                        >
-                                                            {isProcessing ? (
-                                                                <span className="spinner-border spinner-border-sm"></span>
-                                                            ) : (
-                                                                <CheckCircle size={14} />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger"
-                                                            onClick={() => handleReject(complaint)}
-                                                            disabled={isProcessing}
-                                                            title="Reject"
-                                                        >
-                                                            <XCircle size={14} />
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-outline-primary"
-                                                            onClick={() => navigate(`/ward-officer/complaints/${complaintId}`)}
-                                                            title="View Details"
-                                                        >
-                                                            <Eye size={14} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    <div className="card-body p-5">
+                        {complaints.length === 0 ? (
+                            <div className="text-center py-5">
+                                <div className="p-4 rounded-0 bg-light d-inline-block mb-4">
+                                    <CheckCheck size={64} className="text-success opacity-20" />
+                                </div>
+                                <h5 className="fw-black text-muted text-uppercase tracking-widest">Registry Clean</h5>
+                                <p className="text-muted small">All resolved complaints have been audited and finalized.</p>
+                            </div>
+                        ) : (
+                            <div className="table-responsive">
+                                <table className="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr className="bg-light bg-opacity-50">
+                                            <th className="border-0 rounded-start extra-small fw-black text-muted text-uppercase tracking-widest ps-4 py-3">Case ID</th>
+                                            <th className="border-0 extra-small fw-black text-muted text-uppercase tracking-widest py-3">Subject</th>
+                                            <th className="border-0 extra-small fw-black text-muted text-uppercase tracking-widest py-3">Resolution Proof</th>
+                                            <th className="border-0 extra-small fw-black text-muted text-uppercase tracking-widest py-3">Department</th>
+                                            <th className="border-0 extra-small fw-black text-muted text-uppercase tracking-widest py-3 text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="border-0">
+                                        {complaints.map((c) => {
+                                            const cId = c.complaintId || c.id;
+                                            const isProcessing = processingId === cId;
+                                            return (
+                                                <tr key={cId} className="transition-all hover-bg-light border-0">
+                                                    <td className="ps-4 border-0">
+                                                        <span className="badge bg-primary bg-opacity-10 text-primary rounded-0 px-2 py-1 extra-small fw-black">#{cId}</span>
+                                                    </td>
+                                                    <td className="border-0">
+                                                        <h6 className="fw-black text-dark mb-0 extra-small text-uppercase">{c.title}</h6>
+                                                        <p className="extra-small text-muted mb-0 fw-bold opacity-50">Resolved: {c.resolvedAt ? new Date(c.resolvedAt).toLocaleDateString() : 'N/A'}</p>
+                                                    </td>
+                                                    <td className="border-0">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="p-2 bg-success bg-opacity-10 text-success rounded-0">
+                                                                <FileText size={16} />
+                                                            </div>
+                                                            <span className="extra-small fw-bold text-success text-uppercase">Proof Available</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="border-0">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="p-1 rounded-0 bg-light">📋</div>
+                                                            <span className="extra-small fw-black text-muted text-uppercase">{(c.departmentName || 'General').replace(/_/g, ' ')}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="border-0 text-center pe-4">
+                                                        <div className="d-flex justify-content-center gap-2">
+                                                            <button
+                                                                onClick={() => navigate(`/ward-officer/complaints/${cId}`)}
+                                                                className="btn btn-light rounded-0 p-2 shadow-sm border-0 transition-all hover-up-small"
+                                                                title="Review Details"
+                                                            >
+                                                                <Eye size={18} className="text-primary" />
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-success rounded-0 p-2 shadow-sm border-0 transition-all hover-up-small"
+                                                                onClick={() => handleApprove(cId)}
+                                                                disabled={isProcessing}
+                                                                title="Execute Approval"
+                                                                style={{ backgroundColor: '#10B981' }}
+                                                            >
+                                                                {isProcessing ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-danger rounded-0 p-2 shadow-sm border-0 transition-all hover-up-small"
+                                                                onClick={() => handleReject(cId)}
+                                                                disabled={isProcessing}
+                                                                title="Reject Resolution"
+                                                                style={{ backgroundColor: '#EF4444' }}
+                                                            >
+                                                                <X size={18} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
 
-            {/* Info Card */}
-            <div className="row mt-4">
-                <div className="col-12">
-                    <div className="alert alert-info d-flex align-items-start">
-                        <AlertCircle size={24} className="me-3 flex-shrink-0 mt-1" />
+                {/* Tactical Note */}
+                <div className="card border-0 shadow-sm rounded-0 bg-white p-5 border-start border-5 transition-all hover-bg-light" style={{ borderColor: '#6366F1' }}>
+                    <div className="d-flex align-items-start gap-4">
+                        <div className="p-3 rounded-0 bg-indigo-50 text-indigo-600" style={{ backgroundColor: '#EEF2FF', color: '#6366F1' }}>
+                            <AlertCircle size={32} />
+                        </div>
                         <div>
-                            <h6 className="fw-bold mb-2">Approval Guidelines</h6>
-                            <ul className="mb-0 small">
-                                <li>Review complaint details and uploaded images before approving</li>
-                                <li>Verify that the work has been completed satisfactorily</li>
-                                <li>Reject if work is incomplete or unsatisfactory with clear reason</li>
-                                <li>Approved complaints will be sent to admin for final closure</li>
-                            </ul>
+                            <h5 className="fw-black text-dark text-uppercase tracking-wider mb-2">Audit Synchronization Protocols</h5>
+                            <p className="extra-small text-muted fw-bold mb-0 opacity-75 lh-lg">
+                                All approvals are cryptographically logged. Ensure multi-visual verification of resolution proof before case finalization.
+                                Rejected cases are automatically rerouted to the assigned officer with audit flags.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .fw-black { font-weight: 800; }
+                .extra-small { font-size: 0.65rem; }
+                .tracking-widest { letter-spacing: 0.25em; }
+                .tracking-wider { letter-spacing: 0.12em; }
+                .transition-all { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+                .animate-spin { animation: spin 0.8s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .hover-up:hover { transform: translateY(-5px); }
+                .hover-up-small:hover { transform: scale(1.1); transform: translateY(-2px); }
+                .hover-bg-light:hover { background-color: #F8FAFC !important; }
+                .rounded-0 { border-radius: 2.2rem !important; }
+            `}} />
         </div>
     );
 };

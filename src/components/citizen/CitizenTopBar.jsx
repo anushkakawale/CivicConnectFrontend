@@ -93,12 +93,12 @@ const CitizenTopBar = () => {
                                     setShowNotifications(!showNotifications);
                                     setShowProfile(false);
                                 }}
-                                style={{ borderRadius: '50%', width: '40px', height: '40px', padding: '0' }}
+                                style={{ borderRadius: '0', width: '40px', height: '40px', padding: '0' }}
                             >
                                 <Bell size={18} />
                                 {unreadCount > 0 && (
                                     <span
-                                        className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        className="position-absolute top-0 start-100 translate-middle badge rounded-0 bg-danger"
                                         style={{ fontSize: '10px' }}
                                     >
                                         {unreadCount > 9 ? '9+' : unreadCount}
@@ -109,7 +109,7 @@ const CitizenTopBar = () => {
                             {/* Notifications Dropdown */}
                             {showNotifications && (
                                 <div
-                                    className="position-absolute end-0 mt-2 bg-white border rounded shadow-lg"
+                                    className="position-absolute end-0 mt-2 bg-white border rounded-0 shadow-lg"
                                     style={{ width: '350px', maxHeight: '400px', overflow: 'auto', zIndex: 1050 }}
                                 >
                                     <div className="p-3 border-bottom bg-light">
@@ -139,7 +139,7 @@ const CitizenTopBar = () => {
                                                             </small>
                                                         </div>
                                                         {!notification.seen && (
-                                                            <span className="badge bg-primary rounded-pill" style={{ fontSize: '8px' }}>
+                                                            <span className="badge bg-primary rounded-0" style={{ fontSize: '8px' }}>
                                                                 NEW
                                                             </span>
                                                         )}
@@ -167,7 +167,7 @@ const CitizenTopBar = () => {
                                     setShowProfile(!showProfile);
                                     setShowNotifications(false);
                                 }}
-                                style={{ borderRadius: '20px' }}
+                                style={{ borderRadius: '0' }}
                             >
                                 <User size={18} />
                                 <span className="small fw-semibold">{user?.email?.split('@')[0] || 'User'}</span>
@@ -176,7 +176,7 @@ const CitizenTopBar = () => {
                             {/* Profile Dropdown */}
                             {showProfile && (
                                 <div
-                                    className="position-absolute end-0 mt-2 bg-white border rounded shadow-lg"
+                                    className="position-absolute end-0 mt-2 bg-white border rounded-0 shadow-lg"
                                     style={{ width: '220px', zIndex: 1050 }}
                                 >
                                     <div className="p-3 border-bottom">

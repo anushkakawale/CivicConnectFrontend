@@ -36,10 +36,11 @@ const DepartmentOfficerLayout = () => {
             <div
                 className="gov-main d-flex flex-column"
                 style={{
-                    marginTop: '70px',
-                    marginLeft: '250px',
-                    width: 'calc(100% - 250px)',
-                    transition: 'all 0.3s ease'
+                    marginTop: '65px', // SYNCED
+                    marginLeft: '280px', // SYNCED
+                    width: 'calc(100% - 280px)',
+                    transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                    minHeight: 'calc(100vh - 65px)'
                 }}
             >
                 {/* Page Content */}

@@ -6,121 +6,95 @@
 :root {
     /* ==================== COLORS ==================== */
 
-    /* Primary Brand Colors */
-    --cc-primary: #667eea;
-    --cc-primary-dark: #5568d3;
-    --cc-primary-light: #8b9df8;
-    --cc-primary-lighter: #e0e7ff;
+    /* Primary Brand Colors: Elite PMC Blue */
+    --cc-primary: #173470;
+    --cc-primary-dark: #112652;
+    --cc-primary-light: #1C3C82;
+    --cc-primary-lighter: #E8EEFB;
+    --cc-primary-soft: #F1F5FE;
 
-    /* Secondary Colors */
-    --cc-secondary: #764ba2;
-    --cc-secondary-dark: #5f3d85;
-    --cc-secondary-light: #9d6fc4;
-
-    /* Accent Colors */
-    --cc-accent: #f093fb;
-    --cc-accent-dark: #d871f0;
-    --cc-accent-light: #f5b5fc;
+    /* Secondary Colors: Tactical Slate */
+    --cc-secondary: #475569;
+    --cc-secondary-dark: #1E293B;
+    --cc-secondary-light: #94A3B8;
 
     /* Semantic Colors */
-    --cc-success: #10b981;
-    --cc-success-light: #d1fae5;
-    --cc-warning: #f59e0b;
-    --cc-warning-light: #fef3c7;
-    --cc-danger: #ef4444;
-    --cc-danger-light: #fee2e2;
-    --cc-info: #3b82f6;
-    --cc-info-light: #dbeafe;
+    --cc-success: #10B981;
+    --cc-success-dark: #059669;
+    --cc-success-light: #ECFDF5;
+    --cc-warning: #F59E0B;
+    --cc-warning-light: #FFFBEB;
+    --cc-danger: #EF4444;
+    --cc-danger-light: #FEF2F2;
+    --cc-info: #0EA5E9;
+    --cc-info-light: #F0F9FF;
 
-    /* Neutral Colors - Light Mode */
-    --cc-gray-50: #f9fafb;
-    --cc-gray-100: #f3f4f6;
-    --cc-gray-200: #e5e7eb;
-    --cc-gray-300: #d1d5db;
-    --cc-gray-400: #9ca3af;
-    --cc-gray-500: #6b7280;
-    --cc-gray-600: #4b5563;
-    --cc-gray-700: #374151;
-    --cc-gray-800: #1f2937;
-    --cc-gray-900: #111827;
+    /* Neutral Colors - Elite Slate */
+    --cc-gray-50: #F8FAFC;
+    --cc-gray-100: #F1F5F9;
+    --cc-gray-200: #E2E8F0;
+    --cc-gray-300: #CBD5E1;
+    --cc-gray-400: #94A3B8;
+    --cc-gray-500: #64748B;
+    --cc-gray-600: #475569;
+    --cc-gray-700: #334155;
+    --cc-gray-800: #1E293B;
+    --cc-gray-900: #0F172A;
 
     /* Background Colors */
-    --cc-bg-primary: #ffffff;
-    --cc-bg-secondary: #f9fafb;
-    --cc-bg-tertiary: #f3f4f6;
+    --cc-bg-primary: #FFFFFF;
+    --cc-bg-secondary: #F8FAFC;
+    --cc-bg-tertiary: #F1F5F9;
 
     /* Text Colors */
-    --cc-text-primary: #111827;
-    --cc-text-secondary: #6b7280;
-    --cc-text-tertiary: #9ca3af;
-    --cc-text-inverse: #ffffff;
+    --cc-text-primary: #0F172A;
+    --cc-text-secondary: #475569;
+    --cc-text-tertiary: #94A3B8;
+    --cc-text-inverse: #FFFFFF;
 
     /* Border Colors */
-    --cc-border-light: #e5e7eb;
-    --cc-border-medium: #d1d5db;
-    --cc-border-dark: #9ca3af;
+    --cc-border-light: #E2E8F0;
+    --cc-border-medium: #CBD5E1;
+    --cc-border-dark: #94A3B8;
 
     /* ==================== GRADIENTS ==================== */
-    --cc-gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --cc-gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --cc-gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    --cc-gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --cc-gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    --cc-gradient-cool: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    --cc-gradient-primary: linear-gradient(135deg, #173470 0%, #112652 100%);
+    --cc-gradient-secondary: linear-gradient(135deg, #475569 0%, #1E293B 100%);
+    --cc-gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    --cc-gradient-info: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
 
     /* ==================== SHADOWS ==================== */
     --cc-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --cc-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     --cc-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --cc-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --cc-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --cc-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    --cc-shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-
-    /* Colored Shadows */
-    --cc-shadow-primary: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
-    --cc-shadow-success: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
-    --cc-shadow-danger: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+    --cc-shadow-xl: 0 20px 25px -5px rgba(23, 52, 112, 0.1), 0 10px 10px -5px rgba(23, 52, 112, 0.04);
+    --cc-shadow-premium: 0 30px 60px -12px rgba(15, 23, 42, 0.25), 0 18px 36px -18px rgba(15, 23, 42, 0.3);
 
     /* ==================== SPACING ==================== */
     --cc-space-xs: 0.25rem;
-    /* 4px */
     --cc-space-sm: 0.5rem;
-    /* 8px */
     --cc-space-md: 1rem;
-    /* 16px */
     --cc-space-lg: 1.5rem;
-    /* 24px */
     --cc-space-xl: 2rem;
-    /* 32px */
     --cc-space-2xl: 3rem;
-    /* 48px */
     --cc-space-3xl: 4rem;
-    /* 64px */
 
     /* ==================== TYPOGRAPHY ==================== */
-    --cc-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --cc-font-mono: 'Fira Code', 'Courier New', monospace;
+    --cc-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --cc-font-display: 'Outfit', sans-serif;
+    --cc-font-mono: 'Fira Code', monospace;
 
     /* Font Sizes */
     --cc-text-xs: 0.75rem;
-    /* 12px */
     --cc-text-sm: 0.875rem;
-    /* 14px */
     --cc-text-base: 1rem;
-    /* 16px */
     --cc-text-lg: 1.125rem;
-    /* 18px */
     --cc-text-xl: 1.25rem;
-    /* 20px */
     --cc-text-2xl: 1.5rem;
-    /* 24px */
     --cc-text-3xl: 1.875rem;
-    /* 30px */
     --cc-text-4xl: 2.25rem;
-    /* 36px */
     --cc-text-5xl: 3rem;
-    /* 48px */
 
     /* Font Weights */
     --cc-font-light: 300;
@@ -129,44 +103,23 @@
     --cc-font-semibold: 600;
     --cc-font-bold: 700;
     --cc-font-extrabold: 800;
-
-    /* Line Heights */
-    --cc-leading-none: 1;
-    --cc-leading-tight: 1.25;
-    --cc-leading-snug: 1.375;
-    --cc-leading-normal: 1.5;
-    --cc-leading-relaxed: 1.625;
-    --cc-leading-loose: 2;
+    --cc-font-black: 900;
 
     /* ==================== BORDER RADIUS ==================== */
     --cc-radius-sm: 0.25rem;
-    /* 4px */
-    --cc-radius-md: 0.375rem;
-    /* 6px */
-    --cc-radius-lg: 0.5rem;
-    /* 8px */
-    --cc-radius-xl: 0.75rem;
-    /* 12px */
-    --cc-radius-2xl: 1rem;
-    /* 16px */
-    --cc-radius-3xl: 1.5rem;
-    /* 24px */
+    --cc-radius-md: 0.5rem;
+    --cc-radius-lg: 0.75rem;
+    --cc-radius-xl: 1rem;
+    --cc-radius-2xl: 1.5rem;
+    --cc-radius-3xl: 2rem;
     --cc-radius-full: 9999px;
+    --cc-radius-gov: 0.6rem;
 
     /* ==================== TRANSITIONS ==================== */
     --cc-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --cc-transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    --cc-transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    --cc-transition-slower: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-
-    /* ==================== Z-INDEX ==================== */
-    --cc-z-dropdown: 1000;
-    --cc-z-sticky: 1020;
-    --cc-z-fixed: 1030;
-    --cc-z-modal-backdrop: 1040;
-    --cc-z-modal: 1050;
-    --cc-z-popover: 1060;
-    --cc-z-tooltip: 1070;
+    --cc-transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --cc-transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    --cc-transition-premium: 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* ==================== DARK MODE ==================== */

@@ -105,7 +105,9 @@ export const getCurrentUser = () => {
  * @returns {string|null} User role or null
  */
 export const getCurrentRole = () => {
-    return localStorage.getItem('role');
+    const role = localStorage.getItem('role');
+    if (!role || role === 'undefined' || role === 'null') return null;
+    return role;
 };
 
 /**
@@ -113,7 +115,8 @@ export const getCurrentRole = () => {
  * @returns {boolean} True if authenticated
  */
 export const isAuthenticated = () => {
-    return !!localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    return !!token && token !== 'undefined' && token !== 'null';
 };
 
 /**
@@ -126,11 +129,41 @@ export const saveAuthData = (data) => {
         return;
     }
 
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data));
-    localStorage.setItem('role', data.role);
+    // Universal Role Extractor: Handles Single String, Array, or Complex Authority Objects
+    let rawRole = data.role || data.roles || data.authorities || (data.user && (data.user.role || data.user.roles));
 
-    console.log('💾 Auth data saved to localStorage');
+    // 1. Array of Authorities/Roles
+    if (Array.isArray(rawRole) && rawRole.length > 0) {
+        const first = rawRole[0];
+        rawRole = typeof first === 'string' ? first : (first.authority || first.name || first.role || first.roleName);
+    }
+
+    // 2. Object Role
+    if (rawRole && typeof rawRole === 'object') {
+        rawRole = rawRole.authority || rawRole.name || rawRole.role || rawRole.roleName;
+    }
+
+    // 3. String Normalization & Fallback
+    let normalizedRole = typeof rawRole === 'string' ? rawRole.replace('ROLE_', '') : rawRole;
+
+    // Safety Fallback: Default to CITIZEN if we have a token but can't determine role,
+    // though for Admins we usually want to be explicit.
+    if (!normalizedRole && data.token) {
+        console.warn('⚠️ Authentication succeeded but role was not identified. Defaulting to GUEST access.');
+        normalizedRole = 'CITIZEN';
+    }
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('role', normalizedRole);
+    localStorage.setItem('user', JSON.stringify(data));
+
+    if (data.name) localStorage.setItem('name', data.name);
+
+    console.log('🛡️ Security Context Initialized:', {
+        role: normalizedRole,
+        hasToken: !!data.token,
+        userName: data.name
+    });
 };
 
 /**
@@ -144,6 +177,7 @@ export const getDashboardRoute = () => {
         'CITIZEN': '/citizen/dashboard',
         'WARD_OFFICER': '/ward-officer/dashboard',
         'DEPARTMENT_OFFICER': '/department/dashboard',
+        'DEPT_OFFICER': '/department/dashboard',
         'ADMIN': '/admin/dashboard'
     };
 

@@ -10,8 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import apiService, { createComplaintFormData } from '../../api/apiService';
 import { toast } from 'react-toastify';
 import {
-    MapPin, Upload, X, Camera, AlertCircle, CheckCircle,
-    FileText, Tag, Flag, Building, Navigation, Image as ImageIcon
+    FileText, Tag, Flag, Building, Image as ImageIcon, Compass
 } from 'lucide-react';
 import './CreateComplaint.css';
 
@@ -410,7 +409,7 @@ const CreateComplaint = () => {
                         {/* GPS Coordinates */}
                         <div className="form-group">
                             <label>
-                                <Navigation size={18} />
+                                <Compass size={18} />
                                 GPS Coordinates
                             </label>
                             <div className="gps-container">
@@ -424,7 +423,7 @@ const CreateComplaint = () => {
                                     className="btn-get-location"
                                     disabled={gettingLocation}
                                 >
-                                    <Navigation size={18} className={gettingLocation ? 'spinning' : ''} />
+                                    <Compass size={18} className={gettingLocation ? 'spinning' : ''} />
                                     {gettingLocation ? 'Getting Location...' : 'Get Current Location'}
                                 </button>
                             </div>

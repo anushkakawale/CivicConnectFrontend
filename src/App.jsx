@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import ModernLogin from './auth/ModernLogin';
-import RegisterCitizen from './auth/RegisterCitizen';
+import ModernLogin from "./auth/ModernLogin";
+import RegisterCitizen from "./auth/RegisterCitizen";
+import EnhancedComplaintRegistration from "./components/complaint/EnhancedComplaintRegistration";
 import CitizenLayout from './layouts/CitizenLayout';
 import CitizenDashboard from './pages/citizen/CitizenDashboard';
 import RegisterComplaint from './pages/citizen/RegisterComplaint';
@@ -20,8 +21,10 @@ import DepartmentLayout from './layouts/DepartmentLayout';
 import DepartmentDashboard from './pages/department/DepartmentDashboard';
 import DepartmentComplaintDetail from './pages/department/DepartmentComplaintDetail';
 import DepartmentAnalyticsEnhanced from './pages/department/DepartmentAnalyticsEnhanced';
+import DepartmentHistory from './pages/department/DepartmentHistory';
 import DepartmentMap from './pages/department/DepartmentMap';
 import DepartmentNotifications from './pages/department/DepartmentNotifications';
+import DepartmentWork from './pages/department/DepartmentWork';
 import WardOfficerLayout from './layouts/WardOfficerLayout';
 import WardOfficerDashboard from './pages/ward/WardOfficerDashboard';
 import ApprovalQueue from './pages/ward/ApprovalQueue';
@@ -36,16 +39,19 @@ import WardMap from './pages/ward/WardMap';
 import AdminLayout from './layouts/AdminLayout';
 import ProfessionalAdminDashboard from './pages/admin/ProfessionalAdminDashboard';
 import AdminComplaints from './pages/admin/AdminComplaints';
+import AdminCloseComplaints from './pages/admin/AdminCloseComplaints';
+import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminComplaintDetail from './pages/admin/AdminComplaintDetail';
 import AdminUserManagement from './pages/admin/AdminUserManagement';
 import AdminOfficerDirectory from './pages/admin/AdminOfficerDirectory';
+import AdminDepartments from './pages/admin/AdminDepartments';
 import AdminWardOfficerRegistration from './pages/admin/AdminWardOfficerRegistration';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminMap from './pages/admin/AdminMap';
 import AdminReports from './pages/admin/AdminReports';
+import AdminAuditLogs from './pages/admin/AdminAuditLogs';
+import AdminProfile from './pages/admin/AdminProfile';
 import WardChangeRequests from './pages/citizen/WardChangeRequests';
-import ProfessionalWardOfficerDashboard from './pages/ProfessionalWardOfficerDashboard';
-import ProfessionalDepartmentOfficerDashboard from './pages/ProfessionalDepartmentOfficerDashboard';
 import ApiDiagnostic from './pages/ApiDiagnostic';
 import DebugPanel from './components/DebugPanel';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -66,6 +72,7 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/" element={<ModernLogin />} />
                 <Route path="/register" element={<RegisterCitizen />} />
+                <Route path="/register-complaint" element={<EnhancedComplaintRegistration />} />
                 <Route path="/diagnostic" element={<ApiDiagnostic />} />
 
                 {/* Citizen Routes with Layout */}
@@ -80,7 +87,7 @@ function App() {
                   <Route path="dashboard" element={<CitizenDashboard />} />
                   <Route path="complaints" element={<MyComplaints />} />
                   <Route path="register-complaint" element={<RegisterComplaint />} />
-                  <Route path="complaint/:id" element={<ComplaintDetail />} />
+                  <Route path="complaints/:id" element={<ComplaintDetail />} />
                   <Route path="area-complaints" element={<AreaComplaints />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="sla" element={<SlaStatus />} />
@@ -102,8 +109,11 @@ function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route path="dashboard" element={<ProfessionalDepartmentOfficerDashboard />} />
-                  <Route path="complaints" element={<DepartmentDashboard />} />
+                  <Route path="dashboard" element={<DepartmentDashboard />} />
+                  <Route path="assigned" element={<DepartmentDashboard />} />
+                  <Route path="in-progress" element={<DepartmentDashboard />} />
+                  <Route path="history" element={<DepartmentHistory />} />
+                  <Route path="complaints" element={<DepartmentWork />} />
                   <Route path="complaints/:id" element={<DepartmentComplaintDetail />} />
                   <Route path="analytics" element={<DepartmentAnalyticsEnhanced />} />
                   <Route path="map" element={<DepartmentMap />} />
@@ -121,7 +131,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route path="dashboard" element={<ProfessionalWardOfficerDashboard />} />
+                  <Route path="dashboard" element={<WardOfficerDashboard />} />
                   <Route path="approvals" element={<ApprovalQueue />} />
                   <Route path="complaints" element={<WardComplaints />} />
                   <Route path="complaints/:id" element={<WardComplaintDetail />} />
@@ -147,6 +157,9 @@ function App() {
                 >
                   <Route path="dashboard" element={<ProfessionalAdminDashboard />} />
                   <Route path="complaints" element={<AdminComplaints />} />
+                  <Route path="close-complaints" element={<AdminCloseComplaints />} />
+                  <Route path="departments" element={<AdminDepartments />} />
+                  <Route path="notifications" element={<AdminNotifications />} />
                   <Route path="complaints/:id" element={<AdminComplaintDetail />} />
                   <Route path="users" element={<AdminUserManagement />} />
                   <Route path="officers" element={<AdminOfficerDirectory />} />
@@ -154,7 +167,8 @@ function App() {
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="map" element={<AdminMap />} />
                   <Route path="reports" element={<AdminReports />} />
-                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="logs" element={<AdminAuditLogs />} />
+                  <Route path="profile" element={<AdminProfile />} />
                   <Route index element={<Navigate to="dashboard" replace />} />
                 </Route>
 

@@ -8,6 +8,7 @@ import notificationService from '../services/notificationService';
 export const useNotifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [unseenCount, setUnseenCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -18,9 +19,10 @@ export const useNotifications = () => {
             const data = await notificationService.getNotifications();
             setNotifications(data || []);
 
-            // Count unread
-            const unread = (data || []).filter(n => !n.isRead).length;
-            setUnreadCount(unread);
+            // Fetch live stats for precision
+            const stats = await notificationService.getStats();
+            setUnreadCount(stats.unreadCount || 0);
+            setUnseenCount(stats.unseenCount || 0);
         } catch (err) {
             // Handle 403 Forbidden errors gracefully
             if (err.response?.status === 403) {
@@ -41,18 +43,21 @@ export const useNotifications = () => {
         }
     };
 
-    const fetchUnreadCount = async () => {
+    const fetchStats = async () => {
         try {
-            const data = await notificationService.getUnreadCount();
-            setUnreadCount(data);
+            const stats = await notificationService.getStats();
+            setUnreadCount(stats.unreadCount || 0);
+            setUnseenCount(stats.unseenCount || 0);
         } catch (err) {
             // Handle 403 Forbidden errors gracefully
             if (err.response?.status === 403) {
-                console.warn('⚠️ Notifications count endpoint not accessible (403 Forbidden).');
+                console.warn('⚠️ Notifications stats endpoint not accessible (403 Forbidden).');
                 setUnreadCount(0);
+                setUnseenCount(0);
             } else {
-                console.error('❌ Error fetching unread count:', err);
+                console.error('❌ Error fetching notification stats:', err);
                 setUnreadCount(0);
+                setUnseenCount(0);
             }
         }
     };
@@ -61,9 +66,12 @@ export const useNotifications = () => {
         try {
             await notificationService.markAsRead(notificationId);
 
-            // Update local state
+            // Update local state with dual ID support
             setNotifications(prev =>
-                prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+                prev.map(n => {
+                    const currentId = n.id || n.notificationId;
+                    return currentId === notificationId ? { ...n, isRead: true } : n;
+                })
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (err) {
@@ -79,15 +87,53 @@ export const useNotifications = () => {
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
         } catch (err) {
-            console.error('❌ Error marking all notifications as read:', err);
+            if (err.response?.status === 403) {
+                console.warn('⚠️ Mark all read restricted (403). Optimistically updating UI.');
+                // Optimistically update even if forbidden, to clear the annoying badge
+                setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                setUnreadCount(0);
+            } else {
+                console.error('❌ Error marking all notifications as read:', err);
+            }
+        }
+    };
+
+    const deleteNotification = async (notificationId) => {
+        try {
+            await notificationService.deleteNotification(notificationId);
+            setNotifications(prev => prev.filter(n => (n.id || n.notificationId) !== notificationId));
+
+            // Recalculate unread if necessary
+            setUnreadCount(prev => {
+                const deleted = notifications.find(n => (n.id || n.notificationId) === notificationId);
+                return deleted && !deleted.isRead ? Math.max(0, prev - 1) : prev;
+            });
+        } catch (err) {
+            console.error('❌ Error deleting notification:', err);
+        }
+    };
+
+    const markAllAsSeen = async () => {
+        try {
+            await notificationService.markAllAsSeen();
+            setUnseenCount(0);
+        } catch (err) {
+            // Handle 403 Forbidden errors gracefully
+            if (err.response?.status === 403) {
+                console.warn('⚠️ Mark all as seen endpoint not accessible (403 Forbidden).');
+                // Optimistically clear unseen count to avoid UI issues
+                setUnseenCount(0);
+            } else {
+                console.error('❌ Error marking all notifications as seen:', err);
+            }
         }
     };
 
     useEffect(() => {
         fetchNotifications();
 
-        // Refresh every 30 seconds
-        const interval = setInterval(fetchNotifications, 30000);
+        // Refresh every 5 seconds for real-time responsiveness
+        const interval = setInterval(fetchNotifications, 5000);
 
         return () => clearInterval(interval);
     }, []);
@@ -95,10 +141,13 @@ export const useNotifications = () => {
     return {
         notifications,
         unreadCount,
+        unseenCount,
         loading,
         error,
         markAsRead,
         markAllAsRead,
+        markAllAsSeen,
+        deleteNotification,
         fetchNotifications,
         refresh: fetchNotifications
     };

@@ -83,7 +83,7 @@ export default function CitizenDashboard() {
             <div style={{
               width: '48px',
               height: '48px',
-              borderRadius: '4px',
+              borderRadius: '0',
               backgroundColor: '#EFF6FF',
               display: 'flex',
               alignItems: 'center',
@@ -107,7 +107,7 @@ export default function CitizenDashboard() {
             <div style={{
               width: '48px',
               height: '48px',
-              borderRadius: '4px',
+              borderRadius: '0',
               backgroundColor: '#F0FDF4',
               display: 'flex',
               alignItems: 'center',
@@ -131,7 +131,7 @@ export default function CitizenDashboard() {
             <div style={{
               width: '48px',
               height: '48px',
-              borderRadius: '4px',
+              borderRadius: '0',
               backgroundColor: '#FEF3C7',
               display: 'flex',
               alignItems: 'center',

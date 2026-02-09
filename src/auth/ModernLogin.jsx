@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import authService from '../services/authService';
-import { Building2, Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { Building2, Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 
 const ModernLogin = () => {
   const navigate = useNavigate();
@@ -31,35 +31,22 @@ const ModernLogin = () => {
       const email = values.email.trim();
       const password = values.password.trim();
 
-      console.log('🔐 Attempting login with:', { email, passwordLength: password.length });
-
       try {
-        await authService.login(email, password);
+        console.log('🚀 Initiating authentication for:', email);
+        const response = await authService.login(email, password);
+        console.log('✅ Authentication successful. Payload:', response);
+
+        const role = localStorage.getItem('role');
         const dashboardRoute = authService.getDashboardRoute();
 
-        // Show success message briefly before navigating
-        console.log('🎉 Redirecting to:', dashboardRoute);
+        console.log('🎯 Routing defined:', { role, target: dashboardRoute });
         navigate(dashboardRoute);
-      } catch (err) {
-        // Extract error message from various possible formats
+      } catch (error) {
+        console.error('❌ Authentication failed:', error);
         let errorMessage = 'Authentication failed. Please check your credentials.';
-
-        if (err.response?.data) {
-          // Handle string error (like "Bad credentials")
-          if (typeof err.response.data === 'string') {
-            errorMessage = err.response.data;
-          }
-          // Handle object error with message property
-          else if (err.response.data.message) {
-            errorMessage = err.response.data.message;
-          }
-          // Handle object error with error property
-          else if (err.response.data.error) {
-            errorMessage = err.response.data.error;
-          }
+        if (error.response?.data) {
+          errorMessage = typeof error.response.data === 'string' ? error.response.data : (error.response.data.message || error.response.data.error || errorMessage);
         }
-
-        console.error('🔴 Login error:', errorMessage);
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -68,145 +55,150 @@ const ModernLogin = () => {
   });
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light position-relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="position-absolute top-0 start-0 w-100 h-100" style={{
-        backgroundImage: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`,
-        opacity: 0.05
-      }}></div>
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light position-relative overflow-hidden" style={{
+      background: 'linear-gradient(135deg, #112652 0%, #173470 100%)'
+    }}>
+      {/* Tactical Atmospheric Elements */}
+      <div className="position-absolute top-0 start-0 w-100 h-100 opacity-05 pointer-events-none">
+        <div className="position-absolute top-0 end-0 p-5">
+          <Building2 size={400} strokeWidth={0.5} />
+        </div>
+      </div>
 
-      <div className="container position-relative" style={{ zIndex: 1 }}>
+      <div className="container position-relative py-5 animate-zoomIn">
         <div className="row justify-content-center">
-          <div className="col-12 col-md-10 col-lg-8 col-xl-6">
+          <div className="col-12 col-md-10 col-lg-6 col-xl-5">
 
-            {/* Header */}
-            <div className="text-center mb-4">
-              <div className="d-inline-flex align-items-center justify-content-center bg-primary bg-gradient rounded-circle p-3 mb-3 shadow-lg">
-                <Building2 className="text-white" size={40} />
+            {/* Branding */}
+            <div className="text-center mb-5">
+              <div className="d-inline-flex align-items-center justify-content-center rounded-circle p-4 mb-4 shadow-premium circ-blue anim-float" style={{
+                width: '80px', height: '80px'
+              }}>
+                <Building2 className="text-white" size={36} />
               </div>
-              <h1 className="display-5 fw-bold text-primary mb-2">CivicConnect</h1>
-              <p className="text-muted fs-5">Municipal Complaint Management System</p>
+              <h1 className="fw-black mb-1" style={{ color: '#FFFFFF', fontSize: '2.2rem' }}>
+                Civic Connect
+              </h1>
+              <div className="d-flex align-items-center justify-content-center gap-2">
+                <span className="text-white fw-bold small opacity-70">Official Municipal Portal</span>
+              </div>
             </div>
 
-            {/* Login Card */}
-            <div className="card shadow-lg border-0 rounded-4 overflow-hidden">
-              <div className="card-body p-4 p-md-5">
-                <h2 className="card-title text-center mb-2 fw-bold">Welcome Back</h2>
-                <p className="text-center text-muted mb-4">Sign in to access your dashboard</p>
+            {/* Login Box */}
+            <div className="card border-0 shadow-premium rounded-4 overflow-hidden bg-white">
+              <div className="px-5 pt-5 pb-4 border-bottom bg-white text-center">
+                <h4 className="fw-bold mb-1 text-dark">Welcome back</h4>
+                <p className="text-muted small mb-0">Sign in to your account</p>
+              </div>
 
-                {/* Error Alert */}
+              <div className="card-body p-5">
                 {error && (
-                  <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>Authentication Failed!</strong> {error}
-                    <button
-                      type="button"
-                      className="btn-close"
-                      onClick={() => setError('')}
-                      aria-label="Close"
-                    ></button>
+                  <div className="alert border-0 shadow-sm d-flex align-items-center mb-5 rounded-4 animate-fadeIn" style={{ backgroundColor: '#FEF2F2', color: '#EF4444' }}>
+                    <AlertCircle size={18} className="me-3" />
+                    <div className="small fw-bold">{error}</div>
                   </div>
                 )}
 
-                {/* Login Form */}
-                <form onSubmit={formik.handleSubmit}>
-                  {/* Email Field */}
-                  <div className="mb-3">
-                    <label htmlFor="email" className="form-label fw-semibold">
-                      <Mail size={16} className="me-2" />
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      className={`form-control form-control-lg ${formik.touched.email && formik.errors.email ? 'is-invalid' : ''
-                        }`}
-                      id="email"
-                      placeholder="Enter your email"
-                      {...formik.getFieldProps('email')}
-                    />
+                <form onSubmit={formik.handleSubmit} className="row g-4">
+                  <div className="col-12">
+                    <label className="form-label fw-bold small text-muted mb-2 ms-1">Email address</label>
+                    <div className="position-relative">
+                      <div className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40"><Mail size={18} /></div>
+                      <input
+                        type="email"
+                        className={`form-control rounded-pill border-0 bg-light py-4 fw-bold shadow-none ps-11 px-4 ${formik.touched.email && formik.errors.email ? 'is-invalid' : ''}`}
+                        style={{ paddingLeft: '60px !important', fontSize: '1rem' }}
+                        placeholder="yourname@email.com"
+                        {...formik.getFieldProps('email')}
+                      />
+                    </div>
                     {formik.touched.email && formik.errors.email && (
-                      <div className="invalid-feedback">{formik.errors.email}</div>
+                      <div className="text-danger small mt-2 ms-2">{formik.errors.email}</div>
                     )}
                   </div>
 
-                  {/* Password Field */}
-                  <div className="mb-4">
-                    <label htmlFor="password" className="form-label fw-semibold">
-                      <Lock size={16} className="me-2" />
-                      Password
-                    </label>
-                    <div className="input-group input-group-lg">
+                  <div className="col-12">
+                    <label className="form-label fw-bold small text-muted mb-2 ms-1">Password</label>
+                    <div className="position-relative">
+                      <div className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40"><Lock size={18} /></div>
                       <input
                         type={showPassword ? 'text' : 'password'}
-                        className={`form-control ${formik.touched.password && formik.errors.password ? 'is-invalid' : ''
-                          }`}
-                        id="password"
+                        className={`form-control rounded-pill border-0 bg-light py-4 fw-bold shadow-none ps-11 px-4 ${formik.touched.password && formik.errors.password ? 'is-invalid' : ''}`}
+                        style={{ paddingLeft: '60px !important', fontSize: '1rem' }}
                         placeholder="Enter your password"
                         {...formik.getFieldProps('password')}
                       />
                       <button
-                        className="btn btn-outline-secondary"
+                        className="btn border-0 position-absolute end-0 top-50 translate-middle-y me-3 text-muted shadow-none"
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
-                      {formik.touched.password && formik.errors.password && (
-                        <div className="invalid-feedback">{formik.errors.password}</div>
-                      )}
                     </div>
+                    {formik.touched.password && formik.errors.password && (
+                      <div className="text-danger small mt-2 ms-2">{formik.errors.password}</div>
+                    )}
                   </div>
 
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    className="btn btn-primary btn-lg w-100 mb-3 d-flex align-items-center justify-content-center"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Signing In...
-                      </>
-                    ) : (
-                      <>
-                        <LogIn size={20} className="me-2" />
-                        Sign In
-                      </>
-                    )}
-                  </button>
+                  <div className="col-12 pt-4">
+                    <button
+                      type="submit"
+                      className="btn w-100 py-3 d-flex align-items-center justify-content-center text-white rounded-pill btn-premium transition-all border-0"
+                      disabled={isLoading}
+                      style={{
+                        backgroundColor: '#173470',
+                        fontSize: '1.1rem',
+                        fontWeight: '700'
+                      }}
+                    >
+                      {isLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-3" role="status"></span>
+                          Logging in...
+                        </>
+                      ) : (
+                        <>
+                          <LogIn size={20} className="me-3" />
+                          Login
+                        </>
+                      )}
+                    </button>
+                  </div>
 
-                  {/* Register Link */}
-                  <div className="text-center">
-                    <p className="text-muted mb-0">
-                      New to CivicConnect?{' '}
+                  <div className="col-12 text-center mt-5">
+                    <p className="text-muted small">
+                      Need an account?{' '}
                       <button
                         type="button"
                         onClick={() => navigate('/register')}
-                        className="btn btn-link p-0 text-decoration-none fw-semibold"
+                        className="btn btn-link p-0 text-decoration-none fw-bold text-primary ms-1"
+                        style={{ color: '#173470' }}
                       >
-                        <UserPlus size={16} className="me-1" />
-                        Create an account
+                        Register here
                       </button>
                     </p>
                   </div>
                 </form>
               </div>
 
-              {/* Card Footer */}
-              <div className="card-footer bg-light border-0 py-3">
-                <div className="d-flex justify-content-center gap-4 text-muted small">
-                  <span>🔒 Secure Login</span>
-                  <span>🏛️ Government Portal</span>
-                  <span>✅ Verified</span>
+              <div className="px-5 py-4 bg-light bg-opacity-30 border-top d-flex justify-content-between align-items-center">
+                <div className="d-flex align-items-center gap-2">
+                  <div className="bg-success rounded-circle animate-pulse" style={{ width: '8px', height: '8px' }}></div>
+                  <span className="text-muted small">System Online</span>
                 </div>
+                <span className="text-muted extra-small opacity-30">v2.4.0</span>
               </div>
             </div>
 
-            {/* Footer Note */}
-            <div className="text-center mt-4">
-              <p className="text-muted small mb-0">
-                © 2026 CivicConnect. All rights reserved.
-              </p>
+            {/* Footer */}
+            <div className="text-center mt-5 text-muted small px-4">
+              <p className="mb-3">© 2026 PMC Municipal Administration</p>
+              <div className="d-flex justify-content-center gap-4">
+                <span className="pointer">Privacy</span>
+                <span className="pointer">Terms</span>
+                <span className="pointer">Support</span>
+              </div>
             </div>
           </div>
         </div>

@@ -1,100 +1,64 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-    LayoutDashboard,
-    PlusCircle,
-    List,
-    MapPin,
-    Clock,
-    Users,
-    User,
-    LogOut,
-    FileText,
-    CheckCircle,
-    UserPlus,
-    BarChart2,
-    Map as MapIcon,
-    Shield
+    LayoutDashboard, PlusCircle, List, MapPin, Clock, Users,
+    User, LogOut, FileText, CheckCircle, UserPlus, BarChart2,
+    Map as MapIcon, Shield, Activity, Smartphone, Info, ShieldAlert,
+    ShieldCheck
 } from 'lucide-react';
 
+/**
+ * Premium Professional Sidebar
+ * Clean light aesthetic with active states highlighted in primary blue.
+ */
 export default function Sidebar({ role }) {
     const location = useLocation();
+    const userName = localStorage.getItem("name") || "Officer";
+    const PRIMARY_COLOR = '#173470';
 
-    // Mapping roles to color themes
-    const getRoleTheme = () => {
-        switch (role) {
-            case 'CITIZEN':
-                return {
-                    activeBg: 'rgba(28, 167, 166, 0.1)', // Teal
-                    activeText: '#1CA7A6',
-                    activeBorder: '#1CA7A6'
-                };
-            case 'WARD_OFFICER':
-                return {
-                    activeBg: 'rgba(245, 158, 11, 0.1)', // Amber
-                    activeText: '#F59E0B',
-                    activeBorder: '#F59E0B'
-                };
-            case 'DEPARTMENT_OFFICER':
-                return {
-                    activeBg: 'rgba(124, 58, 237, 0.1)', // Purple
-                    activeText: '#7C3AED',
-                    activeBorder: '#7C3AED'
-                };
-            case 'ADMIN':
-            default:
-                return {
-                    activeBg: 'rgba(11, 60, 93, 0.1)', // Deep Navy
-                    activeText: '#0B3C5D',
-                    activeBorder: '#0B3C5D'
-                };
-        }
-    };
-
-    const theme = getRoleTheme();
-
-    // Map roles to menu items
     const getMenuItems = () => {
         switch (role) {
             case 'ADMIN':
                 return [
-                    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-                    { path: '/admin/complaints', icon: List, label: 'All Complaints' },
-                    { path: '/admin/users', icon: Users, label: 'User Management' },
-                    { path: '/admin/officers', icon: Shield, label: 'Officers Directory' },
-                    { path: '/admin/analytics', icon: BarChart2, label: 'Analytics' },
+                    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Home' },
+                    { path: '/admin/complaints', icon: List, label: 'Complaints' },
+                    { path: '/admin/users', icon: Users, label: 'Citizens' },
+                    { path: '/admin/officers', icon: Shield, label: 'Officers' },
+                    { path: '/admin/register-ward-officer', icon: UserPlus, label: 'Add Officer' },
+                    { path: '/admin/analytics', icon: BarChart2, label: 'Stats' },
+                    { path: '/admin/map', icon: MapIcon, label: 'Map' },
                     { path: '/admin/reports', icon: FileText, label: 'Reports' },
                     { path: '/admin/profile', icon: User, label: 'Profile' },
                 ];
             case 'WARD_OFFICER':
                 return [
-                    { path: '/ward-officer/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-                    { path: '/ward-officer/approvals', icon: CheckCircle, label: 'Pending Approvals' },
-                    { path: '/ward-officer/complaints', icon: List, label: 'Ward Complaints' },
-                    { path: '/ward-officer/ward-changes', icon: MapIcon, label: 'Ward Changes' },
-                    { path: '/ward-officer/officers', icon: Users, label: 'Department Officers' },
-                    { path: '/ward-officer/register-officer', icon: UserPlus, label: 'Register Officer' },
-                    { path: '/ward-officer/analytics', icon: BarChart2, label: 'Analytics' },
-                    { path: '/ward-officer/map', icon: MapIcon, label: 'Map View' },
+                    { path: '/ward-officer/dashboard', icon: LayoutDashboard, label: 'Home' },
+                    { path: '/ward-officer/approvals', icon: CheckCircle, label: 'Approvals' },
+                    { path: '/ward-officer/complaints', icon: ShieldAlert, label: 'Complaints' },
+                    { path: '/ward-officer/ward-changes', icon: MapIcon, label: 'Address Changes' },
+                    { path: '/ward-officer/officers', icon: Users, label: 'Our Team' },
+                    { path: '/ward-officer/register-officer', icon: UserPlus, label: 'Add Officer' },
+                    { path: '/ward-officer/analytics', icon: BarChart2, label: 'Stats' },
+                    { path: '/ward-officer/map', icon: MapIcon, label: 'Map' },
                     { path: '/ward-officer/profile', icon: User, label: 'Profile' },
                 ];
             case 'DEPARTMENT_OFFICER':
                 return [
-                    { path: '/department/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-                    { path: '/department/complaints', icon: List, label: 'My Complaints' },
-                    { path: '/department/analytics', icon: BarChart2, label: 'Analytics' },
-                    { path: '/department/map', icon: MapIcon, label: 'Map View' },
+                    { path: '/department/dashboard', icon: LayoutDashboard, label: 'Home' },
+                    { path: '/department/complaints', icon: List, label: 'My Tasks' },
+                    { path: '/department/map', icon: MapIcon, label: 'Map' },
+                    { path: '/department/analytics', icon: BarChart2, label: 'Stats' },
                     { path: '/department/profile', icon: User, label: 'Profile' },
                 ];
             case 'CITIZEN':
                 return [
-                    { path: '/citizen/dashboard', icon: LayoutDashboard, label: 'Overview' },
-                    { path: '/citizen/register-complaint', icon: PlusCircle, label: 'Register Complaint' },
+                    { path: '/citizen/dashboard', icon: LayoutDashboard, label: 'Home' },
+                    { path: '/citizen/register-complaint', icon: PlusCircle, label: 'File Complaint' },
                     { path: '/citizen/complaints', icon: List, label: 'My Complaints' },
-                    { path: '/citizen/area-complaints', icon: MapPin, label: 'Community' },
+                    { path: '/citizen/area-complaints', icon: Activity, label: 'Ward Activity' },
                     { path: '/citizen/map', icon: MapIcon, label: 'City Map' },
-                    { path: '/citizen/sla', icon: Clock, label: 'SLA Status' },
-                    { path: '/citizen/officers', icon: Users, label: 'Officer Directory' },
+                    { path: '/citizen/sla', icon: Clock, label: 'Tracking' },
+                    { path: '/citizen/officers', icon: Users, label: 'Officers' },
                     { path: '/citizen/profile', icon: User, label: 'My Profile' },
                 ];
             default:
@@ -105,45 +69,47 @@ export default function Sidebar({ role }) {
     const menuItems = getMenuItems();
 
     const handleLogout = () => {
-        if (window.confirm('Are you sure you want to logout?')) {
-            localStorage.clear();
-            window.location.href = '/';
-        }
+        localStorage.clear();
+        window.location.href = '/';
     };
 
     return (
-        <aside className="bg-white border-end" style={{
+        <aside className="border-end bg-white" style={{
             position: 'fixed',
             top: '70px',
-            left: 0,
-            bottom: 0,
-            width: '250px',
-            zIndex: 1020,
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '4px 0 24px rgba(0,0,0,0.01)'
+            left: 0, bottom: 0,
+            width: '260px',
+            zIndex: 1040,
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '4px 0 10px rgba(0,0,0,0.02)'
         }}>
-            {/* Scrollable Nav Area */}
-            <div className="flex-grow-1 py-4 px-3 overflow-auto custom-scrollbar">
-                <ul className="list-unstyled mb-0 d-flex flex-column gap-3">
+            {/* Nav Stream */}
+            <div className="flex-grow-1 py-4 px-2 overflow-auto custom-sidebar-scroll">
+                <ul className="list-unstyled mb-0 d-flex flex-column gap-1">
                     {menuItems.map((item, index) => {
                         const Icon = item.icon;
+                        const isActive = location.pathname === item.path;
                         return (
                             <li key={index}>
                                 <NavLink
                                     to={item.path}
-                                    style={({ isActive }) => ({
+                                    style={{
                                         transition: 'all 0.2s ease',
-                                        fontWeight: isActive ? 600 : 500,
-                                        backgroundColor: isActive ? theme.activeBg : 'transparent',
-                                        color: isActive ? theme.activeText : '#64748B', // Slate 500
-                                        borderLeft: isActive ? `4px solid ${theme.activeBorder}` : '4px solid transparent',
-                                        paddingLeft: isActive ? '0.75rem' : '1rem' // Compensate border
-                                    })}
-                                    className="d-flex align-items-center py-3 rounded-end-3 text-decoration-none"
+                                        fontWeight: isActive ? 800 : 500,
+                                        backgroundColor: isActive ? `${PRIMARY_COLOR}10` : 'transparent',
+                                        color: isActive ? PRIMARY_COLOR : '#64748b',
+                                        padding: '0.75rem 1.25rem',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        textDecoration: 'none',
+                                        border: isActive ? `1px solid ${PRIMARY_COLOR}20` : '1px solid transparent'
+                                    }}
+                                    className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
                                 >
-                                    <Icon size={20} className="me-3" strokeWidth={2} />
-                                    <span>{item.label}</span>
+                                    <Icon size={18} className="me-3" />
+                                    <span style={{ fontSize: '0.85rem' }} className="fw-bold text-uppercase">{item.label}</span>
+                                    {isActive && <div className="ms-auto" style={{ width: '5px', height: '15px', backgroundColor: PRIMARY_COLOR, borderRadius: '10px' }}></div>}
                                 </NavLink>
                             </li>
                         );
@@ -151,17 +117,25 @@ export default function Sidebar({ role }) {
                 </ul>
             </div>
 
-            {/* Bottom Actions */}
-            <div className="p-3 border-top bg-light bg-opacity-30">
+            {/* Footer */}
+            <div className="p-4 border-top mt-auto">
                 <button
                     onClick={handleLogout}
-                    className="btn btn-white w-100 d-flex align-items-center justify-content-center py-2 text-danger hover-bg-danger-soft transition-all"
-                    style={{ fontWeight: 500, border: '1px solid #fee2e2' }}
+                    className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center py-2.5 fw-black extra-small rounded-3 transition-all border-2"
                 >
-                    <LogOut size={18} className="me-2" />
-                    Sign Out
+                    <LogOut size={16} className="me-2" />
+                    LOGOUT
                 </button>
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .sidebar-nav-item:hover { background-color: #f8fafc !important; color: ${PRIMARY_COLOR} !important; }
+                .sidebar-nav-item.active:hover { background-color: ${PRIMARY_COLOR}15 !important; }
+                .custom-sidebar-scroll::-webkit-scrollbar { width: 4px; }
+                .custom-sidebar-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+                .extra-small { font-size: 0.65rem; }
+            `}} />
         </aside>
     );
 }

@@ -69,10 +69,10 @@ export default function RegisterDepartmentOfficer() {
             <div className="container py-5">
                 <div className="row justify-content-center">
                     <div className="col-lg-8">
-                        <div className="card border-0 shadow-sm" style={{ borderRadius: '16px' }}>
+                        <div className="card border-0 shadow-sm" style={{ borderRadius: '0' }}>
                             <div className="card-body p-5">
                                 <div className="text-center mb-4">
-                                    <div className="d-inline-flex align-items-center justify-content-center mb-3 rounded-circle" style={{
+                                    <div className="d-inline-flex align-items-center justify-content-center mb-3 rounded-0" style={{
                                         width: '70px',
                                         height: '70px',
                                         background: 'linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%)'
@@ -136,8 +136,8 @@ export default function RegisterDepartmentOfficer() {
                                             >
                                                 <option value="">Select Ward</option>
                                                 {wards.map(ward => (
-                                                    <option key={ward.wardId} value={ward.wardId}>
-                                                        {ward.areaName} (Ward {ward.wardNumber})
+                                                    <option key={ward.wardId || ward.id} value={ward.wardId || ward.id}>
+                                                        {ward.areaName || ward.area_name} (Ward {ward.wardNumber || ward.number})
                                                     </option>
                                                 ))}
                                             </select>
@@ -152,8 +152,8 @@ export default function RegisterDepartmentOfficer() {
                                             >
                                                 <option value="">Select Department</option>
                                                 {departments.map(dept => (
-                                                    <option key={dept.departmentId} value={dept.departmentId}>
-                                                        {dept.name}
+                                                    <option key={dept.departmentId || dept.id} value={dept.departmentId || dept.id}>
+                                                        {dept.name || dept.departmentName}
                                                     </option>
                                                 ))}
                                             </select>

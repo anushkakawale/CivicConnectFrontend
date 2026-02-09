@@ -1,353 +1,339 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../../api/apiService';
-import { StatCard, StatusBadge, PriorityBadge } from '../../components/common';
-import CreateComplaintModal from '../../components/citizen/CreateComplaintModal';
 import {
-    Plus, FileText, Clock, CheckCircle, AlertCircle, TrendingUp,
-    ChevronRight, Activity, RefreshCw, MapPin, Bell
+    Plus, FileText, Clock, CheckCircle, Shield,
+    Activity, RefreshCw, MapPin, User, Building2,
+    TrendingUp, Bell, ArrowRight, ShieldAlert,
+    LayoutDashboard, Map as MapIcon, Info, Compass, Smartphone, ShieldCheck, Zap, ChevronRight
 } from 'lucide-react';
-import './CitizenDashboard.css';
+import DashboardHeader from '../../components/layout/DashboardHeader';
+import StatusBadge from '../../components/ui/StatusBadge';
+import { useToast } from '../../hooks/useToast';
+import ComplaintCard from '../../components/complaints/ComplaintCard';
 
+/**
+ * Premium Strategic Citizen Dashboard
+ * Unified resident experience with high-contrast tactical hub.
+ */
 const CitizenDashboard = () => {
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [dashboardData, setDashboardData] = useState(null);
     const [recentComplaints, setRecentComplaints] = useState([]);
+    const [wardComplaints, setWardComplaints] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
-    const userName = localStorage.getItem('name') || 'Citizen';
+    const [userProfile, setUserProfile] = useState(null);
+    const [userName, setUserName] = useState(localStorage.getItem('name') || 'Citizen');
+    const PRIMARY_COLOR = '#173470';
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'n/a';
+        return new Date(dateString).toLocaleDateString('en-IN', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+    };
 
     useEffect(() => {
-        fetchDashboardData();
+        fetchInitialData();
     }, []);
 
-    const fetchDashboardData = async (isRefresh = false) => {
+    const fetchInitialData = async () => {
+        setLoading(true);
         try {
-            if (isRefresh) {
-                setRefreshing(true);
-            } else {
-                setLoading(true);
+            const [profileRes, dashRes] = await Promise.allSettled([
+                apiService.profile.getProfile(),
+                apiService.citizen.getDashboard()
+            ]);
+
+            if (profileRes.status === 'fulfilled') {
+                const profile = profileRes.value.data || profileRes.value;
+                setUserProfile(profile);
+                if (profile.name) {
+                    setUserName(profile.name);
+                    localStorage.setItem('name', profile.name);
+                }
+
+                // Fetch area activity if profile is available and not in dashboard data
+                const wardId = profile.wardId || profile.ward?.id || profile.ward?.wardId;
+                if (wardId && (!dashRes.value?.data?.wardComplaints)) {
+                    apiService.citizen.getAreaComplaints({ wardId, size: 20 })
+                        .then(res => setWardComplaints(res.content || res.data || []))
+                        .catch(() => { });
+                }
             }
-            setError('');
 
-            // Try to fetch dashboard data
-            try {
-                const dashResponse = await apiService.citizen.getDashboard();
-                setDashboardData(dashResponse);
+            if (dashRes.status === 'fulfilled') {
+                const data = dashRes.value.data || dashRes.value;
+                setDashboardData(data);
 
-                // Get recent complaints from dashboard or fetch separately
-                if (dashResponse.recentComplaints) {
-                    setRecentComplaints(dashResponse.recentComplaints.slice(0, 5));
+                // Use dashboard data for recent and ward activity if provided
+                if (data.recentComplaints) {
+                    setRecentComplaints(data.recentComplaints);
                 }
-            } catch (dashErr) {
-                console.warn('Dashboard API not available, fetching complaints directly:', dashErr);
-
-                // Fallback: fetch complaints directly
-                const complaintsResponse = await apiService.citizen.getMyComplaints();
-                let complaintsData = [];
-
-                if (Array.isArray(complaintsResponse)) {
-                    complaintsData = complaintsResponse;
-                } else if (complaintsResponse?.content) {
-                    complaintsData = complaintsResponse.content;
-                } else if (complaintsResponse?.data) {
-                    complaintsData = complaintsResponse.data;
+                if (data.wardComplaints) {
+                    setWardComplaints(data.wardComplaints);
                 }
-
-                // Calculate stats manually
-                const stats = {
-                    totalComplaints: complaintsData.length,
-                    pendingComplaints: complaintsData.filter(c =>
-                        ['SUBMITTED', 'PENDING'].includes(c.status)
-                    ).length,
-                    inProgressComplaints: complaintsData.filter(c =>
-                        ['APPROVED', 'ASSIGNED', 'IN_PROGRESS'].includes(c.status)
-                    ).length,
-                    resolvedComplaints: complaintsData.filter(c =>
-                        c.status === 'RESOLVED'
-                    ).length,
-                    closedComplaints: complaintsData.filter(c =>
-                        c.status === 'CLOSED'
-                    ).length,
-                };
-
-                setDashboardData(stats);
-                setRecentComplaints(complaintsData.slice(0, 5));
+            } else {
+                // Fallback for totals
+                const res = await apiService.citizen.getMyComplaints({ size: 100 });
+                const list = res.content || res.data || [];
+                setDashboardData({
+                    totalComplaints: list.length,
+                    pendingComplaints: list.filter(c => ['SUBMITTED', 'ASSIGNED'].includes(c.status)).length,
+                    inProgressComplaints: list.filter(c => c.status === 'IN_PROGRESS').length,
+                    resolvedComplaints: list.filter(c => ['RESOLVED', 'CLOSED'].includes(c.status)).length
+                });
+                setRecentComplaints(list.slice(0, 4));
             }
 
         } catch (err) {
-            console.error('Dashboard error:', err);
-            setError('Failed to load dashboard data. Please try again.');
-            // Set default empty data
-            setDashboardData({
-                totalComplaints: 0,
-                pendingComplaints: 0,
-                inProgressComplaints: 0,
-                resolvedComplaints: 0,
-                closedComplaints: 0
-            });
-            setRecentComplaints([]);
+            console.error('Data fetch failure:', err);
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     };
 
-    const handleRefresh = () => {
-        fetchDashboardData(true);
-    };
-
-    const handleComplaintCreated = () => {
-        setShowCreateModal(false);
-        fetchDashboardData(true);
-    };
-
-    const getStatusColor = (status) => {
-        const colors = {
-            'SUBMITTED': '#667eea',
-            'PENDING': '#667eea',
-            'APPROVED': '#8b5cf6',
-            'ASSIGNED': '#f59e0b',
-            'IN_PROGRESS': '#3b82f6',
-            'RESOLVED': '#10b981',
-            'CLOSED': '#6b7280'
-        };
-        return colors[status] || '#667eea';
-    };
-
-    const getStatusLabel = (status) => {
-        const labels = {
-            'SUBMITTED': 'Submitted',
-            'PENDING': 'Pending',
-            'APPROVED': 'Approved',
-            'ASSIGNED': 'Assigned',
-            'IN_PROGRESS': 'In Progress',
-            'RESOLVED': 'Resolved',
-            'CLOSED': 'Closed'
-        };
-        return labels[status] || status;
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffDays === 0) return 'Today';
-        if (diffDays === 1) return 'Yesterday';
-        if (diffDays < 7) return `${diffDays} days ago`;
-        return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-    };
-
-    if (loading) {
+    if (loading && !dashboardData) {
         return (
-            <div className="citizen-dashboard-loading">
-                <div className="spinner-large"></div>
-                <p>Loading your dashboard...</p>
+            <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8FAFC' }}>
+                <RefreshCw className="animate-spin text-primary mb-4" size={56} style={{ color: PRIMARY_COLOR }} />
+                <p className="fw-black text-muted extra-small uppercase">Syncing Mission Intelligence...</p>
             </div>
         );
     }
 
-    const stats = dashboardData || {
-        totalComplaints: 0,
-        pendingComplaints: 0,
-        inProgressComplaints: 0,
-        resolvedComplaints: 0,
-        closedComplaints: 0
-    };
-
     return (
-        <div className="citizen-dashboard">
-            {/* Header */}
-            <div className="dashboard-header">
-                <div className="header-content">
-                    <div>
-                        <h1>Welcome back, {userName}! 👋</h1>
-                        <p>Here's what's happening with your complaints</p>
-                    </div>
-                    <div className="header-actions">
-                        <button
-                            onClick={handleRefresh}
-                            className="btn-refresh"
-                            disabled={refreshing}
-                        >
-                            <RefreshCw className={refreshing ? 'spinning' : ''} size={18} />
-                            {refreshing ? 'Refreshing...' : 'Refresh'}
-                        </button>
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="btn-create"
-                        >
-                            <Plus size={18} />
-                            New Complaint
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-                <div className="error-banner">
-                    <AlertCircle size={20} />
-                    <span>{error}</span>
-                    <button onClick={handleRefresh}>Retry</button>
-                </div>
-            )}
-
-            {/* Stats Cards */}
-            <div className="stats-grid">
-                <StatCard
-                    icon="fas fa-clipboard-list"
-                    value={stats.totalComplaints || 0}
-                    label="Total Complaints"
-                    variant="primary"
-                    onClick={() => navigate('/citizen/complaints')}
-                />
-                <StatCard
-                    icon="fas fa-clock"
-                    value={stats.pendingComplaints || 0}
-                    label="Pending"
-                    variant="warning"
-                />
-                <StatCard
-                    icon="fas fa-spinner"
-                    value={stats.inProgressComplaints || 0}
-                    label="In Progress"
-                    variant="info"
-                />
-                <StatCard
-                    icon="fas fa-check-circle"
-                    value={stats.resolvedComplaints || 0}
-                    label="Resolved"
-                    variant="success"
-                />
-            </div>
-
-            {/* Recent Complaints */}
-            <div className="recent-section">
-                <div className="section-header">
-                    <div>
-                        <h2>Recent Complaints</h2>
-                        <p>Your latest complaint submissions</p>
-                    </div>
+        <div className="citizen-dashboard min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
+            <DashboardHeader
+                portalName="CITIZEN COMMAND"
+                userName={userName}
+                wardName={userProfile?.ward?.areaName || userProfile?.wardName || 'PMC CENTRAL HUB'}
+                subtitle="OFFICIAL RESIDENT PORTAL | MUNICIPAL ACTION CENTER"
+                icon={ShieldIcon}
+                showProfileInitials={true}
+                actions={
                     <button
-                        onClick={() => navigate('/citizen/complaints')}
-                        className="btn-view-all"
+                        onClick={() => navigate('/citizen/register-complaint')}
+                        className="btn btn-primary shadow-premium rounded-circle d-flex align-items-center justify-content-center hover-up transition-all"
+                        style={{ width: '60px', height: '60px', backgroundColor: PRIMARY_COLOR, border: 'none' }}
+                        title="File New Report"
                     >
-                        View All
-                        <ChevronRight size={16} />
+                        <Plus size={32} strokeWidth={3} />
                     </button>
-                </div>
+                }
+            />
 
-                {recentComplaints.length === 0 ? (
-                    <div className="empty-state">
-                        <FileText size={48} />
-                        <h3>No Complaints Yet</h3>
-                        <p>You haven't registered any complaints yet.</p>
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="btn-create-first"
-                        >
-                            <Plus size={18} />
-                            Create Your First Complaint
-                        </button>
-                    </div>
-                ) : (
-                    <div className="complaints-list">
-                        {recentComplaints.map((complaint) => (
-                            <div
-                                key={complaint.complaintId || complaint.id}
-                                className="complaint-card"
-                                onClick={() => navigate(`/citizen/complaints/${complaint.complaintId || complaint.id}`)}
-                            >
-                                <div className="complaint-header">
-                                    <div className="complaint-id">
-                                        #{complaint.complaintId || complaint.id}
+            <div className="container-fluid px-3 px-lg-5 animate-fadeIn" style={{ marginTop: '-40px' }}>
+                {/* Tactical KPI Matrix */}
+                <div className="row g-4 mb-5">
+                    {[
+                        { label: 'REPORTED', val: dashboardData?.totalComplaints || 0, icon: FileText, color: PRIMARY_COLOR, bg: '#EBF2FF' },
+                        { label: 'PENDING', val: (dashboardData?.pendingComplaints || 0) + (dashboardData?.submittedComplaints || 0), icon: Clock, color: '#6366F1', bg: '#F5F3FF' },
+                        { label: 'ACTIVE', val: (dashboardData?.inProgressComplaints || 0) + (dashboardData?.assignedComplaints || 0), icon: Activity, color: '#F59E0B', bg: '#FFFCF5' },
+                        { label: 'EXECUTED', val: (dashboardData?.resolvedComplaints || 0) + (dashboardData?.closedComplaints || 0), icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' }
+                    ].map((s, idx) => (
+                        <div key={idx} className="col-6 col-sm-6 col-lg-3">
+                            <div className="card b-none shadow-premium p-4 p-lg-5 h-100 bg-white rounded-4 transition-all hover-up border-top border-5" style={{ borderTopColor: s.color }}>
+                                <div className="d-flex align-items-center justify-content-between mb-4">
+                                    <div className="rounded-4 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '54px', height: '54px', backgroundColor: s.bg, color: s.color }}>
+                                        <s.icon size={26} strokeWidth={2.5} />
                                     </div>
-                                    <span
-                                        className="complaint-status"
-                                        style={{
-                                            backgroundColor: `${getStatusColor(complaint.status)}15`,
-                                            color: getStatusColor(complaint.status)
-                                        }}
-                                    >
-                                        {getStatusLabel(complaint.status)}
-                                    </span>
+                                    <Zap size={18} className="text-muted opacity-10" />
                                 </div>
-
-                                <h4 className="complaint-title">{complaint.title}</h4>
-
-                                <p className="complaint-description">
-                                    {complaint.description?.substring(0, 100)}
-                                    {complaint.description?.length > 100 ? '...' : ''}
-                                </p>
-
-                                <div className="complaint-meta">
-                                    <div className="meta-item">
-                                        <MapPin size={14} />
-                                        <span>{complaint.location || complaint.wardName || 'N/A'}</span>
-                                    </div>
-                                    <div className="meta-item">
-                                        <Clock size={14} />
-                                        <span>{formatDate(complaint.createdAt)}</span>
-                                    </div>
-                                </div>
-
-                                <ChevronRight className="complaint-arrow" size={20} />
+                                <h1 className="fw-black mb-1 text-dark display-5" style={{ letterSpacing: '-2px' }}>{s.val}</h1>
+                                <p className="extra-small fw-black text-muted mb-0 opacity-40 uppercase tracking-widest">{s.label}</p>
                             </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                        </div>
+                    ))}
+                </div>
 
-            {/* Quick Actions */}
-            <div className="quick-actions">
-                <h2>Quick Actions</h2>
-                <div className="actions-grid">
-                    <button
-                        onClick={() => navigate('/citizen/complaints')}
-                        className="action-card"
-                    >
-                        <FileText size={24} />
-                        <span>My Complaints</span>
-                    </button>
-                    <button
-                        onClick={() => navigate('/citizen/notifications')}
-                        className="action-card"
-                    >
-                        <Bell size={24} />
-                        <span>Notifications</span>
-                    </button>
-                    <button
-                        onClick={() => navigate('/citizen/map')}
-                        className="action-card"
-                    >
-                        <MapPin size={24} />
-                        <span>Area Complaints</span>
-                    </button>
-                    <button
-                        onClick={() => navigate('/citizen/profile')}
-                        className="action-card"
-                    >
-                        <Activity size={24} />
-                        <span>My Profile</span>
-                    </button>
+                <div className="row g-5">
+                    {/* Primary Feed Quadrant */}
+                    <div className="col-xl-8">
+                        {/* Section 1: My Reports */}
+                        <div className="d-flex align-items-center justify-content-between mb-5 bg-white p-4 rounded-4 shadow-sm border-start border-5" style={{ borderColor: PRIMARY_COLOR }}>
+                            <div>
+                                <h5 className="fw-black text-dark mb-1 uppercase tracking-tight">My Personal Reports</h5>
+                                <p className="extra-small text-muted fw-bold uppercase mb-0 opacity-50">Pulse of your reported concerns</p>
+                            </div>
+                            <button onClick={() => navigate('/citizen/complaints')} className="btn btn-dark rounded-pill px-4 py-2 extra-small fw-black transition-all hover-up-tiny">ACCESS FULL ARCHIVE</button>
+                        </div>
+
+                        {(!Array.isArray(recentComplaints) || recentComplaints.length === 0) ? (
+                            <div className="card b-none shadow-premium p-5 text-center bg-white rounded-4 mb-5 border-dashed border-2">
+                                <div className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '100px', height: '100px' }}>
+                                    <ShieldAlert size={48} className="text-muted opacity-20" />
+                                </div>
+                                <h4 className="fw-black text-dark mb-2">Zero Active Incursions</h4>
+                                <p className="extra-small text-muted fw-bold uppercase mb-4 px-lg-5">
+                                    You have not registered any tactical reports. <br />
+                                    Reporting helps maintain city integrity.
+                                </p>
+                                <button onClick={() => navigate('/citizen/register-complaint')} className="btn btn-primary px-5 py-3 rounded-pill fw-black extra-small shadow-premium border-0" style={{ backgroundColor: PRIMARY_COLOR }}>
+                                    INITIALIZE REPORT
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="row g-4 mb-5">
+                                {Array.isArray(recentComplaints) && recentComplaints.map((c) => (
+                                    <div key={c.id || c.complaintId} className="col-md-6">
+                                        <div className="card b-none shadow-premium rounded-4 overflow-hidden h-100 transition-all hover-up border-start border-5" style={{ borderLeftColor: PRIMARY_COLOR }}>
+                                            <div className="card-body p-4">
+                                                <div className="d-flex justify-content-between mb-3">
+                                                    <span className="extra-small fw-black text-muted opacity-40">#{c.complaintId || c.id}</span>
+                                                    <StatusBadge status={c.status} size="sm" />
+                                                </div>
+                                                <h6 className="fw-black text-dark mb-3 text-uppercase">{c.title}</h6>
+                                                <div className="d-flex align-items-center gap-3 mb-4">
+                                                    <div className="p-2 rounded bg-light"><Building2 size={14} className="text-muted" /></div>
+                                                    <span className="extra-small fw-bold text-muted uppercase">{(c.departmentName || 'GENERAL').replace(/_/g, ' ')}</span>
+                                                </div>
+                                                <div className="border-top pt-3 mt-auto d-flex justify-content-between align-items-center">
+                                                    <span className="extra-small text-muted fw-bold">{formatDate(c.createdAt)}</span>
+                                                    <button onClick={() => navigate(`/citizen/complaints/${c.id || c.complaintId}`)} className="btn btn-outline-primary btn-sm border-2 rounded-circle hover-up" style={{ color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR }}>
+                                                        <ArrowRight size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Section 2: Entire Ward Complaints Archive */}
+                        <div className="d-flex align-items-center justify-content-between mb-5 bg-dark p-4 rounded-4 shadow-lg">
+                            <div>
+                                <h5 className="fw-black text-white mb-1 uppercase tracking-tight">My Area Complaints</h5>
+                                <p className="extra-small text-white uppercase mb-0 opacity-50">Active city management within your sector</p>
+                            </div>
+                            <span className="badge bg-primary px-3 py-2 rounded-pill extra-small fw-black" style={{ backgroundColor: PRIMARY_COLOR }}>LIVE FEED</span>
+                        </div>
+
+                        <div className="card b-none shadow-premium bg-white overflow-hidden rounded-4 mb-5">
+                            <div className="table-responsive">
+                                <table className="table table-hover align-middle mb-0">
+                                    <thead className="bg-light">
+                                        <tr>
+                                            <th className="px-5 py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Descriptor</th>
+                                            <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Division</th>
+                                            <th className="py-4 border-0 text-center extra-small fw-black text-muted uppercase tracking-widest">Intelligence</th>
+                                            <th className="px-5 py-4 border-0 text-end extra-small fw-black text-muted uppercase">Visual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {wardComplaints.length > 0 ? wardComplaints.map((item) => (
+                                            <tr key={item.id || item.complaintId} className="cursor-pointer transition-all hover-light" onClick={() => navigate(`/citizen/complaints/${item.id || item.complaintId}`)}>
+                                                <td className="px-5 py-4">
+                                                    <div className="d-flex align-items-center gap-3">
+                                                        <div className="p-2 rounded bg-light border"><FileText size={16} className="text-muted" /></div>
+                                                        <div>
+                                                            <div className="fw-black text-dark small uppercase">{item.title}</div>
+                                                            <div className="extra-small text-muted fw-bold opacity-40 uppercase mt-1">Ref: #{item.complaintId || item.id}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span className="extra-small fw-black text-muted uppercase">{(item.departmentName || 'General').replace(/_/g, ' ')}</span>
+                                                </td>
+                                                <td className="text-center">
+                                                    <StatusBadge status={item.status} size="sm" />
+                                                </td>
+                                                <td className="px-5 text-end">
+                                                    <div className="rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm border hover-up transition-all" style={{ width: '38px', height: '38px', backgroundColor: '#F8FAFC', color: PRIMARY_COLOR }}>
+                                                        <ArrowRight size={16} />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-5">
+                                                    <div className="p-4 rounded-circle bg-light d-inline-block mb-3">
+                                                        <MapIcon size={32} className="text-muted opacity-20" />
+                                                    </div>
+                                                    <p className="extra-small fw-black text-muted uppercase opacity-40">Scanning for sector activity...</p>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Navigation Control Panel */}
+                    <div className="col-xl-4">
+                        <div className="sticky-top" style={{ top: '110px' }}>
+                            <div className="card b-none shadow-premium bg-white p-5 mb-5 rounded-4 border-top border-5" style={{ borderTopColor: '#10B981' }}>
+                                <h6 className="fw-black text-dark mb-4 uppercase tracking-[0.2em] opacity-40 border-bottom pb-4">Mission Links</h6>
+                                <div className="d-grid gap-3">
+                                    {[
+                                        { label: 'Strategic Officers', icon: User, path: '/citizen/officers', color: PRIMARY_COLOR, bg: '#EBF2FF' },
+                                        { label: 'Sector Tactical Map', icon: MapIcon, path: '/citizen/map', color: '#6366F1', bg: '#F5F5FF' },
+                                        { label: 'SLA Tracking Ledger', icon: Clock, path: '/citizen/sla', color: '#F59E0B', bg: '#FFF9EB' },
+                                        { label: 'Management Profile', icon: ShieldCheck, path: '/citizen/profile', color: '#1E293B', bg: '#F8FAFC' }
+                                    ].map((link, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => navigate(link.path)}
+                                            className="btn btn-light bg-white p-4 d-flex align-items-center gap-4 border shadow-sm transition-all rounded-4 hover-up-small text-start border-start border-5"
+                                            style={{ borderLeftColor: link.color }}
+                                        >
+                                            <div className="rounded-4 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '50px', height: '50px', backgroundColor: link.bg, color: link.color }}>
+                                                <link.icon size={22} strokeWidth={2.5} />
+                                            </div>
+                                            <div className="flex-grow-1">
+                                                <span className="fw-black text-dark extra-small uppercase tracking-widest d-block mb-1">{link.label}</span>
+                                                <span className="extra-small fw-bold text-muted uppercase opacity-40">View Protocol</span>
+                                            </div>
+                                            <ChevronRight size={18} className="opacity-20" />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Operational Integrity */}
+                            <div className="card b-none shadow-premium p-5 rounded-4 position-relative overflow-hidden bg-dark">
+                                <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
+                                    <ShieldCheck size={160} strokeWidth={1} className="text-white" />
+                                </div>
+                                <div className="d-flex align-items-center gap-3 mb-4">
+                                    <div className="bg-success rounded-circle animate-pulse" style={{ width: '12px', height: '12px', boxShadow: '0 0 20px #10B981' }}></div>
+                                    <h6 className="fw-black text-white extra-small uppercase tracking-widest mb-0 opacity-80">INTEGRITY LOCK</h6>
+                                </div>
+                                <p className="extra-small text-white opacity-60 uppercase tracking-wider mb-0 lh-relaxed fw-black">
+                                    Operational data is encrypted under municipal protocol. 24/7 Citizen-Command synchronization active.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Create Complaint Modal */}
-            {showCreateModal && (
-                <CreateComplaintModal
-                    onClose={() => setShowCreateModal(false)}
-                    onSuccess={handleComplaintCreated}
-                />
-            )}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .fw-black { font-weight: 900; }
+                .extra-small { font-size: 0.65rem; }
+                .tracking-widest { letter-spacing: 0.25em; }
+                .animate-pulse { animation: pulse 2s infinite; }
+                @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                .shadow-premium { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 5px 15px -3px rgba(0, 0, 0, 0.02); }
+                .hover-up:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1) !important; }
+                .hover-up-small:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
+                .transition-all { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+                .b-none { border: none !important; }
+                .border-dashed { border: 2px dashed #E2E8F0 !important; }
+                .hover-light:hover { background-color: #F8FAFC !important; }
+            `}} />
         </div>
     );
 };
+
+const ShieldIcon = (props) => (
+    <div {...props} className="d-flex align-items-center justify-content-center">
+        <ShieldCheck {...props} />
+    </div>
+);
 
 export default CitizenDashboard;

@@ -24,8 +24,8 @@ export const BarChartComponent = ({ data, xKey, yKey, title, height = 300, color
     return (
         <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
             {title && <h3 className="text-lg font-semibold text-slate-900 mb-4">{title}</h3>}
-            <div style={{ width: '100%', height }}>
-                <ResponsiveContainer>
+            <div style={{ width: '100%', height, minHeight: `${height}px`, position: 'relative' }}>
+                <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={data}
                         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -57,8 +57,8 @@ export const PieChartComponent = ({ data, nameKey, valueKey, title, height = 300
     return (
         <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
             {title && <h3 className="text-lg font-semibold text-slate-900 mb-4">{title}</h3>}
-            <div style={{ width: '100%', height }}>
-                <ResponsiveContainer>
+            <div style={{ width: '100%', height, minHeight: `${height}px`, position: 'relative' }}>
+                <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
                             data={data}

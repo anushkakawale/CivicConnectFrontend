@@ -15,7 +15,8 @@ export default function Home() {
 
     try {
       // Use unified authentication endpoint
-      const response = await api.post("/api/auth/login", formData);
+      // FIXED: Path was /api/api/auth/login due to baseURL already having /api
+      const response = await api.post("/auth/login", formData);
 
       if (response && response.data) {
         // Current backend returns: { token, role }
@@ -24,7 +25,7 @@ export default function Home() {
         // Store authentication data
         localStorage.setItem("token", token);
         localStorage.setItem("email", formData.email);
-        localStorage.setItem("userRole", role);
+        localStorage.setItem("role", role); // FIXED: Match axios.js expected key
 
         // Determine redirect based on role
         let redirectPath = "/";
@@ -86,7 +87,7 @@ export default function Home() {
             height: '80px',
             margin: '0 auto 1rem',
             backgroundColor: 'var(--gov-primary)',
-            borderRadius: '4px',
+            borderRadius: '0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'

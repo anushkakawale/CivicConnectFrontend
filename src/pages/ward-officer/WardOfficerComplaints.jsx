@@ -158,7 +158,7 @@ export default function WardOfficerComplaints() {
             {showModal && (
                 <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
                     <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '16px' }}>
+                        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '0' }}>
                             <div className="modal-header border-0">
                                 <h5 className="modal-title fw-bold">
                                     {action === 'approve' ? 'Approve' : 'Reject'} Complaint

@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  FileText,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  TrendingUp,
-  Users,
-  Building2,
-  Calendar,
-  Eye,
-  RefreshCw,
-  Filter,
-  Search,
-  PlayCircle,
-  CheckSquare,
-  Image as ImageIcon
+  LayoutDashboard, FileText, CheckCircle, Clock, AlertCircle,
+  TrendingUp, Building2, Calendar, Eye, RefreshCw,
+  Search, PlayCircle, CheckSquare, Image as ImageIcon,
+  Timer, Target, AlertTriangle, Mail, Phone, MapPin, ChevronRight,
+  User, Shield, Zap, ArrowRight, ShieldCheck, History as HistoryIcon, List, Smartphone
 } from 'lucide-react';
 import apiService from '../api/apiService';
-import './ProfessionalDepartmentOfficerDashboard.css';
+import { StatusBadge } from '../components/common';
+import DashboardHeader from '../components/layout/DashboardHeader';
 
+/**
+ * Premium Strategic Department Officer Dashboard
+ * Specialized unit focus for field force operations.
+ */
 const ProfessionalDepartmentOfficerDashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -28,427 +22,266 @@ const ProfessionalDepartmentOfficerDashboard = () => {
   const [complaints, setComplaints] = useState([]);
   const [filterStatus, setFilterStatus] = useState('ASSIGNED');
   const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [officerInfo, setOfficerInfo] = useState(null);
+  const [colleagues, setColleagues] = useState([]);
+  const PRIMARY_COLOR = '#1254AF';
 
   useEffect(() => {
-    loadDashboard();
-    loadComplaints();
-  }, [page, filterStatus]);
+    loadData();
+  }, [filterStatus]);
 
-  const loadDashboard = async () => {
+  const loadData = async () => {
     try {
-      console.log('🔄 Loading department officer dashboard...');
-      // Use generic dashboard or analytics dashboard
-      const dashboardRes = await apiService.analytics.department.getDashboard();
-      const data = dashboardRes.data || dashboardRes;
+      if (!dashboardData) setLoading(true);
 
-      console.log('✅ Dashboard data:', data);
+      const [statsRes, taskRes, membersRes] = await Promise.all([
+        apiService.departmentOfficer.getDashboardStats(),
+        filterStatus === 'ASSIGNED' ? apiService.departmentOfficer.getPendingWork() : apiService.departmentOfficer.getAssignedComplaints({ status: filterStatus === 'ALL' ? null : filterStatus }),
+        apiService.departmentOfficer.getColleagues()
+      ]);
 
-      // Transform new analytics data to match component expectation
-      // Expected: { totalAssigned, assigned, inProgress, resolved }
-      // Incoming: { statistics: { totalAssigned... }, sla: {...} }
+      const sData = statsRes.data || statsRes;
+      setDashboardData(sData.statistics || sData);
+      setOfficerInfo(sData);
 
-      if (data.statistics) {
-        setDashboardData({
-          totalAssigned: data.statistics.totalAssigned,
-          assigned: data.statistics.assigned, // pending 
-          inProgress: data.statistics.inProgress,
-          resolved: data.statistics.resolved,
-          sla: data.sla
-        });
-      } else {
-        setDashboardData(data); // Fallback if format is different
-      }
+      let tData = taskRes.data?.complaints || taskRes.complaints || taskRes.data || taskRes || [];
+      if (!Array.isArray(tData)) tData = tData.content || [];
+      setComplaints(tData);
+
+      setColleagues(Array.isArray(membersRes) ? membersRes : (membersRes.data || []));
 
     } catch (err) {
-      console.error('❌ Failed to load dashboard:', err);
-    }
-  };
-
-  const loadComplaints = async () => {
-    try {
-      setLoading(true);
-      console.log('🔄 Loading complaints...');
-
-      // For "Assigned" tab (default), use getPendingWork for prioritized list
-      if (filterStatus === 'ASSIGNED') {
-        const response = await apiService.analytics.department.getPendingWork();
-        // This returns { complaints: [...] } usually
-        const list = response.data?.complaints || response.complaints || response.data || [];
-        setComplaints(list);
-        setTotalPages(1);
-      } else {
-        // Fallback / other statuses
-        const response = await apiService.departmentOfficer.getAssignedComplaints();
-        const list = response.data || response || [];
-        setComplaints(list);
-        setTotalPages(1);
-      }
-    } catch (err) {
-      console.error('❌ Failed to load complaints:', err);
-      setComplaints([]);
+      console.error('Field sync failed:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleStartWork = async (complaintId) => {
-    if (!window.confirm('Start working on this complaint?')) return;
-
+    if (!window.confirm('Initiate rectification protocol for this task?')) return;
     try {
-      await apiService.departmentOfficer.updateStatus(complaintId, 'IN_PROGRESS', 'Started working on the complaint');
-      alert('✅ Status updated to In Progress!');
-      loadDashboard();
-      loadComplaints();
-    } catch (err) {
-      alert('Failed to update status: ' + (err.response?.data?.message || err.message));
-    }
+      await apiService.departmentOfficer.startWork(complaintId);
+      loadData();
+    } catch (err) { console.error('Protocol error'); }
   };
 
-  const handleResolve = (complaintId) => {
-    // Navigate to details page where Resolve action is available
-    navigate(`/department/complaints/${complaintId}`);
-  };
-
-  const getStatusBadge = (status) => {
-    const badges = {
-      'ASSIGNED': { class: 'status-assigned', icon: Users, text: 'Assigned to You' },
-      'IN_PROGRESS': { class: 'status-in-progress', icon: RefreshCw, text: 'In Progress' },
-      'RESOLVED': { class: 'status-resolved', icon: CheckCircle, text: 'Resolved' },
-      'CLOSED': { class: 'status-closed', icon: CheckSquare, text: 'Closed' }
-    };
-    return badges[status] || badges['ASSIGNED'];
-  };
-
-  const getPriorityBadge = (priority) => {
-    const badges = {
-      'LOW': 'priority-low',
-      'MEDIUM': 'priority-medium',
-      'HIGH': 'priority-high',
-      'CRITICAL': 'priority-critical'
-    };
-    return badges[priority] || 'priority-medium';
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const getDaysAgo = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    return `${diffDays} days ago`;
-  };
-
-  const filterComplaints = () => {
-    let filtered = complaints;
-
-    if (filterStatus !== 'ALL') {
-      filtered = filtered.filter(c => c.status === filterStatus);
-    }
-
+  const filteredTasks = complaints.filter(c => {
     if (searchTerm) {
-      filtered = filtered.filter(c =>
-        c.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.complaintId?.toString().includes(searchTerm)
-      );
+      const term = searchTerm.toLowerCase();
+      return c.title?.toLowerCase().includes(term) || c.complaintId?.toString().includes(term);
     }
+    return true;
+  });
 
-    return filtered;
-  };
-
-  const filteredComplaints = filterComplaints();
-
-  // Default dashboard data if not loaded
-  const stats = dashboardData || {
-    totalAssigned: complaints.length,
-    assigned: complaints.filter(c => c.status === 'ASSIGNED').length,
-    inProgress: complaints.filter(c => c.status === 'IN_PROGRESS').length,
-    resolved: complaints.filter(c => c.status === 'RESOLVED' || c.status === 'CLOSED').length
-  };
+  if (loading && !dashboardData) {
+    return (
+      <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F0F2F5' }}>
+        <RefreshCw className="animate-spin text-primary mb-4" size={56} style={{ color: PRIMARY_COLOR }} />
+        <p className="fw-black text-muted text-uppercase tracking-widest small animate-pulse">Syncing Unit Hub...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="dept-officer-dashboard">
-      {/* Header */}
-      <div className="dashboard-header">
-        <div className="header-content">
-          <div className="header-title">
-            <LayoutDashboard className="w-8 h-8" />
-            <div>
-              <h1>Department Officer Dashboard</h1>
-              <p>Manage and resolve assigned complaints</p>
-            </div>
-          </div>
+    <div className="department-dashboard-strategic min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
+      {/* Standard Strategic Header */}
+      <DashboardHeader
+        portalName="FIELD OPERATIONS HUB"
+        userName={localStorage.getItem('name') || 'Officer'}
+        wardName={officerInfo?.departmentName || 'PMC DEPARTMENT'}
+        subtitle="FIELD FORCE UNIT | TACTICAL RECTIFICATION COMMAND"
+        icon={Target}
+        showProfileInitials={true}
+        actions={
           <button
-            onClick={() => { loadDashboard(); loadComplaints(); }}
-            className="btn-refresh"
+            onClick={() => loadData()}
+            className="btn btn-primary circ-white p-0 shadow-premium"
+            style={{ width: '60px', height: '60px', border: 'none' }}
           >
-            <RefreshCw className="w-5 h-5" />
-            Refresh
+            <RefreshCw size={28} className={loading ? 'animate-spin' : ''} />
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Statistics Cards */}
-      <div className="statistics-grid">
-        <div className="stat-card stat-total">
-          <div className="stat-icon">
-            <FileText className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalAssigned || 0}</div>
-            <div className="stat-label">Total Assigned</div>
-          </div>
-          <div className="stat-trend">
-            <TrendingUp className="w-4 h-4" />
-            <span>All time</span>
-          </div>
-        </div>
+      <div className="container-fluid px-5 animate-fadeIn">
 
-        <div className="stat-card stat-assigned">
-          <div className="stat-icon">
-            <Users className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.assigned || 0}</div>
-            <div className="stat-label">Pending Work</div>
-          </div>
-          <div className="stat-action">
-            <button
-              onClick={() => setFilterStatus('ASSIGNED')}
-              className="btn-stat-action"
-            >
-              Start Working
-            </button>
-          </div>
-        </div>
-
-        <div className="stat-card stat-progress">
-          <div className="stat-icon">
-            <RefreshCw className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.inProgress || 0}</div>
-            <div className="stat-label">In Progress</div>
-          </div>
-          <div className="stat-action">
-            <button
-              onClick={() => setFilterStatus('IN_PROGRESS')}
-              className="btn-stat-action"
-            >
-              View All
-            </button>
-          </div>
-        </div>
-
-        <div className="stat-card stat-resolved">
-          <div className="stat-icon">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.resolved || 0}</div>
-            <div className="stat-label">Resolved</div>
-          </div>
-          <div className="stat-trend">
-            <TrendingUp className="w-4 h-4" />
-            <span>Success rate</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="filters-section">
-        <div className="filters-header">
-          <Filter className="w-5 h-5" />
-          <span>Filter & Search</span>
-        </div>
-
-        <div className="filter-controls">
-          <div className="filter-group">
-            <label>Status</label>
-            <div className="filter-buttons">
-              <button
-                onClick={() => setFilterStatus('ALL')}
-                className={`filter-btn ${filterStatus === 'ALL' ? 'active' : ''}`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilterStatus('ASSIGNED')}
-                className={`filter-btn ${filterStatus === 'ASSIGNED' ? 'active' : ''}`}
-              >
-                Assigned
-              </button>
-              <button
-                onClick={() => setFilterStatus('IN_PROGRESS')}
-                className={`filter-btn ${filterStatus === 'IN_PROGRESS' ? 'active' : ''}`}
-              >
-                In Progress
-              </button>
-              <button
-                onClick={() => setFilterStatus('RESOLVED')}
-                className={`filter-btn ${filterStatus === 'RESOLVED' ? 'active' : ''}`}
-              >
-                Resolved
-              </button>
+        {/* Tactical KPI Metrics */}
+        <div className="row g-4 mb-5">
+          {[
+            { label: 'Unit Inventory', val: dashboardData?.totalAssigned || 0, icon: FileText, color: PRIMARY_COLOR, bg: '#EBF2FF' },
+            { label: 'Awaiting Action', val: dashboardData?.assigned || 0, icon: AlertTriangle, color: '#EF4444', bg: '#FEF2F2' },
+            { label: 'Rectification Active', val: dashboardData?.inProgress || 0, icon: RefreshCw, color: '#6366F1', bg: '#F5F5FF' },
+            { label: 'Success Protocols', val: dashboardData?.resolved || 0, icon: CheckCheck, color: '#10B981', bg: '#ECFDF5' }
+          ].map((s, idx) => (
+            <div key={idx} className="col-12 col-sm-6 col-lg-3">
+              <div className="card border-0 shadow-lg p-4 h-100 bg-white gov-rounded hover-up border-bottom border-4" style={{ borderColor: s.color }}>
+                <div className="d-flex align-items-center justify-content-between mb-4">
+                  <div className="circ-white shadow-sm" style={{ width: '56px', height: '56px', backgroundColor: s.bg, color: s.color }}>
+                    <s.icon size={26} />
+                  </div>
+                  <Zap size={16} className="text-muted opacity-20" />
+                </div>
+                <h2 className="fw-black mb-1 text-dark display-5" style={{ letterSpacing: '-2px' }}>{s.val}</h2>
+                <p className="extra-small fw-black text-muted text-uppercase tracking-widest mb-0 opacity-60">{s.label}</p>
+              </div>
             </div>
-          </div>
-
-          <div className="search-group">
-            <Search className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search by ID, title, or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
+          ))}
         </div>
-      </div>
 
-      {/* Complaints List */}
-      {loading ? (
-        <div className="loading-state">
-          <div className="spinner-large"></div>
-          <p>Loading complaints...</p>
-        </div>
-      ) : filteredComplaints.length === 0 ? (
-        <div className="empty-state">
-          <FileText className="w-16 h-16" />
-          <h3>No Complaints Found</h3>
-          <p>
-            {filterStatus === 'ALL' && !searchTerm
-              ? "No complaints assigned to you yet"
-              : "No complaints match your filters"}
-          </p>
-        </div>
-      ) : (
-        <div className="complaints-grid">
-          {filteredComplaints.map((complaint) => {
-            const statusInfo = getStatusBadge(complaint.status);
-            const StatusIcon = statusInfo.icon;
-            const isAssigned = complaint.status === 'ASSIGNED';
-            const isInProgress = complaint.status === 'IN_PROGRESS';
-
-            return (
-              <div key={complaint.complaintId} className="complaint-card">
-                {/* Card Header */}
-                <div className="card-header">
-                  <div className="complaint-id">
-                    <span className="id-label">CMP-{complaint.complaintId}</span>
-                    <span className={`priority-badge ${getPriorityBadge(complaint.priority)}`}>
-                      {complaint.priority || 'MEDIUM'}
-                    </span>
+        <div className="row g-5">
+          {/* Main Registry feed */}
+          <div className="col-lg-8">
+            <div className="card border-0 shadow-lg bg-white overflow-hidden mb-5 gov-rounded elevation-2">
+              <div className="card-header bg-white border-bottom p-5 d-flex flex-column flex-md-row justify-content-between align-items-center gap-4">
+                <div className="d-flex align-items-center gap-3">
+                  <div className="circ-white border" style={{ width: '50px', height: '50px' }}>
+                    <HistoryIcon size={20} className="text-primary" />
                   </div>
-                  <div className={`status-badge ${statusInfo.class}`}>
-                    <StatusIcon className="w-4 h-4" />
-                    <span>{statusInfo.text}</span>
+                  <div>
+                    <h5 className="fw-black text-dark text-uppercase tracking-tight mb-0">Operational Ledger</h5>
+                    <p className="extra-small fw-bold text-muted mb-0 uppercase tracking-widest opacity-60">ACTIVE UNIT QUEUE MONITOR</p>
                   </div>
                 </div>
-
-                {/* Card Body */}
-                <div className="card-body">
-                  <h3 className="complaint-title">{complaint.title}</h3>
-                  <p className="complaint-description">
-                    {complaint.description?.length > 120
-                      ? complaint.description.substring(0, 120) + '...'
-                      : complaint.description}
-                  </p>
-
-                  <div className="complaint-meta">
-                    <div className="meta-item">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatDate(complaint.createdAt)}</span>
-                      <span className="meta-secondary">({getDaysAgo(complaint.createdAt)})</span>
-                    </div>
-                    <div className="meta-item">
-                      <Building2 className="w-4 h-4" />
-                      <span>{complaint.ward?.wardName || 'N/A'}</span>
-                    </div>
-                    <div className="meta-item">
-                      <Users className="w-4 h-4" />
-                      <span>{complaint.citizenName || 'Anonymous'}</span>
-                    </div>
-                    {complaint.imageCount > 0 && (
-                      <div className="meta-item">
-                        <ImageIcon className="w-4 h-4" />
-                        <span>{complaint.imageCount} image(s)</span>
-                      </div>
-                    )}
+                <div className="d-flex gap-3">
+                  <div className="position-relative">
+                    <Search className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40" size={16} />
+                    <input
+                      type="text"
+                      className="form-control gov-rounded border ps-5 py-3 extra-small fw-black tracking-widest text-uppercase"
+                      placeholder="PROTO SEARCH..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{ width: '220px' }}
+                    />
                   </div>
-                </div>
-
-                {/* Card Footer */}
-                <div className="card-footer">
-                  <button
-                    onClick={() => navigate(`/department-officer/complaints/${complaint.complaintId}`)}
-                    className="btn-view"
-                  >
-                    <Eye className="w-4 h-4" />
-                    View Details
-                  </button>
-
-                  {isAssigned && (
-                    <button
-                      onClick={() => handleStartWork(complaint.complaintId)}
-                      className="btn-start"
-                    >
-                      <PlayCircle className="w-4 h-4" />
-                      Start Work
-                    </button>
-                  )}
-
-                  {isInProgress && (
-                    <button
-                      onClick={() => handleResolve(complaint.complaintId)}
-                      className="btn-resolve"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Mark Resolved
-                    </button>
-                  )}
+                  <select className="form-select gov-rounded border py-3 extra-small fw-black tracking-widest text-uppercase px-4" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                    <option value="ASSIGNED">NEW OPS</option>
+                    <option value="IN_PROGRESS">ACTIVE</option>
+                    <option value="RESOLVED">COMPLETED</option>
+                    <option value="ALL">ALL LOGS</option>
+                  </select>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            onClick={() => setPage(p => Math.max(0, p - 1))}
-            disabled={page === 0 || loading}
-            className="pagination-btn"
-          >
-            Previous
-          </button>
-          <span className="pagination-info">
-            Page {page + 1} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1 || loading}
-            className="pagination-btn"
-          >
-            Next
-          </button>
+              <div className="table-responsive">
+                <table className="premium-table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Dispatch ID</th>
+                      <th>Intelligence Subject</th>
+                      <th>Locality Unit</th>
+                      <th className="text-center">Combat Status</th>
+                      <th className="text-end px-5">Unit Control</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTasks.length === 0 ? (
+                      <tr><td colSpan="5" className="text-center py-5">
+                        <Smartphone size={48} className="text-muted opacity-10 mb-3 mx-auto" />
+                        <p className="extra-small fw-black text-muted tracking-widest uppercase">Registry Empty</p>
+                      </td></tr>
+                    ) : (
+                      filteredTasks.map(c => (
+                        <tr key={c.complaintId || c.id} className="cursor-pointer" onClick={() => navigate(`/department/complaints/${c.complaintId || c.id}`)}>
+                          <td className="ps-5">
+                            <span className="badge-rect-blue font-mono" style={{ backgroundColor: '#F1F5F9', color: PRIMARY_COLOR, border: '1px solid #E2E8F0' }}>
+                              #{c.complaintId || c.id}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="fw-black text-dark small text-uppercase tracking-tight text-truncate" style={{ maxWidth: '200px' }}>{c.title}</div>
+                            <div className="extra-small text-muted fw-bold uppercase tracking-widest opacity-40 mt-1">
+                              {new Date(c.createdAt || Date.now()).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center gap-2">
+                              <MapPin size={14} className="text-primary opacity-40" />
+                              <span className="extra-small fw-black text-muted uppercase">{c.wardName || 'PMC CENTRAL'}</span>
+                            </div>
+                          </td>
+                          <td className="text-center"><StatusBadge status={c.status} size="sm" /></td>
+                          <td className="text-end pe-5">
+                            <div className="d-flex justify-content-end gap-2">
+                              <button className="btn btn-light circ-white border overflow-hidden" style={{ width: '40px', height: '40px' }}><Eye size={18} /></button>
+                              {c.status === 'ASSIGNED' && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleStartWork(c.complaintId || c.id); }}
+                                  className="btn btn-primary circ-blue shadow-lg"
+                                  style={{ width: '40px', height: '40px' }}
+                                >
+                                  <PlayCircle size={18} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Liaison & Intelligence feed */}
+          <div className="col-lg-4">
+            <div className="sticky-top" style={{ top: '110px' }}>
+              {/* Ward Commander Liaison */}
+              {officerInfo?.wardOfficer && (
+                <div className="card border-0 shadow-lg bg-white p-5 gov-rounded mb-4 elevation-2 border-top border-5 border-primary">
+                  <h6 className="fw-black text-muted text-uppercase tracking-[0.2em] extra-small mb-4 text-details opacity-40 pb-3 border-bottom">Command Liaison</h6>
+                  <div className="d-flex align-items-center gap-4">
+                    <div className="circ-blue shadow-premium" style={{ width: '64px', height: '64px', fontSize: '1.4rem' }}>
+                      {officerInfo.wardOfficer.name?.charAt(0)}
+                    </div>
+                    <div>
+                      <h5 className="fw-black text-dark mb-1">{officerInfo.wardOfficer.name}</h5>
+                      <span className="badge-rect-blue py-0 extra-small" style={{ fontSize: '0.55rem' }}>WARD COMMANDER: {officerInfo.ward}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-top">
+                    <div className="d-flex align-items-center gap-3 text-muted">
+                      <Mail size={16} className="text-primary opacity-50" />
+                      <span className="extra-small fw-black uppercase tracking-widest">{officerInfo.wardOfficer.email}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Force Matrix */}
+              <div className="card border-0 shadow-lg bg-white p-5 flex-grow-1 gov-rounded elevation-2">
+                <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                  <h6 className="fw-black text-muted text-uppercase tracking-[0.2em] extra-small mb-0 opacity-40">Active Force Members</h6>
+                  <Users size={18} className="text-primary opacity-40" />
+                </div>
+                <div className="d-flex flex-column gap-3">
+                  {colleagues.slice(0, 5).map((col, idx) => (
+                    <div key={idx} className="d-flex align-items-center gap-3 p-3 gov-rounded bg-light transition-standard hover-up-small border border-transparent hover-border-primary">
+                      <div className="circ-white border shadow-sm fw-black text-primary" style={{ width: '40px', height: '40px', fontSize: '0.8rem' }}>
+                        {col.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="text-truncate">
+                        <div className="extra-small fw-black text-dark uppercase tracking-tight">{col.name}</div>
+                        <div className="extra-small fw-bold text-muted uppercase tracking-widest opacity-40 mt-1">{col.role?.replace('ROLE_', '')}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {colleagues.length === 0 && <p className="extra-small fw-black text-center text-muted opacity-40 uppercase tracking-widest py-4">No other active units detected.</p>}
+                </div>
+                <button className="btn btn-dark w-100 py-3 mt-4 gov-rounded fw-black tracking-widest extra-small" style={{ backgroundColor: '#1A1A1A' }}>FORCE DIRECTORY</button>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .hover-border-primary:hover { border-color: ${PRIMARY_COLOR} !important; }
+      `}} />
     </div>
   );
 };

@@ -1,462 +1,254 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, 
-  FileText, 
-  TrendingUp, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  BarChart3,
-  Activity,
-  Building2,
-  Shield,
-  Settings,
-  Calendar,
-  MapPin,
-  Eye
+import {
+  Users, FileText, TrendingUp, AlertTriangle, CheckCircle,
+  Clock, BarChart3, Activity, Building2, Shield, Settings,
+  Calendar, MapPin, Eye, UserPlus, ShieldCheck, Zap,
+  RefreshCw, Filter, Layers, Globe, Database, Cpu
 } from 'lucide-react';
-import ModernLayout from '../components/layout/ModernLayout';
-import { StatsCard, GovButton, GovBadge, GovAlert } from '../components/ui/GovComponents';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend, CartesianGrid, AreaChart, Area,
+  LineChart, Line
+} from 'recharts';
 
 const ProfessionalAdminDashboard = () => {
   const navigate = useNavigate();
-  const userName = localStorage.getItem('email') || 'Admin';
+  const userName = localStorage.getItem("name") || localStorage.getItem('email')?.split('@')[0] || 'Admin';
+
   const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalComplaints: 0,
-    pendingComplaints: 0,
-    resolvedComplaints: 0,
-    activeOfficers: 0,
-    systemHealth: 0
+    totalUsers: 15420,
+    totalComplaints: 3420,
+    pendingComplaints: 234,
+    resolvedComplaints: 2890,
+    activeOfficers: 45,
+    systemHealth: 98
   });
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [slaCompliance, setSlaCompliance] = useState({});
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call to fetch admin dashboard data
+    // Simulated Load
     setTimeout(() => {
-      setStats({
-        totalUsers: 15420,
-        totalComplaints: 3420,
-        pendingComplaints: 234,
-        resolvedComplaints: 2890,
-        activeOfficers: 45,
-        systemHealth: 98
-      });
-      
-      setRecentActivity([
-        {
-          id: 1,
-          type: 'complaint_registered',
-          message: 'New complaint registered by citizen',
-          user: 'john.doe@email.com',
-          time: '5 minutes ago',
-          priority: 'medium'
-        },
-        {
-          id: 2,
-          type: 'officer_assigned',
-          message: 'Department officer assigned to complaint',
-          user: 'ward.officer@city.gov',
-          time: '15 minutes ago',
-          priority: 'low'
-        },
-        {
-          id: 3,
-          type: 'sla_breach',
-          message: 'SLA breach alert for complaint #2341',
-          user: 'system',
-          time: '1 hour ago',
-          priority: 'high'
-        },
-        {
-          id: 4,
-          type: 'complaint_resolved',
-          message: 'Complaint resolved successfully',
-          user: 'dept.officer@city.gov',
-          time: '2 hours ago',
-          priority: 'low'
-        }
-      ]);
-
-      setSlaCompliance({
-        overall: 94.5,
-        infrastructure: 96.2,
-        sanitation: 92.8,
-        water: 91.5,
-        electricity: 97.1
-      });
-
       setLoading(false);
-    }, 1000);
+    }, 800);
   }, []);
 
-  const getActivityIcon = (type) => {
-    const icons = {
-      'complaint_registered': FileText,
-      'officer_assigned': Users,
-      'sla_breach': AlertTriangle,
-      'complaint_resolved': CheckCircle,
-      'system_alert': Settings
-    };
-    return icons[type] || Activity;
-  };
+  const COLORS = ['#1254AF', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6366F1'];
 
-  const getActivityColor = (priority) => {
-    const colors = {
-      'high': 'red',
-      'medium': 'amber',
-      'low': 'green'
-    };
-    return colors[priority] || 'blue';
-  };
-
-  const quickActions = [
-    {
-      title: 'Manage Users',
-      description: 'View and manage all users',
-      icon: Users,
-      color: 'blue',
-      path: '/admin/users',
-      gradient: 'from-blue-500 to-blue-600'
-    },
-    {
-      title: 'Register Ward Officer',
-      description: 'Add new ward officers',
-      icon: UserPlus,
-      color: 'green',
-      path: '/admin/register-ward-officer',
-      gradient: 'from-green-500 to-green-600'
-    },
-    {
-      title: 'System Analytics',
-      description: 'View detailed analytics',
-      icon: BarChart3,
-      color: 'purple',
-      path: '/admin/analytics',
-      gradient: 'from-purple-500 to-purple-600'
-    },
-    {
-      title: 'System Settings',
-      description: 'Configure system settings',
-      icon: Settings,
-      color: 'amber',
-      path: '/admin/settings',
-      gradient: 'from-amber-500 to-amber-600'
-    }
+  const chartData = [
+    { name: 'Mon', complaints: 400, resolved: 240 },
+    { name: 'Tue', complaints: 300, resolved: 139 },
+    { name: 'Wed', complaints: 200, resolved: 980 },
+    { name: 'Thu', complaints: 278, resolved: 390 },
+    { name: 'Fri', complaints: 189, resolved: 480 },
+    { name: 'Sat', complaints: 239, resolved: 380 },
+    { name: 'Sun', complaints: 349, resolved: 430 },
   ];
 
-  if (loading) {
-    return (
-      <ModernLayout role="ADMIN" userName={userName}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </ModernLayout>
-    );
-  }
+  const deptPerformance = [
+    { name: 'Sanitation', value: 400 },
+    { name: 'Roads', value: 300 },
+    { name: 'Water', value: 300 },
+    { name: 'Electricity', value: 200 },
+  ];
+
+  if (loading) return (
+    <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F5F7FA' }}>
+      <Cpu className="animate-spin text-primary mb-4" size={56} style={{ color: '#1254AF' }} />
+      <p className="fw-bold text-primary text-uppercase tracking-widest" style={{ color: '#1254AF' }}>Loading Dashboard...</p>
+    </div>
+  );
 
   return (
-    <ModernLayout role="ADMIN" userName={userName}>
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white shadow-xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">Admin Dashboard</h1>
-              <p className="text-purple-100">System overview and management console</p>
-              <div className="flex items-center space-x-4 mt-4">
-                <GovBadge variant="secondary" className="bg-white/20 text-white border-white/30">
-                  System Administrator
-                </GovBadge>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-purple-100 text-sm">System Online</span>
+    <div className="min-vh-100" style={{ backgroundColor: '#F5F7FA', padding: '2rem' }}>
+
+      {/* Global Command Header */}
+      <div className="card border-0 shadow-lg rounded-0 overflow-hidden mb-4" style={{
+        background: 'linear-gradient(135deg, #1254AF 0%, #0D4291 100%)'
+      }}>
+        <div className="card-body p-4 position-relative">
+          <div className="position-absolute top-50 end-0 translate-middle-y p-3 opacity-10">
+            <Globe size={180} color="white" />
+          </div>
+          <div className="row align-items-center position-relative z-1">
+            <div className="col-md-8 text-white">
+              <div className="d-flex align-items-center gap-3 mb-2">
+                <div className="p-2 rounded-0 bg-white bg-opacity-20 shadow-sm border border-white border-opacity-10">
+                  <ShieldCheck size={28} />
+                </div>
+                <div>
+                  <h1 className="fw-bold mb-0" style={{ fontSize: '1.75rem' }}>Admin Dashboard</h1>
+                  <p className="opacity-90 fw-medium mb-0 small">Overview of city performance and user management.</p>
                 </div>
               </div>
             </div>
-            <div className="hidden lg:block">
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 border border-white/30">
-                <div className="text-center">
-                  <div className="text-3xl font-bold">{stats.systemHealth}%</div>
-                  <div className="text-purple-100 text-sm">System Health</div>
-                </div>
+            <div className="col-md-4">
+              <div className="card bg-white bg-opacity-20 border-0 rounded-0 p-3 text-center backdrop-blur-sm">
+                <div className="display-6 fw-bold text-white mb-0">{stats.systemHealth}%</div>
+                <div className="extra-small fw-bold text-white text-uppercase tracking-wider opacity-90">System Health</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-        <StatsCard
-          title="Total Users"
-          value={stats.totalUsers.toLocaleString()}
-          change="+12% this month"
-          icon={Users}
-          color="blue"
-          trend="up"
-        />
-        <StatsCard
-          title="Total Complaints"
-          value={stats.totalComplaints.toLocaleString()}
-          change="+8% this week"
-          icon={FileText}
-          color="purple"
-          trend="up"
-        />
-        <StatsCard
-          title="Pending"
-          value={stats.pendingComplaints.toLocaleString()}
-          change="Needs attention"
-          icon={Clock}
-          color="amber"
-          trend="down"
-        />
-        <StatsCard
-          title="Resolved"
-          value={stats.resolvedComplaints.toLocaleString()}
-          change="+15% improvement"
-          icon={CheckCircle}
-          color="green"
-          trend="up"
-        />
-        <StatsCard
-          title="Active Officers"
-          value={stats.activeOfficers}
-          change="All departments"
-          icon={Shield}
-          color="blue"
-          trend="up"
-        />
-        <StatsCard
-          title="SLA Compliance"
-          value={`${slaCompliance.overall}%`}
-          change="Above target"
-          icon={TrendingUp}
-          color="green"
-          trend="up"
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-slate-900 mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {quickActions.map((action, index) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={index}
-                onClick={() => navigate(action.path)}
-                className="group relative overflow-hidden bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 text-left border border-slate-200 hover:border-transparent"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${action.gradient} text-white shadow-lg mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-6 h-6" />
+      {/* Strategic Metrics Grid */}
+      <div className="row g-4 mb-4">
+        {[
+          { label: 'Total Users', val: stats.totalUsers, icon: Users, color: '#1254AF', trend: '+12%' },
+          { label: 'Complaints', val: stats.totalComplaints, icon: FileText, color: '#3B82F6', trend: '+8%' },
+          { label: 'High Priority', val: stats.pendingComplaints, icon: AlertTriangle, color: '#F59E0B', alert: true },
+          { label: 'Resolution', val: '84.5%', icon: CheckCircle, color: '#10B981' },
+          { label: 'Active Officers', val: stats.activeOfficers, icon: Shield, color: '#6366F1' },
+          { label: 'Avg Response', val: '1.2s', icon: Zap, color: '#8B5CF6' }
+        ].map((s, idx) => (
+          <div key={idx} className="col-6 col-md-4 col-xl-2">
+            <div className="card border-0 shadow-sm rounded-0 p-3 h-100 bg-white transition-all hover-up">
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <div className="p-2 rounded-0" style={{ backgroundColor: s.color + '15', color: s.color }}>
+                  <s.icon size={20} />
                 </div>
-                
-                <h3 className="font-semibold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
-                  {action.title}
-                </h3>
-                <p className="text-sm text-slate-600">
-                  {action.description}
-                </p>
-                
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="text-purple-600 text-sm font-medium">Manage →</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-slate-900">Recent Activity</h2>
-            <GovButton variant="outline" size="sm">
-              View All Activity
-            </GovButton>
+                {s.trend && <span className="extra-small fw-bold text-success">{s.trend}</span>}
+              </div>
+              <h3 className="fw-bold text-dark mb-0">{s.val}</h3>
+              <span className="extra-small fw-bold text-muted text-uppercase tracking-wider">{s.label}</span>
+            </div>
           </div>
-          
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-            <div className="divide-y divide-slate-200">
-              {recentActivity.map((activity) => {
-                const Icon = getActivityIcon(activity.type);
-                return (
-                  <div key={activity.id} className="p-6 hover:bg-slate-50 transition-colors">
-                    <div className="flex items-start space-x-4">
-                      <div className={`p-2 rounded-lg bg-${getActivityColor(activity.priority)}-100`}>
-                        <Icon className={`w-5 h-5 text-${getActivityColor(activity.priority)}-600`} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-slate-900">{activity.message}</p>
-                          <GovBadge variant={getActivityColor(activity.priority)} size="sm">
-                            {activity.priority}
-                          </GovBadge>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-slate-600">
-                          <span>{activity.user}</span>
-                          <span>•</span>
-                          <span>{activity.time}</span>
-                        </div>
-                      </div>
+        ))}
+      </div>
+
+      <div className="row g-4 mb-4">
+        {/* Core Quick Ops */}
+        <div className="col-12">
+          <div className="card border-0 shadow-sm rounded-0 bg-white p-3 border-hover-primary transition-all">
+            <div className="row g-2">
+              {[
+                { title: 'User Management', desc: 'Manage all users', icon: Users, path: '/admin/users' },
+                { title: 'Register Officer', desc: 'Add new ward officer', icon: UserPlus, path: '/admin/register-ward-officer' },
+                { title: 'Analytics', desc: 'View reports', icon: BarChart3, path: '/admin/analytics' },
+                { title: 'Settings', desc: 'System configuration', icon: Settings, path: '/admin/settings' }
+              ].map((act, idx) => (
+                <div key={idx} className="col-md-3">
+                  <button
+                    onClick={() => navigate(act.path)}
+                    className="btn btn-light w-100 h-100 p-3 rounded-0 border-0 d-flex align-items-center gap-3 text-start"
+                    style={{ backgroundColor: '#F8FAFC' }}
+                  >
+                    <div className="p-2 bg-white rounded-0 shadow-sm text-primary" style={{ color: '#1254AF' }}>
+                      <act.icon size={24} />
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* SLA Compliance */}
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">SLA Compliance</h2>
-          
-          <div className="space-y-6">
-            {/* Overall SLA */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-green-900">Overall Compliance</h3>
-                <span className="text-2xl font-bold text-green-600">{slaCompliance.overall}%</span>
-              </div>
-              <div className="w-full bg-green-200 rounded-full h-2">
-                <div 
-                  className="bg-green-600 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${slaCompliance.overall}%` }}
-                ></div>
-              </div>
-              <p className="text-green-700 text-sm mt-2">Above target threshold</p>
-            </div>
-
-            {/* Department-wise SLA */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-              <h3 className="font-semibold text-slate-900 mb-4">Department SLA</h3>
-              <div className="space-y-4">
-                {Object.entries(slaCompliance).filter(([key]) => key !== 'overall').map(([dept, compliance]) => (
-                  <div key={dept} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-700 capitalize">{dept}</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-20 bg-slate-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            compliance >= 95 ? 'bg-green-500' : 
-                            compliance >= 90 ? 'bg-amber-500' : 'bg-red-500'
-                          }`}
-                          style={{ width: `${compliance}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium text-slate-900">{compliance}%</span>
+                    <div>
+                      <div className="fw-bold text-dark small mb-0">{act.title}</div>
+                      <div className="extra-small text-muted">{act.desc}</div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* System Alerts */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-              <h3 className="font-semibold text-slate-900 mb-4">System Alerts</h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-red-900">SLA Breach Risk</p>
-                    <p className="text-xs text-red-700">3 complaints approaching deadline</p>
-                  </div>
+                  </button>
                 </div>
-                <div className="flex items-center space-x-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                  <Clock className="w-5 h-5 text-amber-600" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-amber-900">Pending Approvals</p>
-                    <p className="text-xs text-amber-700">8 officer registrations pending</p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Building2 className="w-5 h-5 text-blue-600" />
+      <div className="row g-4">
+        {/* Tactical Trends */}
+        <div className="col-lg-8">
+          <div className="card border-0 shadow-sm rounded-0 bg-white p-4 border-hover-primary transition-all h-100">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                <Activity className="text-primary" style={{ color: '#1254AF' }} size={20} />
+                Complaint Trends
+              </h5>
+              <div className="badge bg-primary bg-opacity-10 text-primary rounded-0 px-3 py-1 fw-bold extra-small uppercase tracking-wider" style={{ color: '#1254AF', backgroundColor: '#E3F2FD' }}>
+                Live Data
+              </div>
             </div>
-            <h3 className="font-semibold text-slate-900">System Overview</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-600">Server Uptime</span>
-              <span className="font-medium text-slate-900">99.9%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">Response Time</span>
-              <span className="font-medium text-slate-900">1.2s</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">Database Health</span>
-              <span className="font-medium text-green-600">Optimal</span>
+
+            <div style={{ height: '300px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorComplaints" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1254AF" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#1254AF" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0F9FF" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: '0', border: 'none', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }} />
+                  <Area type="monotone" dataKey="complaints" stroke="#1254AF" fillOpacity={1} fill="url(#colorComplaints)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="resolved" stroke="#3B82F6" fillOpacity={0} strokeWidth={2} strokeDasharray="5 5" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Users className="w-5 h-5 text-purple-600" />
+        {/* Sector Utilization */}
+        <div className="col-lg-4">
+          <div className="card border-0 shadow-sm rounded-0 bg-white p-4 border-hover-primary transition-all h-100">
+            <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+              <Layers className="text-primary" style={{ color: '#1254AF' }} size={20} />
+              Department Load
+            </h5>
+
+            <div style={{ height: '250px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={deptPerformance}
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {deptPerformance.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} cornerRadius={4} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            <h3 className="font-semibold text-slate-900">User Activity</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-600">Active Today</span>
-              <span className="font-medium text-slate-900">342</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">New Registrations</span>
-              <span className="font-medium text-slate-900">28</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">Engagement Rate</span>
-              <span className="font-medium text-slate-900">87%</span>
+
+            <div className="mt-auto pt-4 border-top border-dashed">
+              <div className="row g-3">
+                <div className="col-6">
+                  <div className="p-2 rounded-0 bg-light text-center">
+                    <span className="extra-small fw-bold text-muted d-block mb-1">UPTIME</span>
+                    <span className="fw-bold text-primary" style={{ color: '#1254AF' }}>99.9%</span>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="p-2 rounded-0 bg-light text-center">
+                    <span className="extra-small fw-bold text-muted d-block mb-1">LATENCY</span>
+                    <span className="fw-bold text-primary" style={{ color: '#1254AF' }}>1.2s</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-            </div>
-            <h3 className="font-semibold text-slate-900">Performance</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-600">Avg. Resolution Time</span>
-              <span className="font-medium text-slate-900">2.3 days</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">Satisfaction Score</span>
-              <span className="font-medium text-slate-900">4.6/5</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">Efficiency Index</span>
-              <span className="font-medium text-green-600">+12%</span>
-            </div>
-          </div>
-        </div>
       </div>
-    </ModernLayout>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .fw-bold { font-weight: 700; }
+        .text-primary { color: #1254AF !important; }
+        .bg-primary { background-color: #1254AF !important; }
+        .extra-small { font-size: 0.75rem; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .transition-all { transition: all 0.2s ease-in-out; }
+        .hover-up:hover { transform: translateY(-3px); }
+        .border-hover-primary:hover { border-color: #1254AF !important; }
+        .btn-light:hover { background-color: #F0F9FF !important; color: #1254AF !important; transform: translateY(-2px); }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}} />
+    </div>
   );
 };
 

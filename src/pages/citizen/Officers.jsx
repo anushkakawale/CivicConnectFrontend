@@ -1,122 +1,129 @@
-import { useState, useEffect } from 'react';
-import apiService from '../../api/apiService';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import { useToast } from '../../components/ui/ToastProvider';
-
-export default function Officers() {
-    const toast = useToast();
+const Officers = () => {
+    const { showToast } = useToast();
     const [officers, setOfficers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const PRIMARY_COLOR = '#1254AF';
 
     useEffect(() => {
         fetchOfficers();
     }, []);
 
     const fetchOfficers = async () => {
+        setLoading(true);
         try {
             const response = await apiService.citizen.getOfficers();
-            setOfficers(response.data || []);
+            setOfficers(response.data || response || []);
         } catch (error) {
-            console.error('Failed to fetch officers:', error);
-            toast.error('Failed to load officers');
+            console.error('Failed to fetch officials:', error);
+            showToast('Failed to load officials list', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) return <LoadingSpinner message="Loading officers..." fullScreen />;
+    if (loading) {
+        return (
+            <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8FAFC' }}>
+                <RefreshCw className="animate-spin text-primary mb-4" size={56} style={{ color: PRIMARY_COLOR }} />
+                <p className="fw-bold text-muted small">Loading official directory...</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-vh-100" style={{ background: 'linear-gradient(to bottom, #f8f9fc 0%, #e9ecef 100%)' }}>
-            {/* Header */}
-            <div className="position-relative overflow-hidden" style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                paddingTop: '4rem',
-                paddingBottom: '6rem'
-            }}>
-                <div className="position-absolute w-100 h-100" style={{
-                    background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-                    opacity: 0.1
-                }}></div>
-                <div className="container position-relative">
-                    <div className="d-flex align-items-center gap-3">
-                        <div className="rounded-circle p-3" style={{
-                            background: 'rgba(255,255,255,0.2)',
-                            backdropFilter: 'blur(10px)'
-                        }}>
-                            <i className="bi bi-person-badge-fill text-white" style={{ fontSize: '2rem' }}></i>
-                        </div>
-                        <div>
-                            <h1 className="display-5 fw-bold text-white mb-0">Ward Officers</h1>
-                            <p className="text-white opacity-75 mb-0">Your local government representatives</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
+            <DashboardHeader
+                portalName="PMC Citizen Portal"
+                title="District officials"
+                subtitle="Contact information for authorized municipal officers in your area."
+                icon={User}
+                showProfileInitials={true}
+            />
 
-            <div className="container" style={{ marginTop: '-3rem' }}>
+            <div className="container-fluid px-5 mt-4">
                 {officers.length === 0 ? (
-                    <div className="card border-0 shadow-sm">
-                        <div className="card-body p-5 text-center">
-                            <i className="bi bi-person-x display-1 text-muted opacity-25 mb-4"></i>
-                            <h4 className="fw-bold mb-2">No Officers Found</h4>
-                            <p className="text-muted mb-0">No officers assigned to your ward yet</p>
+                    <div className="card border-0 shadow-premium p-5 text-center bg-white rounded-4 border-2 border-dashed mx-auto" style={{ maxWidth: '800px' }}>
+                        <div className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '80px', height: '80px' }}>
+                            <User size={32} className="text-muted opacity-30" />
                         </div>
+                        <h4 className="fw-bold text-dark mb-2">No officials assigned</h4>
+                        <p className="text-muted small fw-medium mt-2">
+                            There are currently no officers assigned to your ward directory.
+                        </p>
                     </div>
                 ) : (
-                    <div className="row g-4 mb-5">
+                    <div className="row g-4 animate-fadeIn mb-5">
                         {officers.map((officer, index) => (
                             <div key={index} className="col-md-6 col-lg-4">
-                                <div className="card border-0 shadow-sm h-100" style={{
-                                    transition: 'all 0.3s ease'
-                                }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-8px)';
-                                        e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = '';
-                                    }}>
-                                    <div className="card-body p-4">
-                                        <div className="text-center mb-4">
-                                            <div className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{
-                                                width: '80px',
-                                                height: '80px',
-                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                            }}>
-                                                <i className="bi bi-person-fill text-white" style={{ fontSize: '2.5rem' }}></i>
+                                <div className="card border-0 shadow-premium h-100 bg-white rounded-4 transition-all hover-up overflow-hidden">
+                                    <div className="p-4 border-bottom bg-light bg-opacity-50">
+                                        <div className="d-flex align-items-center gap-4">
+                                            <div className="rounded-4 d-flex align-items-center justify-content-center shadow-sm"
+                                                style={{
+                                                    width: '64px',
+                                                    height: '64px',
+                                                    backgroundColor: '#EBF2FF',
+                                                    color: PRIMARY_COLOR,
+                                                    minWidth: '64px'
+                                                }}>
+                                                <User size={28} />
                                             </div>
-                                            <h5 className="fw-bold mb-1">{officer.name}</h5>
-                                            <span className="badge" style={{
-                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                            }}>
-                                                {officer.role?.replace('_', ' ')}
-                                            </span>
+                                            <div className="overflow-hidden">
+                                                <h5 className="fw-bold mb-1 text-dark text-truncate">{officer.name}</h5>
+                                                <span className="badge rounded-pill fw-bold extra-small uppercase-tracking"
+                                                    style={{ backgroundColor: '#EBF2FF', color: PRIMARY_COLOR }}>
+                                                    {(officer.role || 'Officer').replace(/_/g, ' ')}
+                                                </span>
+                                            </div>
                                         </div>
+                                    </div>
 
-                                        <div className="border-top pt-3">
+                                    <div className="card-body p-4">
+                                        <div className="d-flex flex-column gap-3">
                                             {officer.department && (
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <i className="bi bi-building text-primary me-2"></i>
-                                                    <span className="text-muted small">{officer.department}</span>
+                                                <div className="d-flex align-items-start gap-3">
+                                                    <div className="p-2 rounded-3 bg-light text-muted">
+                                                        <Building2 size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="extra-small fw-bold text-muted mb-0 uppercase-tracking">Department</p>
+                                                        <p className="small fw-bold text-dark mb-0">{(officer.departmentName || officer.department).replace(/_/g, ' ')}</p>
+                                                    </div>
                                                 </div>
                                             )}
+
+                                            <div className="d-flex align-items-start gap-3">
+                                                <div className="p-2 rounded-3 bg-light text-muted">
+                                                    <MapPin size={16} />
+                                                </div>
+                                                <div>
+                                                    <p className="extra-small fw-bold text-muted mb-0 uppercase-tracking">Jurisdiction</p>
+                                                    <p className="small fw-bold text-dark mb-0">
+                                                        Ward {officer.wardNumber || officer.wardId || 'Pune City'}
+                                                    </p>
+                                                </div>
+                                            </div>
+
                                             {officer.mobile && (
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <i className="bi bi-telephone text-success me-2"></i>
-                                                    <a href={`tel:${officer.mobile}`} className="text-decoration-none">
-                                                        {officer.mobile}
-                                                    </a>
-                                                </div>
-                                            )}
-                                            {officer.wardNumber && (
-                                                <div className="d-flex align-items-center">
-                                                    <i className="bi bi-geo-alt text-danger me-2"></i>
-                                                    <span className="text-muted small">Ward {officer.wardNumber}</span>
+                                                <div className="d-flex align-items-start gap-3">
+                                                    <div className="p-2 rounded-3" style={{ backgroundColor: '#ECFDF5', color: '#10B981' }}>
+                                                        <Phone size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="extra-small fw-bold text-muted mb-0 uppercase-tracking">Direct contact</p>
+                                                        <a href={`tel:${officer.mobile}`} className="small fw-bold text-decoration-none" style={{ color: '#10B981' }}>
+                                                            {officer.mobile}
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
+                                    </div>
+
+                                    <div className="card-footer bg-white border-0 p-4 pt-0">
+                                        <button className="btn btn-light w-100 rounded-pill fw-bold small border transition-all hover-up-small">
+                                            Official profile
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -124,6 +131,18 @@ export default function Officers() {
                     </div>
                 )}
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .animate-spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
+                .hover-up:hover { transform: translateY(-5px); }
+                .hover-up-small:hover { transform: translateY(-3px); }
+                .transition-all { transition: all 0.3s ease; }
+                .uppercase-tracking { text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+                .extra-small { font-size: 11px; }
+            `}} />
         </div>
     );
-}
+};

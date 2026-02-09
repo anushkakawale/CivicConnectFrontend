@@ -1,0 +1,105 @@
+/* Admin Complaints Styling - Premium Oversight Console */
+
+.admin-complaints-v2 {
+    width: 100%;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.shadow-primary {
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+}
+
+.shadow-amber-500\/30 {
+    box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
+}
+
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.max-w-\[300px\] {
+    max-width: 300px;
+}
+
+/* Table Enhancements */
+.table thead th {
+    background-color: #f8fafc;
+    border-bottom: 2px solid #f1f5f9 !important;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.tracking-widest {
+    letter-spacing: 0.1em;
+}
+
+.tracking-wider {
+    letter-spacing: 0.05em;
+}
+
+.tracking-tighter {
+    letter-spacing: -0.05em;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Badge specific overrides if needed */
+.badge-critical {
+    background-color: #ef4444;
+    color: white;
+}
+
+.badge-high {
+    background-color: #f59e0b;
+    color: white;
+}
+
+.badge-medium {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.badge-low {
+    background-color: #10b981;
+    color: white;
+}

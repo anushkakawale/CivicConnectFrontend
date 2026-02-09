@@ -12,12 +12,14 @@
 /* Sidebar is handled by Sidebar component (Fixed, left:0, top:70px, width:250px) */
 
 .admin-main-content {
-    margin-left: 250px;
+    margin-left: 260px;
     /* Match Sidebar width */
-    margin-top: 70px;
+    margin-top: 75px;
     /* Match Header height */
-    min-height: calc(100vh - 70px);
+    min-height: calc(100vh - 75px);
     transition: margin-left 0.3s ease;
+    padding: 0;
+    background-color: #F9FAFB;
 }
 
 .content-container {

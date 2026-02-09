@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import authService from '../../services/authService';
 import {
-    Home, FileText, Bell, User, LogOut, Briefcase, BarChart3, Map
+    Home, FileText, Bell, User, LogOut, Briefcase, BarChart3, Map as MapIcon
 } from 'lucide-react';
 
 const DepartmentSidebar = () => {
@@ -16,7 +16,7 @@ const DepartmentSidebar = () => {
     const menuItems = [
         { path: '/department/dashboard', icon: Home, label: 'Dashboard' },
         { path: '/department/complaints', icon: FileText, label: 'My Complaints' },
-        { path: '/department/map', icon: Map, label: 'Map View' },
+        { path: '/department/map', icon: MapIcon, label: 'Map View' },
         { path: '/department/analytics', icon: BarChart3, label: 'Analytics' },
         { path: '/department/notifications', icon: Bell, label: 'Notifications' },
         { path: '/department/profile', icon: User, label: 'Profile' }
@@ -44,7 +44,7 @@ const DepartmentSidebar = () => {
                                 to={item.path}
                                 end
                                 className={({ isActive }) =>
-                                    `nav-link d-flex align-items-center gap-2 rounded px-3 py-2 ${isActive
+                                    `nav-link d-flex align-items-center gap-2 rounded-0 px-3 py-2 ${isActive
                                         ? 'bg-primary text-white'
                                         : 'text-dark hover-bg-light'
                                     }`

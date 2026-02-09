@@ -63,7 +63,7 @@ export default function WardComplaints() {
                     <div className="row">
                         <div className="col-12">
                             <div className="d-flex align-items-center gap-3 mb-3">
-                                <div className="rounded-circle p-3" style={{
+                                <div className="rounded-0 p-3" style={{
                                     background: 'rgba(255,255,255,0.2)',
                                     backdropFilter: 'blur(10px)'
                                 }}>
@@ -115,7 +115,7 @@ export default function WardComplaints() {
                                                 {stats[stat.key]}
                                             </h2>
                                         </div>
-                                        <div className="rounded-circle p-3" style={{
+                                        <div className="rounded-0 p-3" style={{
                                             background: filter === stat.key ? 'rgba(255,255,255,0.2)' : 'rgba(102, 126, 234, 0.1)'
                                         }}>
                                             <i className={`bi bi-${stat.icon} ${filter === stat.key ? 'text-white' : 'text-primary'}`} style={{ fontSize: '1.5rem' }}></i>

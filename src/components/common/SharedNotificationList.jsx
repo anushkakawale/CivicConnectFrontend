@@ -75,7 +75,7 @@ const SharedNotificationList = ({
                         >
                             <div className="card-body p-3">
                                 <div className="d-flex gap-3">
-                                    <div className={`flex-shrink-0 rounded-circle p-2 d-flex align-items-center justify-content-center ${getBgColor(notification.type)}`} style={{ width: '40px', height: '40px' }}>
+                                    <div className={`flex-shrink-0 rounded-0 p-2 d-flex align-items-center justify-content-center ${getBgColor(notification.type)}`} style={{ width: '40px', height: '40px' }}>
                                         {getIcon(notification.type)}
                                     </div>
                                     <div className="flex-grow-1">

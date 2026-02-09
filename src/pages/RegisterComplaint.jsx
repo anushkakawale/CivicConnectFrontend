@@ -27,8 +27,8 @@ export default function RegisterComplaintEnhanced() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await apiService.department.getAll();
-      setDepartments(response.data || []);
+      const response = await apiService.masterData.getDepartments();
+      setDepartments(response.data || response || []);
     } catch (error) {
       console.error('Failed to fetch departments:', error);
       toast.error('Failed to load departments');
@@ -142,11 +142,11 @@ export default function RegisterComplaintEnhanced() {
     <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9fc', minHeight: '100vh' }}>
       <div className="row justify-content-center">
         <div className="col-lg-8">
-          <div className="card border-0 shadow-lg rounded-4 animate-scale-in">
+          <div className="card border-0 shadow-lg rounded-0 animate-scale-in">
             <div className="card-body p-5">
               {/* Header */}
               <div className="text-center mb-4">
-                <div className="d-inline-flex align-items-center justify-content-center mb-3 rounded-circle animate-scale-in" style={{
+                <div className="d-inline-flex align-items-center justify-content-center mb-3 rounded-0 animate-scale-in" style={{
                   width: '70px',
                   height: '70px',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
@@ -262,7 +262,7 @@ export default function RegisterComplaintEnhanced() {
                 <div className="mb-4">
                   <label className="form-label fw-semibold">Upload Images (Optional)</label>
                   <p className="text-muted small">Add up to 5 images (max 5MB each)</p>
-                  <div className="border-2 border-dashed rounded p-4 text-center card-hover" style={{ borderStyle: 'dashed', borderColor: '#dee2e6' }}>
+                  <div className="border-2 border-dashed rounded-0 p-4 text-center card-hover" style={{ borderStyle: 'dashed', borderColor: '#dee2e6' }}>
                     <input
                       type="file"
                       id="images"
@@ -286,7 +286,7 @@ export default function RegisterComplaintEnhanced() {
                             <img
                               src={preview}
                               alt={`Preview ${index + 1}`}
-                              className="img-fluid rounded"
+                              className="img-fluid rounded-0"
                               style={{ height: '100px', width: '100%', objectFit: 'cover' }}
                             />
                             <button

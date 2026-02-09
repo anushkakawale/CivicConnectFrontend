@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Bell,
-    CheckCircle,
-    Clock,
-    AlertCircle,
-    Info,
-    FileText,
-    RefreshCw,
-    CheckCheck,
-    Filter,
-    Trash2
+    Bell, CheckCircle, Clock, AlertCircle, Info, FileText,
+    RefreshCw, CheckCheck, Filter, Trash2, Shield, Activity,
+    Zap, Ghost, Layers, Navigation
 } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
-import './Notifications.css';
 
 const Notifications = () => {
     const navigate = useNavigate();
@@ -28,32 +20,25 @@ const Notifications = () => {
     } = useNotifications();
 
     const [filter, setFilter] = useState('all');
-    const [selectedType, setSelectedType] = useState('all');
 
     useEffect(() => {
         fetchNotifications();
     }, []);
 
     const filteredNotifications = notifications.filter(n => {
-        // Filter by read/unread
         if (filter === 'unread' && n.isRead) return false;
         if (filter === 'read' && !n.isRead) return false;
-
-        // Filter by type
-        if (selectedType !== 'all' && n.type !== selectedType) return false;
-
         return true;
     });
 
     const getIcon = (type) => {
         const icons = {
             'NEW_COMPLAINT': Bell,
-            'STATUS_UPDATE': Info,
-            'ASSIGNMENT': AlertCircle,
+            'STATUS_UPDATE': Zap,
+            'ASSIGNMENT': Layers,
             'RESOLUTION': CheckCircle,
-            'CLOSURE': CheckCircle,
+            'CLOSURE': Shield,
             'SLA_WARNING': Clock,
-            'FEEDBACK': FileText,
             'APPROVAL': CheckCircle,
             'REJECTION': AlertCircle
         };
@@ -62,200 +47,141 @@ const Notifications = () => {
 
     const getTypeColor = (type) => {
         const colors = {
-            'NEW_COMPLAINT': '#667eea',
-            'STATUS_UPDATE': '#3b82f6',
-            'ASSIGNMENT': '#f59e0b',
-            'RESOLUTION': '#10b981',
-            'CLOSURE': '#6b7280',
-            'SLA_WARNING': '#ef4444',
-            'FEEDBACK': '#8b5cf6',
-            'APPROVAL': '#10b981',
-            'REJECTION': '#ef4444'
+            'RESOLUTION': '#10B981', // Green
+            'SLA_WARNING': '#EF4444', // Red
+            'ASSIGNMENT': '#244799', // Blue
+            'STATUS_UPDATE': '#3B82F6', // Light Blue
+            'REJECTION': '#EF4444', // Red
+            'APPROVAL': '#10B981', // Green
+            'NEW_COMPLAINT': '#F59E0B' // Amber
         };
-        return colors[type] || '#667eea';
+        return colors[type] || '#173470';
     };
 
-    const formatTime = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffHours < 24) return `${diffHours}h ago`;
-        if (diffDays < 7) return `${diffDays}d ago`;
-        return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-    };
-
-    const handleNotificationClick = (notification) => {
-        if (!notification.isRead) {
-            markAsRead(notification.id);
-        }
-
-        // Navigate based on notification type
-        if (notification.complaintId) {
-            navigate(`/citizen/complaints/${notification.complaintId}`);
-        }
-    };
-
-    const notificationTypes = [
-        { value: 'all', label: 'All Types' },
-        { value: 'NEW_COMPLAINT', label: 'New Complaint' },
-        { value: 'STATUS_UPDATE', label: 'Status Update' },
-        { value: 'RESOLUTION', label: 'Resolution' },
-        { value: 'SLA_WARNING', label: 'SLA Warning' }
-    ];
+    if (loading && notifications.length === 0) return (
+        <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8FAFC' }}>
+            <RefreshCw className="animate-spin text-primary mb-4" size={48} style={{ color: '#173470' }} />
+            <p className="fw-bold text-muted small">Accessing Alert Registry...</p>
+        </div>
+    );
 
     return (
-        <div className="notifications-page">
-            {/* Header */}
-            <div className="notifications-header">
-                <div className="header-content">
-                    <div className="header-title">
-                        <Bell className="w-8 h-8" />
-                        <div>
-                            <h1>Notifications</h1>
-                            <p>{unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}</p>
+        <div className="min-vh-100 pb-5 px-3 px-md-5" style={{ backgroundColor: '#F8FAFC' }}>
+            <div className="container-fluid max-ww-1400 py-4">
+
+                {/* Notification Header */}
+                <div className="card border-0 shadow-lg rounded-4 overflow-hidden mb-5" style={{
+                    background: '#173470'
+                }}>
+                    <div className="card-body p-4 p-md-5 position-relative">
+                        <div className="position-absolute top-50 end-0 translate-middle-y p-5 opacity-10">
+                            <Bell size={180} color="white" />
                         </div>
-                    </div>
-                    <div className="header-actions">
-                        <button
-                            onClick={fetchNotifications}
-                            className="btn-icon"
-                            disabled={loading}
-                        >
-                            <RefreshCw className={`w-5 h-5 ${loading ? 'spinning' : ''}`} />
-                        </button>
-                        <button
-                            onClick={markAllAsRead}
-                            className="btn-mark-all"
-                            disabled={unreadCount === 0}
-                        >
-                            <CheckCheck className="w-5 h-5" />
-                            Mark All as Read
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="filters-section">
-                <div className="filter-group">
-                    <Filter className="w-5 h-5" />
-                    <span className="filter-label">Filter:</span>
-                    <div className="filter-buttons">
-                        <button
-                            onClick={() => setFilter('all')}
-                            className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-                        >
-                            All ({notifications.length})
-                        </button>
-                        <button
-                            onClick={() => setFilter('unread')}
-                            className={`filter-btn ${filter === 'unread' ? 'active' : ''}`}
-                        >
-                            Unread ({unreadCount})
-                        </button>
-                        <button
-                            onClick={() => setFilter('read')}
-                            className={`filter-btn ${filter === 'read' ? 'active' : ''}`}
-                        >
-                            Read ({notifications.length - unreadCount})
-                        </button>
-                    </div>
-                </div>
-
-                <div className="type-filter">
-                    <select
-                        value={selectedType}
-                        onChange={(e) => setSelectedType(e.target.value)}
-                        className="type-select"
-                    >
-                        {notificationTypes.map(type => (
-                            <option key={type.value} value={type.value}>
-                                {type.label}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            </div>
-
-            {/* Notifications List */}
-            {loading && notifications.length === 0 ? (
-                <div className="loading-state">
-                    <div className="spinner-large"></div>
-                    <p>Loading notifications...</p>
-                </div>
-            ) : filteredNotifications.length === 0 ? (
-                <div className="empty-state">
-                    <Bell className="w-16 h-16" />
-                    <h3>No Notifications</h3>
-                    <p>
-                        {filter === 'unread'
-                            ? "You're all caught up! No unread notifications."
-                            : filter === 'read'
-                                ? "No read notifications yet."
-                                : "You don't have any notifications yet."}
-                    </p>
-                </div>
-            ) : (
-                <div className="notifications-list">
-                    {filteredNotifications.map(notification => {
-                        const Icon = getIcon(notification.type);
-                        const iconColor = getTypeColor(notification.type);
-
-                        return (
-                            <div
-                                key={notification.id}
-                                className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
-                                onClick={() => handleNotificationClick(notification)}
-                            >
-                                <div className="notification-icon" style={{ backgroundColor: `${iconColor}15`, color: iconColor }}>
-                                    <Icon className="w-5 h-5" />
-                                </div>
-
-                                <div className="notification-content">
-                                    <div className="notification-header">
-                                        <h4>{notification.title || 'Notification'}</h4>
-                                        <span className="notification-time">{formatTime(notification.createdAt)}</span>
+                        <div className="row align-items-center position-relative z-1 text-white">
+                            <div className="col-md-8">
+                                <div className="d-flex align-items-center gap-4 mb-3">
+                                    <div className="p-3 rounded-4 bg-white bg-opacity-20 shadow-sm border border-white border-opacity-10">
+                                        <Bell size={40} />
                                     </div>
-                                    <p className="notification-message">{notification.message}</p>
-
-                                    {notification.complaintId && (
-                                        <div className="notification-meta">
-                                            <FileText className="w-3 h-3" />
-                                            <span>Complaint #{notification.complaintId}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {!notification.isRead && (
-                                    <div className="unread-indicator">
-                                        <div className="unread-dot"></div>
+                                    <div>
+                                        <h1 className="h2 fw-bold mb-1 text-white">Notifications</h1>
+                                        <p className="opacity-75 fw-medium mb-0">Stay updated on your reported issues and local activities</p>
                                     </div>
-                                )}
-
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (window.confirm('Delete this notification?')) {
-                                            deleteNotification && deleteNotification(notification.id);
-                                        }
-                                    }}
-                                    className="btn-delete"
-                                    title="Delete notification"
-                                >
-                                    <Trash2 className="w-4 h-4" />
+                                </div>
+                            </div>
+                            <div className="col-md-4 text-md-end d-flex gap-3 justify-content-md-end mt-4 mt-md-0">
+                                <button onClick={fetchNotifications} className="btn btn-light rounded-pill px-3 shadow-sm" style={{ color: '#173470' }}><RefreshCw size={20} /></button>
+                                <button onClick={markAllAsRead} className="btn btn-light rounded-pill px-4 py-3 fw-bold small shadow-sm d-flex align-items-center gap-2" style={{ color: '#173470' }}>
+                                    <CheckCheck size={18} /> Mark all read
                                 </button>
                             </div>
-                        );
-                    })}
+                        </div>
+                    </div>
                 </div>
-            )}
+
+                <div className="row g-4 justify-content-center">
+                    <div className="col-12 col-xl-10">
+                        {/* Filters */}
+                        <div className="d-flex gap-2 mb-4">
+                            {['all', 'unread', 'read'].map(f => (
+                                <button
+                                    key={f}
+                                    onClick={() => setFilter(f)}
+                                    className={`btn rounded-pill px-4 py-2 small fw-bold text-capitalize transition-all ${filter === f ? 'btn-primary shadow-sm' : 'btn-light border text-muted'}`}
+                                    style={filter === f ? { backgroundColor: '#173470', borderColor: '#173470' } : {}}
+                                >
+                                    {f} {f === 'unread' && unreadCount > 0 && <span className="ms-2 badge bg-white text-primary rounded-circle" style={{ color: '#173470' }}>{unreadCount}</span>}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* List */}
+                        {filteredNotifications.length === 0 ? (
+                            <div className="card border-0 shadow-sm p-5 text-center bg-white rounded-4 border-dashed">
+                                <Ghost size={64} className="text-muted opacity-20 mb-4 mx-auto" />
+                                <h4 className="fw-bold text-dark mb-2">No alerts found</h4>
+                                <p className="text-muted small">When we have updates for you, they'll appear here.</p>
+                            </div>
+                        ) : (
+                            <div className="d-grid gap-3">
+                                {filteredNotifications.map((n) => {
+                                    const Icon = getIcon(n.type);
+                                    const color = getTypeColor(n.type);
+
+                                    return (
+                                        <div
+                                            key={n.id}
+                                            className={`card border-0 shadow-sm rounded-4 overflow-hidden transition-all ${!n.isRead ? 'border-start border-4' : ''}`}
+                                            style={!n.isRead ? { borderLeftColor: color + ' !important' } : {}}
+                                        >
+                                            <div className="card-body p-4 d-flex align-items-start gap-4">
+                                                <div className="p-3 rounded-4 shadow-sm border" style={{ backgroundColor: color + '10', color: color }}>
+                                                    <Icon size={24} />
+                                                </div>
+                                                <div className="flex-grow-1">
+                                                    <div className="d-flex justify-content-between align-items-start mb-1">
+                                                        <h6 className={`fw-bold mb-0 ${!n.isRead ? 'text-dark' : 'text-muted'}`}>{n.title}</h6>
+                                                        <span className="extra-small text-muted fw-medium">{new Date(n.createdAt).toLocaleString()}</span>
+                                                    </div>
+                                                    <p className={`small mb-3 ${!n.isRead ? 'text-secondary' : 'text-muted opacity-60'} line-clamp-2`}>{n.message}</p>
+                                                    <div className="d-flex gap-3">
+                                                        {!n.isRead && (
+                                                            <button
+                                                                onClick={() => markAsRead(n.id)}
+                                                                className="btn btn-link p-0 text-decoration-none extra-small fw-bold text-primary"
+                                                                style={{ color: '#173470' }}
+                                                            >
+                                                                Mark read
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => deleteNotification(n.id)}
+                                                            className="btn btn-link p-0 text-decoration-none extra-small fw-bold text-muted hover-text-danger"
+                                                        >
+                                                            Dismiss
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .text-primary { color: #173470 !important; }
+                .bg-primary { background-color: #173470 !important; }
+                .extra-small { font-size: 0.7rem; }
+                .transition-all { transition: all 0.2s ease-in-out; }
+                .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+                .hover-text-danger:hover { color: #EF4444 !important; background-color: rgba(239, 68, 68, 0.1) !important; }
+                .border-dashed { border: 2px dashed #E2E8F0 !important; }
+            `}} />
         </div>
     );
 };

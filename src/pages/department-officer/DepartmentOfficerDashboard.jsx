@@ -123,7 +123,7 @@ export default function DepartmentOfficerDashboard() {
                                 onClick={() => navigate(action.path)}
                             >
                                 <div className="card-body p-4 text-center">
-                                    <div className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{
+                                    <div className="rounded-0 d-inline-flex align-items-center justify-content-center mb-3" style={{
                                         width: '70px',
                                         height: '70px',
                                         backgroundColor: action.color + '20'

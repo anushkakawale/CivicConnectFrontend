@@ -1,494 +1,397 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  FileText,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  TrendingUp,
-  Users,
-  MapPin,
-  Calendar,
-  Eye,
-  CheckSquare,
-  XCircle,
-  RefreshCw,
-  Filter,
-  Search,
-  Building2
+  LayoutDashboard, FileText, CheckCircle, Clock,
+  MapPin, Eye, CheckSquare, RefreshCw,
+  Search, Building2, AlertCircle,
+  User, Map as MapIcon, ClipboardList, Shield, ShieldCheck,
+  ArrowRight, Activity, Zap
 } from 'lucide-react';
-import apiService from '../api/apiService';
-import './ProfessionalWardOfficerDashboard.css';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid
+} from 'recharts';
+import wardOfficerService from '../services/wardOfficerService';
+import { StatusBadge } from '../components/common';
 
 const ProfessionalWardOfficerDashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [complaints, setComplaints] = useState([]);
-  const [filterStatus, setFilterStatus] = useState('PENDING');
+  const [filterStatus, setFilterStatus] = useState('PENDING_APPROVAL');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [wardChanges, setWardChanges] = useState([]);
+  const [activeView, setActiveView] = useState('overview');
 
   useEffect(() => {
     loadDashboard();
     loadComplaints();
-  }, [page, filterStatus]);
+  }, []);
 
   const loadDashboard = async () => {
     try {
-      console.log('🔄 Loading ward officer dashboard...');
-      const [dashboardRes, pendingRes] = await Promise.all([
-        apiService.wardOfficer.getDashboard(),
-        apiService.wardOfficer.getPendingApprovals()
-      ]);
-
-      const dashboard = dashboardRes.data || dashboardRes;
-      const pending = pendingRes.data || pendingRes || [];
-
-      console.log('✅ Dashboard data:', dashboard);
-      setDashboardData({
-        ...dashboard,
-        pendingApprovalsList: pending // Store full list if needed
-      });
-
-      // If pending count from dashboard stats is missing, use list length
-      if (dashboard.pendingApproval === undefined) {
-        dashboard.pendingApproval = pending.length;
-      }
-
+      const response = await wardOfficerService.getDashboardAnalytics();
+      setDashboardData(response.data || response);
+      const wardChangesRes = await wardOfficerService.getPendingWardChanges();
+      setWardChanges(wardChangesRes.data || wardChangesRes || []);
     } catch (err) {
-      console.error('❌ Failed to load dashboard:', err);
+      console.error('Failed to load dashboard:', err);
     }
   };
 
-  const loadComplaints = async () => {
+  const loadComplaints = async (pageNum = 0) => {
     try {
       setLoading(true);
-      console.log('🔄 Loading complaints...');
-
-      // Use specific pending approvals if filter is PENDING
-      if (filterStatus === 'PENDING') {
-        const response = await apiService.wardOfficer.getPendingApprovals();
-        const list = response.data || response || [];
-        setComplaints(list);
-        setTotalPages(1);
-      } else {
-        // Fallback to normal list
-        const response = await apiService.wardOfficer.getAllComplaints(); // Changed from getComplaints which was paginated?
-        // Note: apiService.wardOfficer.getAllComplaints() maps to /ward/complaints. 
-        // Previous code used getComplaints(page, 10).
-        // If getAllComplaints returns list, handle it:
-        const list = response.data || response || [];
-        setComplaints(list);
-        setTotalPages(1);
-      }
+      const response = await wardOfficerService.getWardComplaints({ page: pageNum, size: 20 });
+      const payload = response.data || response;
+      const list = payload.content || (Array.isArray(payload) ? payload : []);
+      setComplaints(list);
+      setPage(pageNum);
     } catch (err) {
-      console.error('❌ Failed to load complaints:', err);
+      console.error('Failed to load complaints:', err);
       setComplaints([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApprove = async (complaintId) => {
-    if (!window.confirm('Are you sure you want to approve this complaint?')) return;
-
+  const handleWardChange = async (requestId, action) => {
     try {
-      await apiService.wardOfficer.approveComplaint(complaintId);
-      alert('✅ Complaint approved successfully!');
+      if (action === 'approve') {
+        await wardOfficerService.approveWardChange(requestId, 'Approved by Ward Command');
+      } else {
+        await wardOfficerService.rejectWardChange(requestId, 'Protocol rejection by Ward Command');
+      }
       loadDashboard();
-      loadComplaints();
     } catch (err) {
-      alert('Failed to approve complaint: ' + (err.response?.data?.message || err.message));
+      console.error('Error handling ward change:', err);
     }
   };
 
-  const handleReject = async (complaintId) => {
-    const reason = prompt('Please provide a reason for rejection:');
-    if (!reason) return;
-
-    try {
-      await apiService.wardOfficer.rejectComplaint(complaintId, reason);
-      alert('✅ Complaint rejected!');
-      loadDashboard();
-      loadComplaints();
-    } catch (err) {
-      alert('Failed to reject complaint: ' + (err.response?.data?.message || err.message));
-    }
+  const stats = dashboardData?.cards || dashboardData?.overallStatistics || {
+    totalComplaints: 0, pendingApprovals: 0, approved: 0, pending: 0, closed: 0
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      'SUBMITTED': { class: 'status-submitted', icon: Clock, text: 'Pending Approval' },
-      'APPROVED': { class: 'status-approved', icon: CheckCircle, text: 'Approved' },
-      'ASSIGNED': { class: 'status-assigned', icon: Users, text: 'Assigned' },
-      'IN_PROGRESS': { class: 'status-in-progress', icon: RefreshCw, text: 'In Progress' },
-      'RESOLVED': { class: 'status-resolved', icon: CheckCircle, text: 'Resolved' },
-      'CLOSED': { class: 'status-closed', icon: CheckCircle, text: 'Closed' },
-      'REJECTED': { class: 'status-rejected', icon: XCircle, text: 'Rejected' }
-    };
-    return badges[status] || badges['SUBMITTED'];
-  };
+  const deptData = (dashboardData?.departmentPerformance || []).map(d => ({
+    name: d.departmentName || d.name,
+    count: d.total || d.count || 0
+  }));
 
-  const getPriorityBadge = (priority) => {
-    const badges = {
-      'LOW': 'priority-low',
-      'MEDIUM': 'priority-medium',
-      'HIGH': 'priority-high',
-      'CRITICAL': 'priority-critical'
-    };
-    return badges[priority] || 'priority-medium';
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const getDaysAgo = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    return `${diffDays} days ago`;
-  };
-
-  const filterComplaints = () => {
-    let filtered = complaints;
-
+  const filteredComplaints = complaints.filter(c => {
     if (filterStatus !== 'ALL') {
-      filtered = filtered.filter(c => {
-        if (filterStatus === 'PENDING') return c.status === 'SUBMITTED';
-        return c.status === filterStatus;
-      });
+      if (filterStatus === 'PENDING_APPROVAL') if (c.status !== 'RESOLVED') return false;
+      else if (filterStatus === 'IN_PROGRESS') if (c.status !== 'IN_PROGRESS' && c.status !== 'ASSIGNED') return false;
+      else if (c.status !== filterStatus) return false;
     }
-
     if (searchTerm) {
-      filtered = filtered.filter(c =>
-        c.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.complaintId?.toString().includes(searchTerm)
-      );
+      const term = searchTerm.toLowerCase();
+      return c.title?.toLowerCase().includes(term) || c.complaintId?.toString().includes(term);
     }
+    return true;
+  });
 
-    return filtered;
-  };
+  const ITEMS_PER_PAGE = 6;
+  const paginatedComplaints = filteredComplaints.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  const filteredComplaints = filterComplaints();
-
-  // Default dashboard data if not loaded
-  const stats = dashboardData || {
-    totalComplaints: complaints.length,
-    pendingApproval: complaints.filter(c => c.status === 'SUBMITTED').length,
-    approved: complaints.filter(c => c.status === 'APPROVED' || c.status === 'ASSIGNED').length,
-    inProgress: complaints.filter(c => c.status === 'IN_PROGRESS').length,
-    resolved: complaints.filter(c => c.status === 'RESOLVED' || c.status === 'CLOSED').length
-  };
+  if (loading && !dashboardData) {
+    return (
+      <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F5F7FA' }}>
+        <RefreshCw className="animate-spin text-primary mb-4" size={56} style={{ color: '#1254AF' }} />
+        <p className="fw-bold text-primary text-uppercase tracking-widest" style={{ color: '#1254AF' }}>Loading...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="ward-officer-dashboard">
-      {/* Header */}
-      <div className="dashboard-header">
-        <div className="header-content">
-          <div className="header-title">
-            <LayoutDashboard className="w-8 h-8" />
-            <div>
-              <h1>Ward Officer Dashboard</h1>
-              <p>Manage and approve complaints in your ward</p>
-            </div>
+    <div className="min-vh-100" style={{ backgroundColor: '#F5F7FA', padding: '2rem' }}>
+      {/* Header Section */}
+      <div className="card border-0 shadow-lg rounded-0 overflow-hidden mb-4" style={{
+        background: 'linear-gradient(135deg, #1254AF 0%, #0D4291 100%)'
+      }}>
+        <div className="card-body p-4 position-relative">
+          <div className="position-absolute top-50 end-0 translate-middle-y p-3 opacity-10">
+            <ShieldCheck size={180} color="white" />
           </div>
-          <button
-            onClick={() => { loadDashboard(); loadComplaints(); }}
-            className="btn-refresh"
-          >
-            <RefreshCw className="w-5 h-5" />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="statistics-grid">
-        <div className="stat-card stat-total">
-          <div className="stat-icon">
-            <FileText className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalComplaints || 0}</div>
-            <div className="stat-label">Total Complaints</div>
-          </div>
-          <div className="stat-trend">
-            <TrendingUp className="w-4 h-4" />
-            <span>All time</span>
-          </div>
-        </div>
-
-        <div className="stat-card stat-pending">
-          <div className="stat-icon">
-            <Clock className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.pendingApproval || 0}</div>
-            <div className="stat-label">Pending Approval</div>
-          </div>
-          <div className="stat-action">
-            <button
-              onClick={() => setFilterStatus('PENDING')}
-              className="btn-stat-action"
-            >
-              View All
-            </button>
-          </div>
-        </div>
-
-        <div className="stat-card stat-approved">
-          <div className="stat-icon">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.approved || 0}</div>
-            <div className="stat-label">Approved</div>
-          </div>
-          <div className="stat-action">
-            <button
-              onClick={() => setFilterStatus('APPROVED')}
-              className="btn-stat-action"
-            >
-              View All
-            </button>
-          </div>
-        </div>
-
-        <div className="stat-card stat-progress">
-          <div className="stat-icon">
-            <RefreshCw className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.inProgress || 0}</div>
-            <div className="stat-label">In Progress</div>
-          </div>
-          <div className="stat-action">
-            <button
-              onClick={() => setFilterStatus('IN_PROGRESS')}
-              className="btn-stat-action"
-            >
-              View All
-            </button>
-          </div>
-        </div>
-
-        <div className="stat-card stat-resolved">
-          <div className="stat-icon">
-            <CheckSquare className="w-6 h-6" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.resolved || 0}</div>
-            <div className="stat-label">Resolved</div>
-          </div>
-          <div className="stat-trend">
-            <TrendingUp className="w-4 h-4" />
-            <span>Success rate</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="filters-section">
-        <div className="filters-header">
-          <Filter className="w-5 h-5" />
-          <span>Filter & Search</span>
-        </div>
-
-        <div className="filter-controls">
-          <div className="filter-group">
-            <label>Status</label>
-            <div className="filter-buttons">
-              <button
-                onClick={() => setFilterStatus('ALL')}
-                className={`filter-btn ${filterStatus === 'ALL' ? 'active' : ''}`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilterStatus('PENDING')}
-                className={`filter-btn ${filterStatus === 'PENDING' ? 'active' : ''}`}
-              >
-                Pending
-              </button>
-              <button
-                onClick={() => setFilterStatus('APPROVED')}
-                className={`filter-btn ${filterStatus === 'APPROVED' ? 'active' : ''}`}
-              >
-                Approved
-              </button>
-              <button
-                onClick={() => setFilterStatus('IN_PROGRESS')}
-                className={`filter-btn ${filterStatus === 'IN_PROGRESS' ? 'active' : ''}`}
-              >
-                In Progress
-              </button>
-              <button
-                onClick={() => setFilterStatus('RESOLVED')}
-                className={`filter-btn ${filterStatus === 'RESOLVED' ? 'active' : ''}`}
-              >
-                Resolved
-              </button>
-            </div>
-          </div>
-
-          <div className="search-group">
-            <Search className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search by ID, title, or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Complaints List */}
-      {loading ? (
-        <div className="loading-state">
-          <div className="spinner-large"></div>
-          <p>Loading complaints...</p>
-        </div>
-      ) : filteredComplaints.length === 0 ? (
-        <div className="empty-state">
-          <FileText className="w-16 h-16" />
-          <h3>No Complaints Found</h3>
-          <p>
-            {filterStatus === 'ALL' && !searchTerm
-              ? "No complaints in your ward yet"
-              : "No complaints match your filters"}
-          </p>
-        </div>
-      ) : (
-        <div className="complaints-grid">
-          {filteredComplaints.map((complaint) => {
-            const statusInfo = getStatusBadge(complaint.status);
-            const StatusIcon = statusInfo.icon;
-            const isPending = complaint.status === 'SUBMITTED';
-
-            return (
-              <div key={complaint.complaintId} className="complaint-card">
-                {/* Card Header */}
-                <div className="card-header">
-                  <div className="complaint-id">
-                    <span className="id-label">CMP-{complaint.complaintId}</span>
-                    <span className={`priority-badge ${getPriorityBadge(complaint.priority)}`}>
-                      {complaint.priority || 'MEDIUM'}
-                    </span>
-                  </div>
-                  <div className={`status-badge ${statusInfo.class}`}>
-                    <StatusIcon className="w-4 h-4" />
-                    <span>{statusInfo.text}</span>
-                  </div>
+          <div className="row align-items-center position-relative z-1">
+            <div className="col-md-8">
+              <div className="d-flex align-items-center gap-3 mb-2">
+                <div className="p-2 rounded-0 bg-white bg-opacity-20 shadow-sm border border-white border-opacity-10 text-white">
+                  <Shield size={28} />
                 </div>
-
-                {/* Card Body */}
-                <div className="card-body">
-                  <h3 className="complaint-title">{complaint.title}</h3>
-                  <p className="complaint-description">
-                    {complaint.description?.length > 120
-                      ? complaint.description.substring(0, 120) + '...'
-                      : complaint.description}
-                  </p>
-
-                  <div className="complaint-meta">
-                    <div className="meta-item">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatDate(complaint.createdAt)}</span>
-                      <span className="meta-secondary">({getDaysAgo(complaint.createdAt)})</span>
-                    </div>
-                    <div className="meta-item">
-                      <Building2 className="w-4 h-4" />
-                      <span>{complaint.department?.departmentName || 'N/A'}</span>
-                    </div>
-                    <div className="meta-item">
-                      <Users className="w-4 h-4" />
-                      <span>{complaint.citizenName || 'Anonymous'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Footer */}
-                <div className="card-footer">
-                  <button
-                    onClick={() => navigate(`/ward-officer/complaints/${complaint.complaintId}`)}
-                    className="btn-view"
-                  >
-                    <Eye className="w-4 h-4" />
-                    View Details
-                  </button>
-
-                  <button
-                    onClick={() => navigate('/ward-officer/map')}
-                    className="btn-view ms-2"
-                    style={{ background: '#f3f4f6', color: '#4b5563' }}
-                  >
-                    <MapPin className="w-4 h-4" />
-                    Map
-                  </button>
-
-                  {isPending && (
-                    <>
-                      <button
-                        onClick={() => handleApprove(complaint.complaintId)}
-                        className="btn-approve"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleReject(complaint.complaintId)}
-                        className="btn-reject"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        Reject
-                      </button>
-                    </>
-                  )}
+                <div>
+                  <h2 className="fw-bold text-white mb-0" style={{ fontSize: '1.75rem' }}>Ward Dashboard</h2>
+                  <p className="text-white opacity-90 small mb-0 font-medium">Overview of your ward's complaints and performance.</p>
                 </div>
               </div>
-            );
-          })}
+            </div>
+            <div className="col-md-4 text-md-end">
+              <div className="d-flex gap-2 justify-content-md-end mt-3 mt-md-0">
+                <button
+                  onClick={() => navigate('/ward-officer/map')}
+                  className="btn btn-white rounded-0 px-3 py-2 fw-bold small shadow-sm d-flex align-items-center justify-content-center gap-2"
+                >
+                  <MapIcon size={16} /> Map View
+                </button>
+                <button
+                  onClick={() => { loadDashboard(); loadComplaints(); }}
+                  className="btn btn-outline-light rounded-0 px-3 py-2 fw-bold small shadow-sm d-flex align-items-center justify-content-center gap-2"
+                >
+                  <RefreshCw size={16} /> Refresh
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Quick Grid */}
+      <div className="row g-4 mb-4">
+        {[
+          { label: 'Total Complaints', val: stats.totalComplaints, icon: FileText, color: '#1254AF', trend: '+5.2%' },
+          { label: 'Pending Approval', val: stats.pendingApprovals, icon: AlertCircle, color: '#F59E0B', highlight: true },
+          { label: 'In Progress', val: stats.pending, icon: Zap, color: '#3B82F6' },
+          { label: 'Closed', val: stats.closed, icon: CheckSquare, color: '#10B981' }
+        ].map((s, idx) => (
+          <div key={idx} className="col-6 col-md-3">
+            <div className={`card border-0 shadow-sm rounded-0 p-3 h-100 bg-white transition-all hover-up ${s.highlight ? 'border-start border-4 border-warning' : ''}`}>
+              <div className="d-flex justify-content-between align-items-start mb-2">
+                <div className="p-2 rounded-0" style={{ backgroundColor: s.color + '15', color: s.color }}>
+                  <s.icon size={20} />
+                </div>
+                {s.trend && <span className="extra-small fw-bold text-success">{s.trend}</span>}
+              </div>
+              <h3 className="fw-bold text-dark mb-0">{s.val}</h3>
+              <span className="extra-small fw-bold text-muted text-uppercase tracking-wider">{s.label}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="bg-white p-1 rounded-0 shadow-sm mb-4 d-inline-flex gap-1 border border-light">
+        {[
+          { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+          { id: 'complaints', label: 'Complaints', icon: ClipboardList },
+          { id: 'ward-changes', label: 'Ward Transfers', icon: MapPin, count: wardChanges.length }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveView(tab.id)}
+            className={`btn d-flex align-items-center gap-2 px-4 py-2 border-0 rounded-0 fw-bold small transition-all ${activeView === tab.id ? 'bg-primary text-white shadow-sm' : 'text-muted'}`}
+            style={{ backgroundColor: activeView === tab.id ? '#1254AF' : undefined }}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+            {tab.count > 0 && <span className="badge bg-danger ms-2 rounded-0 px-2">{tab.count}</span>}
+          </button>
+        ))}
+      </div>
+
+      {activeView === 'overview' && (
+        <div className="row g-4">
+          <div className="col-lg-8">
+            <div className="card border-0 shadow-sm rounded-0 overflow-hidden h-100 bg-white">
+              <div className="card-header bg-white border-0 p-4 d-flex justify-content-between align-items-center">
+                <h5 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                  <Activity className="text-primary" style={{ color: '#1254AF' }} size={20} />
+                  Recent Activity
+                </h5>
+                <button onClick={() => setActiveView('complaints')} className="btn btn-link p-0 text-primary fw-bold small text-decoration-none" style={{ color: '#1254AF' }}>View All</button>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead className="bg-light">
+                      <tr>
+                        <th className="px-4 py-3 small fw-bold text-muted text-uppercase">ID</th>
+                        <th className="py-3 small fw-bold text-muted text-uppercase">Title</th>
+                        <th className="py-3 small fw-bold text-muted text-uppercase">Status</th>
+                        <th className="py-3 text-end px-4 small fw-bold text-muted text-uppercase">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedComplaints.slice(0, 5).map(c => (
+                        <tr key={c.complaintId} className="border-bottom border-light">
+                          <td className="px-4 fw-bold text-primary" style={{ color: '#1254AF' }}>#{c.complaintId}</td>
+                          <td>
+                            <div className="fw-semibold text-dark text-truncate" style={{ maxWidth: '250px' }}>{c.title}</div>
+                            <div className="small text-muted mt-1">{c.department?.departmentName || 'General'}</div>
+                          </td>
+                          <td><StatusBadge status={c.status} size="small" /></td>
+                          <td className="text-end px-4">
+                            <button
+                              onClick={() => navigate(`/ward-officer/complaints/${c.complaintId}`)}
+                              className="btn btn-light rounded-0 p-2 text-primary"
+                              style={{ color: '#1254AF', backgroundColor: '#F0F9FF' }}
+                            >
+                              <Eye size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-lg-4">
+            <div className="card border-0 shadow-sm rounded-0 bg-white h-100 p-4">
+              <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+                <Building2 className="text-primary" style={{ color: '#1254AF' }} size={20} />
+                Department Load
+              </h5>
+              <div style={{ height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={deptData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#EBF6F6" />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fontWeight: 600 }} width={80} />
+                    <Tooltip cursor={{ fill: '#F8FAFC' }} contentStyle={{ borderRadius: '0', border: 'none', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }} />
+                    <Bar dataKey="count" fill="#1254AF" radius={[0, 4, 4, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            onClick={() => setPage(p => Math.max(0, p - 1))}
-            disabled={page === 0 || loading}
-            className="pagination-btn"
-          >
-            Previous
-          </button>
-          <span className="pagination-info">
-            Page {page + 1} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1 || loading}
-            className="pagination-btn"
-          >
-            Next
-          </button>
+      {activeView === 'complaints' && (
+        <div className="card border-0 shadow-sm rounded-0 overflow-hidden bg-white">
+          <div className="card-header bg-white border-0 p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <h5 className="fw-bold mb-0">All Complaints</h5>
+            <div className="d-flex gap-2 align-items-center">
+              <div className="position-relative">
+                <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={16} />
+                <input
+                  type="text"
+                  className="form-control rounded-0 border bg-light ps-5 py-2 small"
+                  placeholder="Search ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ width: '200px' }}
+                />
+              </div>
+              <select className="form-select rounded-0 border bg-light small px-3 py-2 shadow-none" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                <option value="ALL">All Status</option>
+                <option value="PENDING_APPROVAL">Pending Approval</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+            </div>
+          </div>
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead className="bg-light">
+                  <tr>
+                    <th className="px-4 py-3 small fw-bold text-muted">ID</th>
+                    <th className="py-3 small fw-bold text-muted">Title</th>
+                    <th className="py-3 small fw-bold text-muted text-center">Status</th>
+                    <th className="py-3 small fw-bold text-muted text-end px-4">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedComplaints.map(c => (
+                    <tr key={c.complaintId} className="border-bottom border-light">
+                      <td className="px-4 fw-bold text-primary" style={{ color: '#1254AF' }}>#{c.complaintId}</td>
+                      <td>
+                        <div className="fw-semibold text-dark">{c.title}</div>
+                        <div className="small text-muted">{new Date(c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                      </td>
+                      <td className="text-center"><StatusBadge status={c.status} size="small" /></td>
+                      <td className="text-end px-4">
+                        <button onClick={() => navigate(`/ward-officer/complaints/${c.complaintId}`)} className="btn btn-light rounded-0 p-2 text-primary" style={{ backgroundColor: '#F0F9FF', color: '#1254AF' }}>
+                          <Eye size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
+
+      {activeView === 'ward-changes' && (
+        <div className="animate-fadeIn">
+          <div className="d-flex align-items-center gap-3 mb-4">
+            <h4 className="fw-bold mb-0">Transfer Requests</h4>
+            <span className="badge bg-primary rounded-0 px-3 py-2 small" style={{ backgroundColor: '#1254AF' }}>{wardChanges.length} Pending</span>
+          </div>
+
+          <div className="row g-4">
+            {wardChanges.length === 0 ? (
+              <div className="col-12 text-center py-5">
+                <div className="card border-0 shadow-sm rounded-0 p-5 bg-white border-dashed">
+                  <MapPin size={60} className="text-muted opacity-25 mb-3 mx-auto" />
+                  <h5 className="fw-bold text-muted">No Requests</h5>
+                  <p className="text-muted small">No jurisdictional transfer requests found.</p>
+                </div>
+              </div>
+            ) : (
+              wardChanges.map(request => (
+                <div key={request.id} className="col-md-6">
+                  <div className="card border-0 shadow-sm rounded-0 bg-white p-4 h-100">
+                    <div className="d-flex align-items-center gap-3 mb-3">
+                      <div className="p-3 rounded-0 bg-primary bg-opacity-10 text-primary" style={{ backgroundColor: '#F0F9FF', color: '#1254AF' }}>
+                        <User size={24} />
+                      </div>
+                      <div className="flex-grow-1">
+                        <h5 className="fw-bold text-dark mb-0">{request.userName || 'Citizen'}</h5>
+                        <div className="d-flex align-items-center gap-2 small text-muted">
+                          <Clock size={14} /> {new Date().toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-0 bg-light border mb-3 d-flex align-items-center justify-content-center gap-3">
+                      <div className="text-center">
+                        <span className="extra-small fw-bold text-muted d-block mb-1">Current</span>
+                        <div className="badge bg-white text-dark rounded-0 px-3 border">Ward {user?.wardId || 'X'}</div>
+                      </div>
+                      <ArrowRight size={18} className="text-muted" />
+                      <div className="text-center">
+                        <span className="extra-small fw-bold text-muted d-block mb-1">Target</span>
+                        <div className="badge bg-primary text-white rounded-0 px-3" style={{ backgroundColor: '#1254AF' }}>Ward {request.requestedWardId}</div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-0 bg-white border border-dashed mb-3">
+                      <p className="extra-small fw-bold text-muted mb-1 text-uppercase">Reason</p>
+                      <p className="mb-0 small fst-italic text-dark">"{request.reason || 'No reason provided'}"</p>
+                    </div>
+
+                    <div className="d-flex gap-2">
+                      <button onClick={() => handleWardChange(request.id, 'approve')} className="btn btn-primary flex-grow-1 rounded-0 py-2 small fw-bold text-white shadow-sm" style={{ backgroundColor: '#1254AF' }}>Approve</button>
+                      <button onClick={() => handleWardChange(request.id, 'reject')} className="btn btn-light flex-grow-1 rounded-0 py-2 small fw-bold shadow-sm text-secondary">Reject</button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .fw-black { font-weight: 800; }
+        .text-primary { color: #1254AF !important; }
+        .bg-primary { background-color: #1254AF !important; }
+        .extra-small { font-size: 0.75rem; }
+        .tracking-widest { letter-spacing: 0.1em; }
+        .transition-all { transition: all 0.2s ease-in-out; }
+        .hover-up:hover { transform: translateY(-3px); }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}} />
     </div>
   );
 };

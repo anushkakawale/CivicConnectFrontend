@@ -20,7 +20,6 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
   headers: {
-    "Content-Type": "application/json",
     "Accept": "application/json"
   }
 });
@@ -31,7 +30,10 @@ const api = axios.create({
 const PUBLIC_ENDPOINTS = [
   "/auth/login",
   "/citizens/register",
-  "/wards"
+  "/wards",
+  "/departments",
+  "/diagnostics",
+  "/health"
 ];
 
 /**
@@ -41,7 +43,9 @@ const PUBLIC_ENDPOINTS = [
  */
 const isPublicEndpoint = (url) => {
   if (!url) return false;
-  return PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint));
+  // Clean URL of query parameters for comparison
+  const path = url.split('?')[0];
+  return PUBLIC_ENDPOINTS.some(endpoint => path === endpoint || path.startsWith(endpoint + '/'));
 };
 
 /**
@@ -123,9 +127,9 @@ api.interceptors.request.use(
 
       console.group(`🚀 API Request: ${method} ${url}`);
       console.log("📍 URL:", `${config.baseURL}${url}`);
-      console.log("🔑 Headers:", config.headers);
+      console.log("🔑 Auth Present:", !!config.headers.Authorization);
       if (data) {
-        console.log("📤 Request Data:", data);
+        console.log("📤 Request Data Type:", data instanceof FormData ? 'FormData' : typeof data);
       }
       console.groupEnd();
     }
@@ -200,6 +204,9 @@ api.interceptors.response.use(
 
       if (error.response) {
         console.error("📥 Response Data:", error.response.data);
+        console.group("🧾 Response Headers");
+        console.log(error.response.headers);
+        console.groupEnd();
       }
 
       console.groupEnd();
@@ -207,20 +214,60 @@ api.interceptors.response.use(
 
     // Handle 401 Unauthorized - clear session and redirect to login
     if (error.response?.status === 401) {
-      // Only redirect if not already on login page
-      if (!window.location.pathname.includes('/login') && window.location.pathname !== '/') {
-        console.warn("🔒 Session expired. Redirecting to login...");
-        localStorage.clear();
-        window.location.href = "/";
+      const failedUrl = error.config?.url || "UNKNOWN";
+      console.error("🔍 401 Unauthorized Error on URL:", failedUrl);
+
+      const currentToken = localStorage.getItem("token");
+      const currentRole = localStorage.getItem("role");
+      const isPublic = isPublicEndpoint(failedUrl);
+
+      console.warn("🛡️ Security Context Diagnostics:", {
+        hasToken: !!currentToken,
+        role: currentRole,
+        isPublic: isPublic,
+        pathname: window.location.pathname
+      });
+
+      // Temporary check: If this is an upload, don't immediately redirect to allow seeing the toast
+      const isUpload = failedUrl.includes('/images');
+      const isAuthCall = failedUrl.includes('/auth/');
+
+      // If we have a token but got a 401 on a protected route, it's an invalid session
+      if (!isPublic && currentToken && !isAuthCall && !isUpload) {
+        if (!window.location.pathname.includes('/login') && window.location.pathname !== '/') {
+          console.warn("🔒 Invalid session detected for protected resource. Resetting security...");
+          // Only clear if NOT on public pages to avoid loop
+          localStorage.removeItem('token');
+          localStorage.removeItem('role');
+          localStorage.removeItem('user');
+          window.location.href = "/";
+        }
+      } else if (isAuthCall) {
+        console.error("❌ Authentication failure during login/refresh. Check credentials.");
+      } else if (isPublic) {
+        console.warn("⚠️ Public endpoint returned 401. This is likely a Backend configuration error.");
       }
     }
 
     // Handle 403 Forbidden
     if (error.response?.status === 403) {
       console.warn("🚫 Access forbidden. You don't have permission for this action.");
+
+      // Log specific path that failed
+      const currentPath = window.location.pathname;
+      console.warn(`403 Error on path: ${currentPath} for URL: ${error.config?.url}`);
+
+      // Do NOT redirect automatically, as this causes loops if the dashboard calls a 403 endpoint.
+      // Let the UI handle the error state.
+
       if (isPublicEndpoint(error.config?.url)) {
         console.error("⚠️ Public endpoint returned 403. Check Backend Security Configuration (CORS, CSRF, or permitAll).");
-        errorMessage = "Backend Access Denied. Please contact the administrator.";
+        // errorMessage is a const from line 189, so we should just use a different variable or modify the customError later
+        const publicErrorMessage = "Backend Access Denied. Please contact the administrator.";
+        const publicError = new Error(publicErrorMessage);
+        publicError.status = 403;
+        publicError.response = error.response;
+        return Promise.reject(publicError);
       }
     }
 
@@ -228,6 +275,7 @@ api.interceptors.response.use(
     const customError = new Error(errorMessage);
     customError.status = error.response?.status;
     customError.data = error.response?.data;
+    customError.response = error.response; // Preserve response for compatibility
     customError.originalError = error;
 
     return Promise.reject(customError);

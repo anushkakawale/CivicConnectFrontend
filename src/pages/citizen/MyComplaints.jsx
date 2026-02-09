@@ -1,312 +1,227 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    FileText,
-    Eye,
-    Filter,
-    RefreshCw,
-    AlertCircle,
-    CheckCircle,
-    Clock,
-    MapPin,
-    Calendar,
-    Image as ImageIcon
+    FileText, Filter, RefreshCw, AlertCircle, Eye,
+    Clock, CheckCircle, XCircle, Loader, Calendar,
+    Building2, MapPin, ArrowRight, Search, Plus, Activity, AlertCircle as ShieldAlert, User
 } from 'lucide-react';
-import { StatusBadge, PriorityBadge } from '../../components/common';
 import apiService from '../../api/apiService';
-import './MyComplaints.css';
+import DashboardHeader from '../../components/layout/DashboardHeader';
+import ComplaintCard from '../../components/complaints/ComplaintCard';
 
 const MyComplaints = () => {
     const navigate = useNavigate();
     const [complaints, setComplaints] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [filterStatus, setFilterStatus] = useState('ALL');
-    const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
+    const [filter, setFilter] = useState('ALL');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const PRIMARY_COLOR = '#244799';
 
     useEffect(() => {
         fetchComplaints();
-    }, [page]);
+    }, []);
 
     const fetchComplaints = async () => {
+        setLoading(true);
+        setError('');
         try {
-            setLoading(true);
-            setError('');
-            console.log('🔄 Fetching my complaints...');
+            const response = await apiService.citizen.getMyComplaints({ size: 100 });
+            const data = response.data?.content || response.content || response.data || response;
+            const list = Array.isArray(data) ? data : (data.content || []);
 
-            const response = await apiService.citizen.getMyComplaints({ page, size: 10 });
-            console.log('✅ Complaints Request Complete. Response:', response);
-
-            // Backend returns a Page object: { content: [], pageable: {}, totalPages: ... }
-            // axios interceptor might return response.data directly
-            const data = response.data || response;
-
-            if (data && Array.isArray(data.content)) {
-                setComplaints(data.content);
-                setTotalPages(data.totalPages || 0);
-            } else if (Array.isArray(data)) {
-                // Fallback for list
-                setComplaints(data);
-                setTotalPages(1);
-            } else {
-                console.warn('⚠️ Unexpected response format:', data);
-                setComplaints([]);
-            }
-        } catch (err) {
-            console.error('❌ Failed to fetch complaints:', err);
-            setError('Failed to load complaints. Please try again.');
+            // Deduplicate by ID
+            const uniqueMap = new Map();
+            list.forEach(item => {
+                if (item && typeof item === 'object') {
+                    const id = item.complaintId || item.id;
+                    if (id && !uniqueMap.has(id)) {
+                        uniqueMap.set(id, item);
+                    }
+                }
+            });
+            setComplaints(Array.from(uniqueMap.values()));
+        } catch (error) {
+            console.error('Failed to fetch reports:', error);
+            setError('Failed to load your reports');
             setComplaints([]);
         } finally {
             setLoading(false);
         }
     };
 
+    const filteredComplaints = complaints.filter(c => {
+        const matchesFilter = filter === 'ALL' ||
+            (filter === 'PENDING' && ['SUBMITTED', 'ASSIGNED'].includes(c.status)) ||
+            (filter === 'ACTIVE' && c.status === 'IN_PROGRESS') ||
+            (filter === 'RESOLVED' && ['RESOLVED', 'CLOSED'].includes(c.status));
 
+        const matchesSearch = (c.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.complaintId || c.id)?.toString().includes(searchQuery));
 
-    const filterComplaints = () => {
-        if (filterStatus === 'ALL') return complaints;
-        return complaints.filter(c => c.status === filterStatus);
+        return matchesFilter && matchesSearch;
+    });
+
+    const stats = {
+        total: complaints.length,
+        pending: complaints.filter(c => ['SUBMITTED', 'ASSIGNED'].includes(c.status)).length,
+        active: complaints.filter(c => c.status === 'IN_PROGRESS').length,
+        resolved: complaints.filter(c => ['RESOLVED', 'CLOSED'].includes(c.status)).length
     };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        });
-    };
-
-    const getDaysAgo = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-        if (diffDays === 0) return 'Today';
-        if (diffDays === 1) return 'Yesterday';
-        return `${diffDays} days ago`;
-    };
-
-    const filteredComplaints = filterComplaints();
-
-    if (loading && page === 0) {
-        return (
-            <div className="my-complaints-container">
-                <div className="loading-state">
-                    <div className="spinner-large"></div>
-                    <p>Loading your complaints...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
-        <div className="my-complaints-container">
-            {/* Header */}
-            <div className="complaints-header">
-                <div className="header-content">
-                    <div className="header-title">
-                        <FileText className="w-8 h-8" />
-                        <div>
-                            <h1>My Complaints</h1>
-                            <p>Track and manage all your submitted complaints</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={fetchComplaints}
-                        className="btn-refresh"
-                        disabled={loading}
-                    >
-                        <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
-                    </button>
-                </div>
-            </div>
-
-            {/* Error Alert */}
-            {error && (
-                <div className="alert alert-error">
-                    <AlertCircle className="w-5 h-5" />
-                    <span>{error}</span>
-                    <button onClick={() => setError('')} className="alert-close">×</button>
-                </div>
-            )}
-
-            {/* Filters */}
-            <div className="filters-section">
-                <div className="filters-header">
-                    <Filter className="w-5 h-5" />
-                    <span>Filter by Status</span>
-                </div>
-                <div className="filter-buttons">
-                    <button
-                        onClick={() => setFilterStatus('ALL')}
-                        className={`filter-btn ${filterStatus === 'ALL' ? 'active' : ''}`}
-                    >
-                        All ({complaints.length})
-                    </button>
-                    <button
-                        onClick={() => setFilterStatus('SUBMITTED')}
-                        className={`filter-btn ${filterStatus === 'SUBMITTED' ? 'active' : ''}`}
-                    >
-                        Submitted
-                    </button>
-                    <button
-                        onClick={() => setFilterStatus('IN_PROGRESS')}
-                        className={`filter-btn ${filterStatus === 'IN_PROGRESS' ? 'active' : ''}`}
-                    >
-                        In Progress
-                    </button>
-                    <button
-                        onClick={() => setFilterStatus('RESOLVED')}
-                        className={`filter-btn ${filterStatus === 'RESOLVED' ? 'active' : ''}`}
-                    >
-                        Resolved
-                    </button>
-                    <button
-                        onClick={() => setFilterStatus('CLOSED')}
-                        className={`filter-btn ${filterStatus === 'CLOSED' ? 'active' : ''}`}
-                    >
-                        Closed
-                    </button>
-                </div>
-            </div>
-
-            {/* Complaints List */}
-            {filteredComplaints.length === 0 ? (
-                <div className="empty-state">
-                    <FileText className="w-16 h-16" />
-                    <h3>No Complaints Found</h3>
-                    <p>
-                        {filterStatus === 'ALL'
-                            ? "You haven't submitted any complaints yet"
-                            : `No ${filterStatus.toLowerCase()} complaints`}
-                    </p>
+        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
+            <DashboardHeader
+                portalName="PMC Citizen Portal"
+                title="My reports"
+                subtitle="Track the status of all your submitted municipal issues."
+                icon={FileText}
+                actions={
                     <button
                         onClick={() => navigate('/citizen/register-complaint')}
-                        className="btn-primary"
+                        className="btn btn-primary shadow-premium rounded-4 d-flex align-items-center gap-2 px-4 py-2"
+                        style={{ backgroundColor: PRIMARY_COLOR, border: 'none' }}
                     >
-                        Register New Complaint
+                        <Plus size={20} strokeWidth={2.5} />
+                        <span className="fw-bold small">Report issue</span>
                     </button>
-                </div>
-            ) : (
-                <div className="complaints-grid">
-                    {filteredComplaints.map((complaint) => {
-                        return (
-                            <div key={complaint.complaintId} className="complaint-card">
-                                {/* Card Header */}
-                                <div className="card-header">
-                                    <div className="complaint-id">
-                                        <span className="id-label">CMP-{complaint.complaintId}</span>
-                                        <PriorityBadge priority={complaint.priority} />
+                }
+            />
+
+            <div className="container-fluid px-5">
+                {/* Visual Stats Bar */}
+                <div className="row g-4 mb-5">
+                    {[
+                        { label: 'Total reported', value: stats.total, color: PRIMARY_COLOR, bg: '#EBF2FF', icon: FileText },
+                        { label: 'Pending', value: stats.pending, color: '#6366F1', bg: '#F5F3FF', icon: Clock },
+                        { label: 'In progress', value: stats.active, color: '#F59E0B', bg: '#FFFCF5', icon: Activity },
+                        { label: 'Resolved', value: stats.resolved, color: '#10B981', bg: '#ECFDF5', icon: CheckCircle }
+                    ].map((s, idx) => (
+                        <div key={idx} className="col-md-3">
+                            <div className="card border-0 shadow-premium rounded-4 p-4 h-100 bg-white border-bottom border-4" style={{ borderColor: s.color }}>
+                                <div className="d-flex align-items-center gap-3">
+                                    <div className="rounded-4 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '44px', height: '44px', backgroundColor: s.bg, color: s.color }}>
+                                        <s.icon size={20} />
                                     </div>
-                                    <StatusBadge status={complaint.status} />
-                                </div>
-
-                                {/* Card Body */}
-                                <div className="card-body">
-                                    <h3 className="complaint-title">{complaint.title}</h3>
-                                    <p className="complaint-description">
-                                        {complaint.description?.length > 120
-                                            ? complaint.description.substring(0, 120) + '...'
-                                            : complaint.description}
-                                    </p>
-
-                                    <div className="complaint-meta">
-                                        <div className="meta-item">
-                                            <Calendar className="w-4 h-4" />
-                                            <span>{formatDate(complaint.createdAt)}</span>
-                                            <span className="meta-secondary">({getDaysAgo(complaint.createdAt)})</span>
-                                        </div>
-                                        <div className="meta-item">
-                                            <MapPin className="w-4 h-4" />
-                                            <span>{complaint.wardName || 'Ward Area'}</span>
-                                        </div>
-                                        {complaint.imageCount > 0 && (
-                                            <div className="meta-item">
-                                                <ImageIcon className="w-4 h-4" />
-                                                <span>{complaint.imageCount} {complaint.imageCount === 1 ? 'image' : 'images'}</span>
-                                            </div>
-                                        )}
+                                    <div>
+                                        <h3 className="fw-bold mb-0 text-dark" style={{ letterSpacing: '-1px' }}>{s.value}</h3>
+                                        <p className="extra-small fw-bold text-muted mb-0 uppercase-tracking">{s.label}</p>
                                     </div>
-
-                                    {complaint.departmentName && (
-                                        <div className="complaint-category">
-                                            <span className="department-badge">
-                                                {complaint.departmentName}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Card Footer */}
-                                <div className="card-footer">
-                                    <button
-                                        onClick={() => navigate(`/citizen/complaint/${complaint.complaintId}`)}
-                                        className="btn-view-details"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                        View Details
-                                    </button>
                                 </div>
                             </div>
-                        );
-                    })}
+                        </div>
+                    ))}
                 </div>
-            )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="pagination">
-                    <button
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        disabled={page === 0 || loading}
-                        className="pagination-btn"
-                    >
-                        Previous
-                    </button>
-                    <span className="pagination-info">
-                        Page {page + 1} of {totalPages}
-                    </span>
-                    <button
-                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                        disabled={page >= totalPages - 1 || loading}
-                        className="pagination-btn"
-                    >
-                        Next
-                    </button>
+                {/* Filters and Actions */}
+                <div className="card border-0 shadow-premium rounded-4 p-4 mb-5 bg-white">
+                    <div className="row g-4 align-items-center">
+                        <div className="col-lg-6">
+                            <div className="d-flex flex-wrap gap-2">
+                                {[
+                                    { id: 'ALL', label: 'All reports' },
+                                    { id: 'PENDING', label: 'Pending' },
+                                    { id: 'ACTIVE', label: 'In progress' },
+                                    { id: 'RESOLVED', label: 'Resolved' }
+                                ].map(btn => (
+                                    <button
+                                        key={btn.id}
+                                        onClick={() => setFilter(btn.id)}
+                                        className={`btn rounded-pill px-4 py-2 fw-bold small transition-all ${filter === btn.id ? 'btn-primary' : 'btn-light border text-muted'}`}
+                                        style={filter === btn.id ? { backgroundColor: PRIMARY_COLOR, border: 'none' } : {}}
+                                    >
+                                        {btn.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="col-lg-6">
+                            <div className="input-group">
+                                <span className="input-group-text bg-light border-0 ps-4 rounded-start-pill text-muted">
+                                    <Search size={18} />
+                                </span>
+                                <input
+                                    type="text"
+                                    className="form-control bg-light border-0 py-3 rounded-end-pill px-3 fw-medium"
+                                    placeholder="Search by ID or title..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            )}
 
-            {/* Statistics */}
-            {complaints.length > 0 && (
-                <div className="statistics-section">
-                    <div className="stat-card">
-                        <div className="stat-value">{complaints.length}</div>
-                        <div className="stat-label">Shown on Page</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-value">
-                            {complaints.filter(c => c.status === 'IN_PROGRESS').length}
+                {/* Content Area */}
+                <div className="row g-4 animate-fadeIn">
+                    {loading ? (
+                        <div className="col-12 text-center py-5" style={{ backgroundColor: '#F8FAFC' }}>
+                            <RefreshCw className="animate-spin text-primary opacity-20 mb-3" size={48} style={{ color: PRIMARY_COLOR }} />
+                            <p className="text-muted fw-bold small">Updating reports...</p>
                         </div>
-                        <div className="stat-label">In Progress</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-value">
-                            {complaints.filter(c => c.status === 'RESOLVED' || c.status === 'CLOSED').length}
-                        </div>
-                        <div className="stat-label">Resolved</div>
-                    </div>
-                    <div className="stat-card">
-                        <div className="stat-value">
-                            {complaints.filter(c => c.status === 'SUBMITTED' || c.status === 'APPROVED').length}
-                        </div>
-                        <div className="stat-label">Pending</div>
-                    </div>
+                    ) : (
+                        <>
+                            <div className="col-12 mb-4 d-flex align-items-center justify-content-between">
+                                <h5 className="fw-bold text-dark mb-0 border-start border-4 border-primary ps-3">
+                                    Showing {filteredComplaints.length} reports
+                                </h5>
+                                <button
+                                    onClick={fetchComplaints}
+                                    className="btn btn-light rounded-circle shadow-sm p-2 border"
+                                    title="Refresh details"
+                                >
+                                    <RefreshCw size={18} className="text-muted" />
+                                </button>
+                            </div>
+
+                            {filteredComplaints.length > 0 ? (
+                                filteredComplaints.map(c => (
+                                    <div key={c.id || c.complaintId} className="col-md-6 col-lg-4">
+                                        <div className="animate-fadeIn">
+                                            <ComplaintCard
+                                                complaint={c}
+                                                onClick={() => navigate(`/citizen/complaints/${c.id || c.complaintId}`)}
+                                                brandColor={PRIMARY_COLOR}
+                                            />
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-12">
+                                    <div className="card border-0 shadow-premium p-5 text-center bg-white rounded-4 border-2 border-dashed">
+                                        <div className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '80px', height: '80px' }}>
+                                            <ShieldAlert size={32} className="text-muted opacity-30" />
+                                        </div>
+                                        <h4 className="fw-bold text-dark mb-2">No reports found</h4>
+                                        <p className="text-muted small fw-medium mt-2">
+                                            We couldn't find any reports matching your current filter.
+                                        </p>
+                                        <div className="mt-5">
+                                            <button onClick={() => { setFilter('ALL'); setSearchQuery(''); }} className="btn btn-primary px-5 py-3 rounded-pill fw-bold small shadow-premium border-0" style={{ backgroundColor: PRIMARY_COLOR }}>
+                                                Clear all filters
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
-            )}
+            </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .animate-spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
+                .transition-all { transition: all 0.3s ease; }
+                .uppercase-tracking { text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+                .extra-small { font-size: 11px; }
+                .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            `}} />
         </div>
     );
 };

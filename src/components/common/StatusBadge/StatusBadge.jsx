@@ -1,60 +1,32 @@
 /**
  * StatusBadge Component
- * Displays complaint status with consistent styling
+ * Premium professional status badge with consistent design
  */
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import './StatusBadge.css';
 
 const StatusBadge = ({ status, size = 'medium', showIcon = true }) => {
+    const normalizedStatus = status?.toUpperCase().replace(' ', '_');
+
     const statusConfig = {
-        'SUBMITTED': {
-            label: 'Submitted',
-            icon: 'fas fa-paper-plane',
-            className: 'submitted'
-        },
-        'APPROVED': {
-            label: 'Approved',
-            icon: 'fas fa-check-circle',
-            className: 'approved'
-        },
-        'ASSIGNED': {
-            label: 'Assigned',
-            icon: 'fas fa-user-check',
-            className: 'assigned'
-        },
-        'IN_PROGRESS': {
-            label: 'In Progress',
-            icon: 'fas fa-spinner',
-            className: 'in-progress'
-        },
-        'RESOLVED': {
-            label: 'Resolved',
-            icon: 'fas fa-check-double',
-            className: 'resolved'
-        },
-        'CLOSED': {
-            label: 'Closed',
-            icon: 'fas fa-times-circle',
-            className: 'closed'
-        },
-        'REJECTED': {
-            label: 'Rejected',
-            icon: 'fas fa-ban',
-            className: 'rejected'
-        }
+        'SUBMITTED': { label: 'Submitted', className: 'submitted' },
+        'PENDING': { label: 'Pending', className: 'submitted' },
+        'APPROVED': { label: 'Approved', className: 'approved' },
+        'ASSIGNED': { label: 'Assigned', className: 'assigned' },
+        'IN_PROGRESS': { label: 'In Progress', className: 'in-progress' },
+        'RESOLVED': { label: 'Resolved', className: 'resolved' },
+        'CLOSED': { label: 'Closed', className: 'closed' },
+        'REJECTED': { label: 'Rejected', className: 'rejected' }
     };
 
-    const config = statusConfig[status] || {
+    const config = statusConfig[normalizedStatus] || {
         label: status,
-        icon: 'fas fa-question-circle',
-        className: 'default'
+        className: 'closed'
     };
 
     return (
-        <span className={`status-badge ${config.className} ${size}`}>
-            {showIcon && <i className={config.icon}></i>}
+        <span className={`status-badge ${config.className} ${size === 'small' ? 'px-2 py-0.5 text-[10px]' : ''}`}>
             <span>{config.label}</span>
         </span>
     );

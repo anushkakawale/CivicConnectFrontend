@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import apiService from "../api/apiService";
 
@@ -16,7 +16,21 @@ export default function CitizenRegistration() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [wards, setWards] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchWards();
+  }, []);
+
+  const fetchWards = async () => {
+    try {
+      const response = await apiService.masterData.getWards();
+      setWards(response.data || response || []);
+    } catch (err) {
+      console.error("Failed to fetch wards:", err);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,7 +116,7 @@ export default function CitizenRegistration() {
             height: '80px',
             margin: '0 auto 1rem',
             backgroundColor: 'var(--gov-primary)',
-            borderRadius: '4px',
+            borderRadius: '0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -205,13 +219,11 @@ export default function CitizenRegistration() {
                 onChange={(e) => setFormData({ ...formData, wardNumber: e.target.value })}
               >
                 <option value="">Select your ward (optional)</option>
-                <option value="1">Ward 1</option>
-                <option value="2">Ward 2</option>
-                <option value="3">Ward 3</option>
-                <option value="4">Ward 4</option>
-                <option value="5">Ward 5</option>
-                <option value="6">Ward 6</option>
-                <option value="7">Ward 7</option>
+                {wards.map(ward => (
+                  <option key={ward.wardId} value={ward.wardId}>
+                    Ward {ward.wardNumber || ward.number} - {ward.areaName || ward.wardName}
+                  </option>
+                ))}
               </select>
             </div>
 

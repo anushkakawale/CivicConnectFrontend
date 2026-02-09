@@ -7,7 +7,6 @@ const CitizenLayout = () => {
     const [userName, setUserName] = useState('Citizen');
 
     useEffect(() => {
-        // Get user name from localStorage
         try {
             const userStr = localStorage.getItem('user');
             const nameStr = localStorage.getItem('name');
@@ -25,32 +24,28 @@ const CitizenLayout = () => {
     }, []);
 
     return (
-        <div className="d-flex" style={{ minHeight: '100vh' }}>
-            {/* Top Bar - Fixed */}
+        <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#F8FAFC' }}>
             <TopHeader role="CITIZEN" userName={userName} />
 
-            {/* Sidebar - Fixed below navbar */}
             <Sidebar role="CITIZEN" />
 
-            {/* Main Content Area */}
             <div
                 className="gov-main d-flex flex-column"
                 style={{
                     marginTop: '70px',
-                    marginLeft: '250px',
-                    width: 'calc(100% - 250px)',
-                    transition: 'all 0.3s ease'
+                    marginLeft: '260px',
+                    width: 'calc(100% - 260px)',
+                    transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                    minHeight: 'calc(100vh - 70px)'
                 }}
             >
-                {/* Page Content */}
-                <div className="flex-grow-1 bg-light">
+                <div className="flex-grow-1 p-0">
                     <Outlet />
                 </div>
             </div>
 
-            {/* Responsive Styles */}
             <style>{`
-                @media (max-width: 768px) {
+                @media (max-width: 1024px) {
                     .gov-main {
                         margin-left: 0 !important;
                         width: 100% !important;
@@ -62,4 +57,3 @@ const CitizenLayout = () => {
 };
 
 export default CitizenLayout;
-

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { Filter, MapPin, RefreshCw } from 'lucide-react';
+import { Filter, MapPin, RefreshCw, Layers } from 'lucide-react';
 import apiService from '../../api/apiService';
 import 'leaflet/dist/leaflet.css';
 import './ComplaintMap.css';
@@ -51,46 +51,78 @@ const ComplaintMap = ({ role, userId, wardId, departmentId, onComplaintClick }) 
     const loadComplaints = async () => {
         try {
             setLoading(true);
-            console.log('🗺️ Loading map data for role:', role);
-
             let params = {};
+            let responseData = [];
 
-            // Role-based filtering
-            switch (role) {
-                case 'CITIZEN':
-                    // Show only own ward complaints
-                    params.wardId = wardId;
-                    break;
-
-                case 'WARD_OFFICER':
-                    // Show all complaints in officer's ward
-                    params.wardId = wardId;
-                    break;
-
-                case 'DEPARTMENT_OFFICER':
-                    // Show assigned complaints in their ward and department
-                    params.wardId = wardId;
-                    params.departmentId = departmentId;
-                    params.assignedTo = userId;
-                    break;
-
-                case 'ADMIN':
-                    // Show all complaints with filters
-                    if (filters.ward !== 'ALL') params.wardId = filters.ward;
-                    if (filters.department !== 'ALL') params.departmentId = filters.department;
-                    break;
-            }
-
-            // Add status filter
             if (filters.status !== 'ALL') {
                 params.status = filters.status;
             }
 
-            const data = await apiService.map.getComplaintsForMap(params);
-            console.log('✅ Map data loaded:', data?.length || 0, 'complaints');
-            setComplaints(data || []);
+            switch (role) {
+                case 'CITIZEN':
+                    try {
+                        const res = await apiService.citizen.getMapData();
+                        responseData = Array.isArray(res) ? res : (res.data || []);
+                    } catch (e) {
+                        // Fallback if specific endpoint not ready yet
+                        params.wardId = wardId;
+                        const res = await apiService.map.getActiveComplaints(params);
+                        responseData = res;
+                    }
+                    break;
+                case 'WARD_OFFICER':
+                    try {
+                        const res = await apiService.wardOfficer.getMapData();
+                        responseData = Array.isArray(res) ? res : (res.data || []);
+                    } catch (e) {
+                        params.wardId = wardId;
+                        const res = await apiService.map.getActiveComplaints(params);
+                        responseData = res;
+                    }
+                    break;
+                case 'DEPARTMENT_OFFICER':
+                    try {
+                        const res = await apiService.departmentOfficer.getMapData();
+                        responseData = Array.isArray(res) ? res : (res.data || []);
+                    } catch (e) {
+                        params.wardId = wardId;
+                        params.departmentId = departmentId;
+                        params.assignedTo = userId;
+                        const res = await apiService.map.getActiveComplaints(params);
+                        responseData = res;
+                    }
+                    break;
+                case 'ADMIN':
+                    if (filters.ward !== 'ALL') params.wardId = filters.ward;
+                    if (filters.department !== 'ALL') params.departmentId = filters.department;
+
+                    try {
+                        let res;
+                        if (filters.ward !== 'ALL') {
+                            res = await apiService.admin.getWardMap(filters.ward);
+                        } else {
+                            res = await apiService.admin.getCityMap();
+                        }
+                        responseData = Array.isArray(res) ? res : (res.data || []);
+                    } catch (e) {
+                        const res = await apiService.map.getActiveComplaints(params);
+                        responseData = res;
+                    }
+                    break;
+                default:
+                    const res = await apiService.map.getActiveComplaints(params); // Fallback
+                    responseData = res;
+                    break;
+            }
+
+            // Client-side filtering if API returns everything
+            if (filters.status !== 'ALL' && Array.isArray(responseData)) {
+                responseData = responseData.filter(c => c.status === filters.status);
+            }
+
+            setComplaints(responseData || []);
         } catch (error) {
-            console.error('❌ Failed to load map data:', error);
+            console.error('Failed to load map data:', error);
             setComplaints([]);
         } finally {
             setLoading(false);
@@ -99,82 +131,45 @@ const ComplaintMap = ({ role, userId, wardId, departmentId, onComplaintClick }) 
 
     const getMarkerIcon = (status) => {
         const colors = {
-            'SUBMITTED': '#3b82f6',    // Blue
-            'APPROVED': '#8b5cf6',      // Purple
-            'ASSIGNED': '#f59e0b',      // Amber
-            'IN_PROGRESS': '#f97316',   // Orange
-            'RESOLVED': '#10b981',      // Green
-            'CLOSED': '#6b7280',        // Gray
-            'REJECTED': '#ef4444'       // Red
+            'SUBMITTED': '#3b82f6',
+            'APPROVED': '#8b5cf6',
+            'ASSIGNED': '#f59e0b',
+            'IN_PROGRESS': '#f97316',
+            'RESOLVED': '#10b981',
+            'CLOSED': '#6b7280',
+            'REJECTED': '#ef4444'
         };
-
         const color = colors[status] || '#6b7280';
 
         return L.divIcon({
             className: 'custom-marker',
             html: `
-        <div style="
-          background-color: ${color};
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          border: 3px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+        <div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+            <circle cx="12" cy="9" r="2.5" fill="rgba(0,0,0,0.2)"/>
           </svg>
-        </div>
-      `,
+        </div>`,
             iconSize: [30, 30],
             iconAnchor: [15, 30],
-            popupAnchor: [0, -30]
+            popupAnchor: [0, -32]
         });
-    };
-
-    const getStatusBadgeClass = (status) => {
-        const classes = {
-            'SUBMITTED': 'status-submitted',
-            'APPROVED': 'status-approved',
-            'ASSIGNED': 'status-assigned',
-            'IN_PROGRESS': 'status-in-progress',
-            'RESOLVED': 'status-resolved',
-            'CLOSED': 'status-closed',
-            'REJECTED': 'status-rejected'
-        };
-        return classes[status] || 'status-default';
-    };
-
-    const handleComplaintClick = (complaintId) => {
-        if (onComplaintClick) {
-            onComplaintClick(complaintId);
-        }
     };
 
     return (
         <div className="complaint-map-container">
-            {/* Filters */}
-            <div className="map-filters-panel">
+            <div className={`map-filters-panel ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="filters-header">
                     <div className="filters-title">
-                        <Filter className="w-5 h-5" />
-                        <h3>Map Filters</h3>
+                        <Filter className="w-5 h-5 text-blue-600" />
+                        <h3>Smart Filters</h3>
                     </div>
-                    <button
-                        onClick={loadComplaints}
-                        className="refresh-button"
-                        disabled={loading}
-                    >
+                    <button onClick={loadComplaints} className="refresh-button">
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
                     </button>
                 </div>
 
                 <div className="filters-content">
-                    {/* Status Filter */}
                     <div className="filter-group">
                         <label>Status</label>
                         <select
@@ -182,162 +177,80 @@ const ComplaintMap = ({ role, userId, wardId, departmentId, onComplaintClick }) 
                             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                             className="filter-select"
                         >
-                            <option value="ALL">All Status</option>
+                            <option value="ALL">All Active</option>
                             <option value="SUBMITTED">Submitted</option>
-                            <option value="APPROVED">Approved</option>
-                            <option value="ASSIGNED">Assigned</option>
                             <option value="IN_PROGRESS">In Progress</option>
                             <option value="RESOLVED">Resolved</option>
-                            <option value="CLOSED">Closed</option>
                         </select>
                     </div>
 
-                    {/* Admin-only filters */}
                     {role === 'ADMIN' && (
                         <>
                             <div className="filter-group">
                                 <label>Ward</label>
-                                <select
-                                    value={filters.ward}
-                                    onChange={(e) => setFilters({ ...filters, ward: e.target.value })}
-                                    className="filter-select"
-                                >
-                                    <option value="ALL">All Wards</option>
-                                    {wards.map(ward => (
-                                        <option key={ward.wardId} value={ward.wardId}>
-                                            {ward.wardName}
-                                        </option>
-                                    ))}
+                                <select value={filters.ward} onChange={(e) => setFilters({ ...filters, ward: e.target.value })} className="filter-select">
+                                    <option value="ALL">Entire City</option>
+                                    {wards.map(w => <option key={w.wardId} value={w.wardId}>{w.wardName}</option>)}
                                 </select>
                             </div>
-
                             <div className="filter-group">
                                 <label>Department</label>
-                                <select
-                                    value={filters.department}
-                                    onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-                                    className="filter-select"
-                                >
-                                    <option value="ALL">All Departments</option>
-                                    {departments.map(dept => (
-                                        <option key={dept.departmentId} value={dept.departmentId}>
-                                            {dept.departmentName}
-                                        </option>
-                                    ))}
+                                <select value={filters.department} onChange={(e) => setFilters({ ...filters, department: e.target.value })} className="filter-select">
+                                    <option value="ALL">All Depts</option>
+                                    {departments.map(d => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
                                 </select>
                             </div>
                         </>
                     )}
 
-                    {/* Stats */}
-                    <div className="map-stats">
-                        <div className="stat-item">
-                            <MapPin className="w-4 h-4" />
-                            <span>{complaints.length} Complaints</span>
+                    <div className="map-stats mt-4 pt-4 border-t border-slate-100">
+                        <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                            <Layers className="w-4 h-4 text-slate-400" />
+                            <span>{complaints.length} Visible Pins</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Map */}
             <div className="map-wrapper">
-                {loading && (
-                    <div className="map-loading-overlay">
-                        <div className="loader-spinner"></div>
-                        <p>Loading complaints...</p>
-                    </div>
-                )}
-
-                <MapContainer
-                    center={center}
-                    zoom={13}
-                    style={{ height: '100%', width: '100%' }}
-                    className="complaint-map"
-                >
+                <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }} className="complaint-map">
                     <TileLayer
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        attribution='&copy; OpenStreetMap'
                     />
-
-                    {complaints.map((complaint) => (
-                        <Marker
-                            key={complaint.complaintId}
-                            position={[complaint.latitude, complaint.longitude]}
-                            icon={getMarkerIcon(complaint.status)}
-                        >
-                            <Popup className="complaint-popup">
-                                <div className="popup-content">
-                                    <h4 className="popup-title">{complaint.title}</h4>
-
-                                    <div className="popup-details">
-                                        <div className="detail-row">
-                                            <span className="detail-label">ID:</span>
-                                            <span className="detail-value">CMP-{complaint.complaintId}</span>
-                                        </div>
-
-                                        <div className="detail-row">
-                                            <span className="detail-label">Status:</span>
-                                            <span className={`status-badge ${getStatusBadgeClass(complaint.status)}`}>
-                                                {complaint.status}
-                                            </span>
-                                        </div>
-
-                                        <div className="detail-row">
-                                            <span className="detail-label">Category:</span>
-                                            <span className="detail-value">{complaint.category}</span>
-                                        </div>
-
-                                        {complaint.priority && (
-                                            <div className="detail-row">
-                                                <span className="detail-label">Priority:</span>
-                                                <span className={`priority-badge priority-${complaint.priority.toLowerCase()}`}>
-                                                    {complaint.priority}
-                                                </span>
+                    {complaints.map((c) => (
+                        <Marker key={c.complaintId || c.id} position={[c.latitude, c.longitude]} icon={getMarkerIcon(c.status)}>
+                            <Popup className="complaint-popup-premium">
+                                <div className="p-1 min-w-[200px]">
+                                    {c.imageUrl && (
+                                        <div className="w-full h-32 mb-3 rounded-lg overflow-hidden relative bg-slate-100">
+                                            <img src={c.imageUrl} alt="Issue" className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} />
+                                            <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
+                                                {c.departmentName || 'General'}
                                             </div>
-                                        )}
-
-                                        <div className="detail-row">
-                                            <span className="detail-label">Date:</span>
-                                            <span className="detail-value">
-                                                {new Date(complaint.createdAt).toLocaleDateString()}
-                                            </span>
                                         </div>
+                                    )}
+                                    <h4 className="font-bold text-slate-900 mb-1 line-clamp-1">{c.title}</h4>
+                                    <p className="text-xs text-slate-500 mb-3 line-clamp-2">{c.description}</p>
+
+                                    <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wider mb-3">
+                                        <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded-0">{c.wardName}</span>
+                                        <span className={`px-2 py-1 rounded-0 ${c.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                            {c.status}
+                                        </span>
                                     </div>
 
                                     <button
-                                        onClick={() => handleComplaintClick(complaint.complaintId)}
-                                        className="view-details-btn"
+                                        onClick={() => onComplaintClick && onComplaintClick(c.complaintId || c.id)}
+                                        className="w-full py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors"
                                     >
-                                        View Full Details
+                                        View Details
                                     </button>
                                 </div>
                             </Popup>
                         </Marker>
                     ))}
                 </MapContainer>
-            </div>
-
-            {/* Legend */}
-            <div className="map-legend">
-                <h4>Status Legend</h4>
-                <div className="legend-items">
-                    <div className="legend-item">
-                        <div className="legend-marker" style={{ backgroundColor: '#3b82f6' }}></div>
-                        <span>Submitted</span>
-                    </div>
-                    <div className="legend-item">
-                        <div className="legend-marker" style={{ backgroundColor: '#f97316' }}></div>
-                        <span>In Progress</span>
-                    </div>
-                    <div className="legend-item">
-                        <div className="legend-marker" style={{ backgroundColor: '#10b981' }}></div>
-                        <span>Resolved</span>
-                    </div>
-                    <div className="legend-item">
-                        <div className="legend-marker" style={{ backgroundColor: '#6b7280' }}></div>
-                        <span>Closed</span>
-                    </div>
-                </div>
             </div>
         </div>
     );

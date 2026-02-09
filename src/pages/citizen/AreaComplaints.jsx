@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    MapPin,
-    Eye,
-    Filter,
-    RefreshCw,
-    AlertCircle,
-    CheckCircle,
-    Clock,
-    Calendar,
-    Building2,
-    TrendingUp
+    MapPin, Eye, Filter, RefreshCw, AlertCircle, CheckCircle,
+    Clock, Calendar, Building2, TrendingUp, Search, Layers,
+    ArrowRight, Info, Activity, Zap, Shield, Compass
 } from 'lucide-react';
 import apiService from '../../api/apiService';
-import './AreaComplaints.css';
+import StatusBadge from '../../components/ui/StatusBadge';
+import DashboardHeader from '../../components/layout/DashboardHeader';
+
+import ComplaintCard from '../../components/complaints/ComplaintCard';
 
 const AreaComplaints = () => {
     const navigate = useNavigate();
@@ -23,358 +19,220 @@ const AreaComplaints = () => {
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [filterDepartment, setFilterDepartment] = useState('ALL');
     const [departments, setDepartments] = useState([]);
-    const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
     const [wardInfo, setWardInfo] = useState(null);
 
+    const PRIMARY_COLOR = '#1254AF';
+
     useEffect(() => {
-        loadDepartments();
-        fetchComplaints();
-    }, [page]);
+        loadData();
+        const interval = setInterval(loadData, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, []);
 
-    const loadDepartments = async () => {
-        try {
-            const response = await apiService.masterData.getDepartments();
-            setDepartments(response.data || []);
-        } catch (err) {
-            console.error('Failed to load departments:', err);
-        }
-    };
-
-    const fetchComplaints = async () => {
+    const loadData = async () => {
         try {
             setLoading(true);
             setError('');
 
-            const response = await apiService.citizen.getAreaComplaints();
-            const data = response.data || response;
+            const deptRes = await apiService.masterData.getDepartments();
+            setDepartments(deptRes.data || []);
 
-            if (Array.isArray(data)) {
-                setComplaints(data);
-                setTotalPages(1);
-                if (data.length > 0) {
-                    setWardInfo({
-                        wardName: data[0].wardName || 'Your Ward',
-                        wardId: data[0].wardId
-                    });
-                }
-            } else {
-                setComplaints([]);
+            const profileRes = await apiService.profile.getProfile();
+            const profile = profileRes.data || profileRes;
+            const wardId = profile.wardId || profile.ward?.id || profile.ward?.wardId;
+
+            if (wardId) {
+                setWardInfo({
+                    wardName: profile.ward?.areaName || profile.wardName || 'Neighborhood',
+                    wardId: wardId
+                });
             }
+
+            const response = await apiService.citizen.getWardComplaints();
+            const data = response.data?.content || response.content || response.data || response;
+            const list = Array.isArray(data) ? data : (data.content || []);
+
+            // Tactical Anonymization and De-duplication
+            const uniqueMap = new Map();
+            list.forEach(item => {
+                const id = item.complaintId || item.id;
+                if (id && !uniqueMap.has(id)) {
+                    // Anonymize citizen data for public visibility
+                    const anonymized = {
+                        ...item,
+                        citizenName: "IDENTIFIED CITIZEN",
+                        citizenEmail: "SENSITIVE@PROTECTED",
+                        citizenMobile: "CONTACT_MASKED"
+                    };
+                    uniqueMap.set(id, anonymized);
+                }
+            });
+
+            const finalComplaints = Array.from(uniqueMap.values());
+            setComplaints(finalComplaints);
         } catch (err) {
-            console.error('❌ Failed to fetch ward complaints:', err);
-            setError('Failed to load ward complaints. Please try again.');
-            setComplaints([]);
+            console.error('Failed to load area reports:', err);
+            setError('Unable to load reports for this area.');
         } finally {
             setLoading(false);
         }
     };
 
-    const getStatusBadge = (status) => {
-        const badges = {
-            'SUBMITTED': { class: 'status-submitted', icon: Clock, text: 'Submitted' },
-            'APPROVED': { class: 'status-approved', icon: CheckCircle, text: 'Approved' },
-            'ASSIGNED': { class: 'status-assigned', icon: CheckCircle, text: 'Assigned' },
-            'IN_PROGRESS': { class: 'status-in-progress', icon: RefreshCw, text: 'In Progress' },
-            'RESOLVED': { class: 'status-resolved', icon: CheckCircle, text: 'Resolved' },
-            'CLOSED': { class: 'status-closed', icon: CheckCircle, text: 'Closed' },
-            'REJECTED': { class: 'status-rejected', icon: AlertCircle, text: 'Rejected' }
-        };
-        return badges[status] || badges['SUBMITTED'];
-    };
+    const filteredComplaints = complaints.filter(c => {
+        const matchesStatus = filterStatus === 'ALL' || c.status === filterStatus;
+        const matchesDept = filterDepartment === 'ALL' ||
+            (c.departmentId?.toString() === filterDepartment) ||
+            (c.department?.departmentId?.toString() === filterDepartment);
+        return matchesStatus && matchesDept;
+    });
 
-    const getPriorityBadge = (priority) => {
-        const badges = {
-            'LOW': 'priority-low',
-            'MEDIUM': 'priority-medium',
-            'HIGH': 'priority-high',
-            'CRITICAL': 'priority-critical'
-        };
-        return badges[priority] || 'priority-medium';
-    };
-
-    const filterComplaints = () => {
-        let filtered = complaints;
-
-        if (filterStatus !== 'ALL') {
-            filtered = filtered.filter(c => c.status === filterStatus);
-        }
-
-        if (filterDepartment !== 'ALL') {
-            filtered = filtered.filter(c => c.department?.departmentId === parseInt(filterDepartment));
-        }
-
-        return filtered;
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        });
-    };
-
-    const getDaysAgo = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-        if (diffDays === 0) return 'Today';
-        if (diffDays === 1) return 'Yesterday';
-        return `${diffDays} days ago`;
-    };
-
-    const filteredComplaints = filterComplaints();
-
-    // Calculate statistics
     const stats = {
         total: complaints.length,
-        inProgress: complaints.filter(c => c.status === 'IN_PROGRESS').length,
-        resolved: complaints.filter(c => c.status === 'RESOLVED' || c.status === 'CLOSED').length,
-        pending: complaints.filter(c => c.status === 'SUBMITTED' || c.status === 'APPROVED').length
+        pending: complaints.filter(c => ['SUBMITTED', 'PENDING', 'ASSIGNED'].includes(c.status)).length,
+        active: complaints.filter(c => c.status === 'IN_PROGRESS').length,
+        resolved: complaints.filter(c => ['RESOLVED', 'CLOSED'].includes(c.status)).length
     };
 
-    if (loading && page === 0) {
-        return (
-            <div className="area-complaints-container">
-                <div className="loading-state">
-                    <div className="spinner-large"></div>
-                    <p>Loading ward complaints...</p>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8FAFC' }}>
+            <RefreshCw className="animate-spin text-primary mb-4" size={56} style={{ color: PRIMARY_COLOR }} />
+            <p className="fw-bold text-muted small">Loading local area reports...</p>
+        </div>
+    );
 
     return (
-        <div className="area-complaints-container">
-            {/* Header */}
-            <div className="complaints-header">
-                <div className="header-content">
-                    <div className="header-title">
-                        <MapPin className="w-8 h-8" />
-                        <div>
-                            <h1>Area Complaints</h1>
-                            <p>View all complaints in {wardInfo?.wardName || 'your ward'}</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={fetchComplaints}
-                        className="btn-refresh"
-                        disabled={loading}
-                    >
-                        <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
-                    </button>
-                </div>
-            </div>
-
-            {/* Error Alert */}
-            {error && (
-                <div className="alert alert-error">
-                    <AlertCircle className="w-5 h-5" />
-                    <span>{error}</span>
-                    <button onClick={() => setError('')} className="alert-close">×</button>
-                </div>
-            )}
-
-            {/* Statistics Cards */}
-            <div className="statistics-grid">
-                <div className="stat-card stat-total">
-                    <div className="stat-icon">
-                        <MapPin className="w-6 h-6" />
-                    </div>
-                    <div className="stat-content">
-                        <div className="stat-value">{stats.total}</div>
-                        <div className="stat-label">Total Complaints</div>
-                    </div>
-                </div>
-                <div className="stat-card stat-pending">
-                    <div className="stat-icon">
-                        <Clock className="w-6 h-6" />
-                    </div>
-                    <div className="stat-content">
-                        <div className="stat-value">{stats.pending}</div>
-                        <div className="stat-label">Pending</div>
-                    </div>
-                </div>
-                <div className="stat-card stat-progress">
-                    <div className="stat-icon">
-                        <TrendingUp className="w-6 h-6" />
-                    </div>
-                    <div className="stat-content">
-                        <div className="stat-value">{stats.inProgress}</div>
-                        <div className="stat-label">In Progress</div>
-                    </div>
-                </div>
-                <div className="stat-card stat-resolved">
-                    <div className="stat-icon">
-                        <CheckCircle className="w-6 h-6" />
-                    </div>
-                    <div className="stat-content">
-                        <div className="stat-value">{stats.resolved}</div>
-                        <div className="stat-label">Resolved</div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="filters-section">
-                <div className="filters-header">
-                    <Filter className="w-5 h-5" />
-                    <span>Filter Complaints</span>
-                </div>
-                <div className="filter-groups">
-                    <div className="filter-group">
-                        <label>Status</label>
-                        <div className="filter-buttons">
-                            <button
-                                onClick={() => setFilterStatus('ALL')}
-                                className={`filter-btn ${filterStatus === 'ALL' ? 'active' : ''}`}
-                            >
-                                All
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('SUBMITTED')}
-                                className={`filter-btn ${filterStatus === 'SUBMITTED' ? 'active' : ''}`}
-                            >
-                                Submitted
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('IN_PROGRESS')}
-                                className={`filter-btn ${filterStatus === 'IN_PROGRESS' ? 'active' : ''}`}
-                            >
-                                In Progress
-                            </button>
-                            <button
-                                onClick={() => setFilterStatus('RESOLVED')}
-                                className={`filter-btn ${filterStatus === 'RESOLVED' ? 'active' : ''}`}
-                            >
-                                Resolved
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="filter-group">
-                        <label>Department</label>
-                        <select
-                            value={filterDepartment}
-                            onChange={(e) => setFilterDepartment(e.target.value)}
-                            className="department-select"
+        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
+            <DashboardHeader
+                portalName="Citizen Dashboard"
+                title="Local Issues"
+                subtitle={`Showing reports from ${wardInfo?.wardName || 'your area'}.`}
+                icon={Compass}
+                actions={
+                    <div className="d-flex align-items-center gap-3">
+                        <button
+                            onClick={loadData}
+                            className="btn btn-light rounded-pill px-4 py-2 fw-black d-flex align-items-center gap-2 shadow-sm border-0 transition-all hover-up"
+                            style={{ color: PRIMARY_COLOR }}
                         >
-                            <option value="ALL">All Departments</option>
-                            {departments.map(dept => (
-                                <option key={dept.departmentId} value={dept.departmentId}>
-                                    {dept.departmentName}
-                                </option>
-                            ))}
-                        </select>
+                            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} /> REFRESH FEED
+                        </button>
                     </div>
-                </div>
-            </div>
+                }
+            />
 
-            {/* Complaints List */}
-            {filteredComplaints.length === 0 ? (
-                <div className="empty-state">
-                    <MapPin className="w-16 h-16" />
-                    <h3>No Complaints Found</h3>
-                    <p>
-                        {filterStatus === 'ALL' && filterDepartment === 'ALL'
-                            ? "No complaints in your ward yet"
-                            : "No complaints match your filters"}
-                    </p>
-                </div>
-            ) : (
-                <div className="complaints-grid">
-                    {filteredComplaints.map((complaint) => {
-                        const statusInfo = getStatusBadge(complaint.status);
-                        const StatusIcon = statusInfo.icon;
-
-                        return (
-                            <div key={complaint.complaintId} className="complaint-card">
-                                {/* Card Header */}
-                                <div className="card-header">
-                                    <div className="complaint-id">
-                                        <span className="id-label">CMP-{complaint.complaintId}</span>
-                                        <span className={`priority-badge ${getPriorityBadge(complaint.priority)}`}>
-                                            {complaint.priority || 'MEDIUM'}
-                                        </span>
+            <div className="container-fluid px-5">
+                {/* Visual Stats */}
+                <div className="row g-4 mb-5">
+                    {[
+                        { label: 'Total reported', val: stats.total, icon: Layers, color: PRIMARY_COLOR, bg: '#EBF2FF' },
+                        { label: 'Pending', val: stats.pending, icon: Clock, color: '#6366F1', bg: '#F5F3FF' },
+                        { label: 'In progress', val: stats.active, icon: Activity, color: '#F59E0B', bg: '#FFFCF5' },
+                        { label: 'Resolved', val: stats.resolved, icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' }
+                    ].map((s, idx) => (
+                        <div key={idx} className="col-md-3">
+                            <div className="card border-0 shadow-premium rounded-4 p-4 h-100 bg-white border-bottom border-4" style={{ borderColor: s.color }}>
+                                <div className="d-flex align-items-center gap-3">
+                                    <div className="rounded-4 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '44px', height: '44px', backgroundColor: s.bg, color: s.color }}>
+                                        <s.icon size={20} />
                                     </div>
-                                    <div className={`status-badge ${statusInfo.class}`}>
-                                        <StatusIcon className="w-4 h-4" />
-                                        <span>{statusInfo.text}</span>
+                                    <div>
+                                        <h3 className="fw-bold mb-0 text-dark" style={{ letterSpacing: '-1px' }}>{s.val}</h3>
+                                        <p className="extra-small fw-bold text-muted mb-0 uppercase-tracking">{s.label}</p>
                                     </div>
-                                </div>
-
-                                {/* Card Body */}
-                                <div className="card-body">
-                                    <h3 className="complaint-title">{complaint.title}</h3>
-                                    <p className="complaint-description">
-                                        {complaint.description?.length > 120
-                                            ? complaint.description.substring(0, 120) + '...'
-                                            : complaint.description}
-                                    </p>
-
-                                    <div className="complaint-meta">
-                                        <div className="meta-item">
-                                            <Calendar className="w-4 h-4" />
-                                            <span>{formatDate(complaint.createdAt)}</span>
-                                            <span className="meta-secondary">({getDaysAgo(complaint.createdAt)})</span>
-                                        </div>
-                                        <div className="meta-item">
-                                            <Building2 className="w-4 h-4" />
-                                            <span>{complaint.department?.departmentName || 'N/A'}</span>
-                                        </div>
-                                    </div>
-
-                                    {complaint.citizenName && (
-                                        <div className="citizen-info">
-                                            <span className="citizen-label">Reported by:</span>
-                                            <span className="citizen-name">{complaint.citizenName}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Card Footer */}
-                                <div className="card-footer">
-                                    <button
-                                        onClick={() => navigate(`/citizen/complaint/${complaint.complaintId}`)}
-                                        className="btn-view-details"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                        View Details
-                                    </button>
                                 </div>
                             </div>
-                        );
-                    })}
+                        </div>
+                    ))}
                 </div>
-            )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="pagination">
-                    <button
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        disabled={page === 0 || loading}
-                        className="pagination-btn"
-                    >
-                        Previous
-                    </button>
-                    <span className="pagination-info">
-                        Page {page + 1} of {totalPages}
-                    </span>
-                    <button
-                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                        disabled={page >= totalPages - 1 || loading}
-                        className="pagination-btn"
-                    >
-                        Next
-                    </button>
+                {/* Filters Hub */}
+                <div className="card border-0 shadow-premium rounded-4 p-4 bg-white mb-5">
+                    <div className="row g-4 align-items-end">
+                        <div className="col-lg-6">
+                            <label className="form-label extra-small fw-bold text-muted mb-3 uppercase-tracking d-flex align-items-center gap-2">
+                                <Filter size={12} style={{ color: PRIMARY_COLOR }} /> Resolution status
+                            </label>
+                            <div className="d-flex gap-2 flex-wrap">
+                                {[
+                                    { id: 'ALL', label: 'All reports' },
+                                    { id: 'SUBMITTED', label: 'Reported' },
+                                    { id: 'IN_PROGRESS', label: 'In progress' },
+                                    { id: 'RESOLVED', label: 'Resolved' }
+                                ].map(s => (
+                                    <button
+                                        key={s.id}
+                                        onClick={() => setFilterStatus(s.id)}
+                                        className={`btn rounded-pill px-4 py-2 fw-bold small transition-all ${filterStatus === s.id ? 'btn-primary shadow-sm' : 'btn-light border text-muted'}`}
+                                        style={filterStatus === s.id ? { backgroundColor: PRIMARY_COLOR, border: 'none' } : {}}
+                                    >
+                                        {s.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="col-lg-4">
+                            <label className="form-label extra-small fw-bold text-muted mb-3 uppercase-tracking d-flex align-items-center gap-2">
+                                <Building2 size={12} style={{ color: PRIMARY_COLOR }} /> Municipal departments
+                            </label>
+                            <select
+                                className="form-select rounded-pill border py-3 px-4 fw-bold shadow-none small bg-light border-0"
+                                value={filterDepartment}
+                                onChange={(e) => setFilterDepartment(e.target.value)}
+                            >
+                                <option value="ALL">All departments</option>
+                                {departments.map(dept => (
+                                    <option key={dept.departmentId} value={dept.departmentId}>
+                                        {(dept.name || dept.departmentName).replace(/_/g, ' ')}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="col-lg-2">
+                            <div className="p-3 rounded-pill bg-light d-flex align-items-center justify-content-center gap-2 border" style={{ height: '54px' }}>
+                                <Search size={16} className="text-muted" />
+                                <span className="small fw-bold text-dark">{filteredComplaints.length} found</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            )}
+
+                {/* Main Content */}
+                <div className="row g-4 animate-fadeIn">
+                    {filteredComplaints.length === 0 ? (
+                        <div className="col-12">
+                            <div className="card border-0 shadow-premium rounded-4 p-5 text-center bg-white border-dashed border-2">
+                                <div className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '80px', height: '80px' }}>
+                                    <Shield size={32} className="text-muted opacity-30" />
+                                </div>
+                                <h4 className="fw-bold text-dark mb-2">No area reports found</h4>
+                                <p className="text-muted small fw-medium mt-2">
+                                    No reports were found in your area matching these filters.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        filteredComplaints.map((c) => (
+                            <div key={c.id || c.complaintId} className="col-md-6 col-lg-4">
+                                <ComplaintCard
+                                    complaint={c}
+                                    onClick={() => navigate(`/citizen/complaints/${c.id || c.complaintId}`)}
+                                    brandColor={PRIMARY_COLOR}
+                                />
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .animate-spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
+                .transition-all { transition: all 0.3s ease; }
+                .uppercase-tracking { text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+                .extra-small { font-size: 11px; }
+            `}} />
         </div>
     );
 };

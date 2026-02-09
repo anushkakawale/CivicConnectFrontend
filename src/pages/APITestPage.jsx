@@ -200,14 +200,14 @@ const APITestPage = () => {
                                             <button
                                                 onClick={() => runSingleTest(test)}
                                                 disabled={testing}
-                                                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                                className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-0 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
                                             >
                                                 Test
                                             </button>
                                         </div>
 
                                         {result && result.status === 'error' && (
-                                            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                                            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-0">
                                                 <p className="text-sm font-semibold text-red-800">Error:</p>
                                                 <p className="text-sm text-red-700">{result.error}</p>
                                                 {result.details && (
@@ -228,7 +228,7 @@ const APITestPage = () => {
                                                 <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-900">
                                                     Show response data
                                                 </summary>
-                                                <pre className="mt-2 p-3 bg-gray-50 rounded text-xs overflow-auto max-h-64">
+                                                <pre className="mt-2 p-3 bg-gray-50 rounded-0 text-xs overflow-auto max-h-64">
                                                     {JSON.stringify(result.data, null, 2)}
                                                 </pre>
                                             </details>

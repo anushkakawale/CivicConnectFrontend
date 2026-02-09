@@ -42,16 +42,16 @@ export const STATUS_LABELS = {
     [COMPLAINT_STATUS.ESCALATED]: 'Escalated'
 };
 
-// Status colors
+// Status colors (Modern Palette)
 export const STATUS_COLORS = {
-    [COMPLAINT_STATUS.PENDING]: '#ff9800',      // Orange
-    [COMPLAINT_STATUS.APPROVED]: '#2196f3',     // Blue
-    [COMPLAINT_STATUS.IN_PROGRESS]: '#03a9f4',  // Light Blue
-    [COMPLAINT_STATUS.RESOLVED]: '#4caf50',     // Green
-    [COMPLAINT_STATUS.CLOSED]: '#9e9e9e',       // Gray
-    [COMPLAINT_STATUS.REJECTED]: '#f44336',     // Red
-    [COMPLAINT_STATUS.REOPENED]: '#ff5722',     // Deep Orange
-    [COMPLAINT_STATUS.ESCALATED]: '#e91e63'     // Pink
+    [COMPLAINT_STATUS.PENDING]: '#f59e0b',      // Amber
+    [COMPLAINT_STATUS.APPROVED]: '#10b981',     // Emerald
+    [COMPLAINT_STATUS.IN_PROGRESS]: '#3b82f6',  // Blue
+    [COMPLAINT_STATUS.RESOLVED]: '#10b981',     // Emerald
+    [COMPLAINT_STATUS.CLOSED]: '#1e293b',       // Slate 800
+    [COMPLAINT_STATUS.REJECTED]: '#ef4444',     // Red
+    [COMPLAINT_STATUS.REOPENED]: '#6366f1',     // Indigo
+    [COMPLAINT_STATUS.ESCALATED]: '#dc2626'      // Red-600
 };
 
 // ==================== COMPLAINT CATEGORY ====================

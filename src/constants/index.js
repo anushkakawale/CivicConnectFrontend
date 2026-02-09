@@ -130,3 +130,9 @@ export const IMAGE_TYPES = {
     IN_PROGRESS: { label: 'In Progress', icon: '🔨' },
     AFTER_RESOLUTION: { label: 'After Resolution', icon: '✨' }
 };
+
+export const IMAGE_STAGES = {
+    BEFORE_WORK: { label: 'Before Work', color: 'secondary', icon: '📸' },
+    IN_PROGRESS: { label: 'In Progress', color: 'primary', icon: '🔨' },
+    AFTER_RESOLUTION: { label: 'Resolved Proof', color: 'success', icon: '✨' }
+};

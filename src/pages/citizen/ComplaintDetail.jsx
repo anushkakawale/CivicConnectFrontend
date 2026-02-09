@@ -1,520 +1,241 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    FileText, MapPin, Calendar, User, Building2, AlertCircle,
-    Clock, CheckCircle, XCircle, Image as ImageIcon, MessageSquare,
-    Star, RotateCcw, Upload, X
+    ArrowLeft, RotateCcw, Star, Loader, ShieldAlert, X, Zap, ChevronLeft, FileText, RefreshCw
 } from 'lucide-react';
-import { StatusBadge, PriorityBadge } from '../../components/common';
 import apiService from '../../api/apiService';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { useToast } from '../../hooks/useToast';
+import DashboardHeader from '../../components/layout/DashboardHeader';
+import ComplaintDetailView from '../../components/complaints/ComplaintDetailView';
 
+/**
+ * Strategic Citizen Complaint Detail
+ * Unified high-contrast layout for resident case tracking.
+ */
 const ComplaintDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [complaint, setComplaint] = useState(null);
+    const [timeline, setTimeline] = useState([]);
+    const [slaData, setSlaData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showReopenModal, setShowReopenModal] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-    const [showImageUpload, setShowImageUpload] = useState(false);
     const [reopenReason, setReopenReason] = useState('');
     const [rating, setRating] = useState(5);
     const [feedbackComment, setFeedbackComment] = useState('');
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
-    const [uploading, setUploading] = useState(false);
+    const [userWardId, setUserWardId] = useState(null);
+    const PRIMARY_COLOR = '#1254AF';
 
     useEffect(() => {
-        fetchComplaintDetails();
+        apiService.profile.getProfile().then(res => {
+            const p = res.data || res;
+            setUserWardId(p.wardId || p.ward?.id || p.ward?.wardId);
+        }).catch(() => { });
+    }, []);
+
+    useEffect(() => {
+        fetchData();
     }, [id]);
 
-    const fetchComplaintDetails = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
-            console.log(`🔄 Fetching details for complaint #${id}...`);
-            const response = await apiService.complaint.getById(id);
-            console.log('✅ Complaint Details Response:', response);
+            const [response, slaRes] = await Promise.all([
+                apiService.citizen.getComplaintDetails(id),
+                apiService.citizen.getSlaCountdown(id).catch(() => null)
+            ]);
 
-            const data = response.data || response;
+            const details = response.data || response;
 
-            if (data) {
-                setComplaint(data);
-            } else {
-                console.error('❌ No data found in response');
-                alert('Failed to load complaint details: No data received');
-            }
+            // Map rich "Gist" data structure from backend
+            setComplaint({
+                ...details,
+                images: details.images || details.imageUrls || []
+            });
+
+            // Use history from the rich object as primary timeline
+            setTimeline(details.history || details.timeline || []);
+            setSlaData(slaRes?.data || slaRes);
         } catch (error) {
-            console.error('❌ Failed to load complaint details:', error);
-            // alert('Failed to load complaint details'); // Suppress alert to avoid spamming if it's a transient issue
+            console.error('Fetch error:', error);
+            showToast('Unable to load report details.', 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const handleReopen = async () => {
-        if (!reopenReason.trim()) {
-            alert('Please provide a reason for reopening');
-            return;
-        }
-
+        if (!reopenReason.trim()) return;
         try {
             await apiService.complaint.reopen(id, reopenReason);
-            alert('✅ Complaint reopened successfully!');
+            showToast('Report reopened successfully.', 'success');
             setShowReopenModal(false);
-            fetchComplaintDetails();
-        } catch (error) {
-            alert(error.response?.data?.error || error.response?.data?.message || 'Failed to reopen complaint');
-        }
+            fetchData();
+        } catch (error) { showToast('Unable to reopen report.', 'error'); }
     };
 
     const handleSubmitFeedback = async () => {
         try {
             await apiService.complaint.submitFeedback(id, rating, feedbackComment);
-            alert('✅ Feedback submitted successfully!');
+            showToast('Thank you for your feedback.', 'success');
             setShowFeedbackModal(false);
-            fetchComplaintDetails();
-        } catch (error) {
-            alert(error.response?.data?.error || error.response?.data?.message || 'Failed to submit feedback');
-        }
+            fetchData();
+        } catch (error) { showToast('Unable to submit feedback.', 'error'); }
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSelectedFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => setImagePreview(reader.result);
-            reader.readAsDataURL(file);
-        }
-    };
+    if (loading && !complaint) {
+        return (
+            <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8FAFC' }}>
+                <RefreshCw className="animate-spin text-primary mb-4" size={56} style={{ color: PRIMARY_COLOR }} />
+                <p className="fw-bold text-muted small">Loading details...</p>
+            </div>
+        );
+    }
 
-    const handleImageUpload = async () => {
-        if (!selectedFile) return;
-
-        try {
-            setUploading(true);
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-            formData.append('stage', 'AFTER_RESOLUTION');
-
-            await apiService.citizen.uploadImage(id, formData);
-            alert('✅ Image uploaded successfully!');
-            setShowImageUpload(false);
-            setSelectedFile(null);
-            setImagePreview(null);
-            fetchComplaintDetails();
-        } catch (error) {
-            alert('Failed to upload image');
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'SUBMITTED': return 'secondary';
-            case 'PENDING': return 'warning';
-            case 'APPROVED': return 'info';
-            case 'ASSIGNED': return 'primary';
-            case 'IN_PROGRESS': return 'primary';
-            case 'RESOLVED': return 'success';
-            case 'CLOSED': return 'dark';
-            case 'REJECTED': return 'danger';
-            default: return 'secondary';
-        }
-    };
-
-
-
-    if (loading) return <LoadingSpinner />;
-    if (!complaint) return <div className="alert alert-danger">Complaint not found</div>;
+    if (!complaint) return null;
 
     return (
-        <div className="container-fluid py-4">
-            {/* Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 className="fw-bold mb-1">
-                        <FileText className="me-2" size={32} />
-                        Complaint #{complaint.complaintId}
-                    </h2>
-                    <p className="text-muted mb-0">{complaint.title}</p>
-                </div>
-                <div className="d-flex gap-2">
-                    {complaint.canReopen && (
+        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
+            <DashboardHeader
+                portalName="Citizen Service Portal 🏛️"
+                userName={`📋 ${complaint.title || "Issue Investigation"}`}
+                wardName={`📍 ${complaint.wardByWardId?.areaName || complaint.wardName || "PMC District"}`}
+                subtitle={`Report ID: #${complaint.complaintId || id} • Official Municipal Case Trace 🛡️`}
+                icon={FileText}
+                showProfileInitials={true}
+                actions={
+                    <div className="d-flex gap-3">
                         <button
-                            className="btn btn-warning"
-                            onClick={() => setShowReopenModal(true)}
+                            onClick={() => navigate(-1)}
+                            className="btn btn-white bg-white rounded-pill px-4 py-2 shadow-sm fw-black extra-small tracking-widest d-flex align-items-center gap-2 border transition-all hover-shadow-md"
+                            style={{ color: '#173470' }}
                         >
-                            <RotateCcw size={18} className="me-2" />
-                            Reopen
+                            <ArrowLeft size={16} /> RETURN
                         </button>
-                    )}
-                    {complaint.status === 'CLOSED' && !complaint.feedback && (
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => setShowFeedbackModal(true)}
-                        >
-                            <Star size={18} className="me-2" />
-                            Give Feedback
-                        </button>
-                    )}
-                    <button
-                        className="btn btn-outline-secondary"
-                        onClick={() => setShowImageUpload(true)}
-                    >
-                        <Upload size={18} className="me-2" />
-                        Upload Image
-                    </button>
+                        {complaint.status === 'CLOSED' && !complaint.feedback && String(userWardId) === String(complaint.wardId || complaint.ward?.id || complaint.ward?.wardId) && (
+                            <button
+                                className="btn shadow-premium px-4 py-2 fw-bold rounded-pill d-flex align-items-center gap-2 border-0"
+                                style={{ backgroundColor: '#F59E0B', color: 'white' }}
+                                onClick={() => setShowFeedbackModal(true)}
+                            >
+                                <Star size={18} />
+                                <span className="small">Share feedback</span>
+                            </button>
+                        )}
+                    </div>
+                }
+            />
+
+            <div className="container-fluid px-3 px-lg-5 mt-4">
+                <div className="row justify-content-center">
+                    <div className="col-12">
+                        <ComplaintDetailView
+                            complaint={complaint}
+                            images={complaint.images || []}
+                            statusHistory={timeline.length > 0 ? timeline : (complaint.timeline || complaint.statusHistory || [])}
+                            slaCountdown={slaData}
+                            userRole="CITIZEN"
+                            onReopen={() => setShowReopenModal(true)}
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div className="row g-4">
-                {/* Main Details */}
-                <div className="col-lg-8">
-                    {/* Status Card */}
-                    <div className="card border-0 shadow-sm mb-4">
-                        <div className="card-body">
-                            <div className="row g-3">
-                                <div className="col-md-4">
-                                    <div className="d-flex align-items-center">
-                                        <div className="me-2 text-muted"><AlertCircle size={20} /></div>
-                                        <div>
-                                            <small className="text-muted d-block mb-1">Status</small>
-                                            <StatusBadge status={complaint.status} />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-md-4">
-                                    <div className="d-flex align-items-center">
-                                        <div className="me-2 text-muted"><AlertCircle size={20} /></div>
-                                        <div>
-                                            <small className="text-muted d-block mb-1">Priority</small>
-                                            <PriorityBadge priority={complaint.priority} />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="col-md-4">
-                                    <div className="d-flex align-items-center">
-                                        <Clock className="text-muted me-2" size={20} />
-                                        <div>
-                                            <small className="text-muted d-block">SLA Status</small>
-                                            <span className={`badge bg-${complaint.slaStatus === 'BREACHED' ? 'danger' : complaint.slaStatus === 'WARNING' ? 'warning' : 'success'}`}>
-                                                {complaint.slaStatus || 'ON_TRACK'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    {/* Description */}
-                    <div className="card border-0 shadow-sm mb-4">
-                        <div className="card-header bg-white">
-                            <h5 className="mb-0 fw-semibold">Description</h5>
-                        </div>
-                        <div className="card-body">
-                            <p className="mb-0">{complaint.description}</p>
-                        </div>
-                    </div>
-
-                    {/* Images Gallery */}
-                    {complaint.images && complaint.images.length > 0 && (
-                        <div className="card border-0 shadow-sm mb-4">
-                            <div className="card-header bg-white">
-                                <h5 className="mb-0 fw-semibold">
-                                    <ImageIcon size={20} className="me-2" />
-                                    Images ({complaint.images.length})
-                                </h5>
-                            </div>
-                            <div className="card-body">
-                                <div className="row g-3">
-                                    {complaint.images.map((img, index) => {
-                                        // Construct URL: strip /api from base if needed, or rely on absolute path from backend
-                                        // Backend sends "/api/images/filename". 
-                                        // We need "http://localhost:8083/api/images/filename"
-                                        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8083/api';
-                                        const origin = baseUrl.replace(/\/api$/, '');
-                                        const fullUrl = `${origin}${img.imageUrl}`;
-
-                                        return (
-                                            <div key={img.id || index} className="col-md-4">
-                                                <div className="position-relative group">
-                                                    <img
-                                                        src={fullUrl}
-                                                        alt={`Complaint Evidence ${index + 1}`}
-                                                        className="img-fluid rounded shadow-sm hover-zoom"
-                                                        style={{
-                                                            cursor: 'pointer',
-                                                            height: '220px',
-                                                            objectFit: 'cover',
-                                                            width: '100%',
-                                                            transition: 'transform 0.3s ease'
-                                                        }}
-                                                        onClick={() => window.open(fullUrl, '_blank')}
-                                                    />
-                                                    <div className="position-absolute bottom-0 start-0 end-0 bg-dark bg-opacity-75 text-white p-2 rounded-bottom">
-                                                        <div className="d-flex justify-content-between align-items-center">
-                                                            <span className="badge bg-light text-dark">{img.imageStage}</span>
-                                                            <small className="ms-2">{new Date(img.uploadedAt).toLocaleDateString()}</small>
-                                                        </div>
-                                                        <small className="d-block mt-1 text-truncate">
-                                                            By {img.uploadedBy} ({img.uploadedByRole})
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Timeline */}
-                    {
-                        complaint.timeline && complaint.timeline.length > 0 && (
-                            <div className="card border-0 shadow-sm mb-4">
-                                <div className="card-header bg-white">
-                                    <h5 className="mb-0 fw-semibold">
-                                        <Clock size={20} className="me-2" />
-                                        Timeline
-                                    </h5>
-                                </div>
-                                <div className="card-body">
-                                    <div className="timeline">
-                                        {complaint.timeline.map((event, index) => (
-                                            <div key={index} className="timeline-item mb-3">
-                                                <div className="d-flex">
-                                                    <div className="timeline-marker me-3">
-                                                        <div className={`rounded-circle bg-${getStatusColor(event.status)} p-2`}>
-                                                            <CheckCircle size={16} className="text-white" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex-grow-1">
-                                                        <div className="d-flex justify-content-between">
-                                                            <h6 className="mb-1">{event.status}</h6>
-                                                            <small className="text-muted">
-                                                                {new Date(event.changedAt).toLocaleString()}
-                                                            </small>
-                                                        </div>
-                                                        <p className="text-muted mb-1">By {event.changedBy}</p>
-                                                        {event.remarks && <p className="mb-0 small">{event.remarks}</p>}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    }
-
-                    {/* Feedback */}
-                    {
-                        complaint.feedback && (
-                            <div className="card border-0 shadow-sm">
-                                <div className="card-header bg-white">
-                                    <h5 className="mb-0 fw-semibold">
-                                        <MessageSquare size={20} className="me-2" />
-                                        Feedback
-                                    </h5>
-                                </div>
-                                <div className="card-body">
-                                    <div className="mb-2">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star
-                                                key={i}
-                                                size={20}
-                                                className={i < complaint.feedback.rating ? 'text-warning' : 'text-muted'}
-                                                fill={i < complaint.feedback.rating ? 'currentColor' : 'none'}
-                                            />
-                                        ))}
-                                    </div>
-                                    <p className="mb-0">{complaint.feedback.comment}</p>
-                                </div>
-                            </div>
-                        )
-                    }
-                </div >
-
-                {/* Sidebar */}
-                < div className="col-lg-4" >
-                    {/* Citizen Info */}
-                    < div className="card border-0 shadow-sm mb-4" >
-                        <div className="card-header bg-white">
-                            <h6 className="mb-0 fw-semibold">Citizen Information</h6>
-                        </div>
-                        <div className="card-body">
-                            <div className="mb-3">
-                                <User size={16} className="text-muted me-2" />
-                                <strong>{complaint.citizenName}</strong>
-                            </div>
-                            <div className="mb-3">
-                                <span className="text-muted">📧 {complaint.citizenEmail}</span>
-                            </div>
-                            <div>
-                                <Calendar size={16} className="text-muted me-2" />
-                                <small className="text-muted">
-                                    Registered: {new Date(complaint.createdAt).toLocaleDateString()}
-                                </small>
-                            </div>
-                        </div>
-                    </div >
-
-                    {/* Location */}
-                    < div className="card border-0 shadow-sm mb-4" >
-                        <div className="card-header bg-white">
-                            <h6 className="mb-0 fw-semibold">Location</h6>
-                        </div>
-                        <div className="card-body">
-                            <div className="mb-2">
-                                <MapPin size={16} className="text-muted me-2" />
-                                <strong>{complaint.wardName}</strong>
-                            </div>
-                            <div className="mb-2">
-                                <Building2 size={16} className="text-muted me-2" />
-                                {complaint.departmentName}
-                            </div>
-                            {complaint.latitude && complaint.longitude && (
-                                <div className="mt-3">
-                                    <small className="text-muted">
-                                        📍 {complaint.latitude.toFixed(6)}, {complaint.longitude.toFixed(6)}
-                                    </small>
-                                </div>
-                            )}
-                        </div>
-                    </div >
-
-                    {/* Assigned Officer */}
-                    <div className="card border-0 shadow-sm">
-                        <div className="card-header bg-white">
-                            <h6 className="mb-0 fw-semibold">Assigned Officer</h6>
-                        </div>
-                        <div className="card-body">
-                            <User size={16} className="text-muted me-2" />
-                            <strong>{complaint.assignedOfficer || 'Not Assigned'}</strong>
-                        </div>
-                    </div>
-                </div >
-            </div >
-
             {/* Reopen Modal */}
-            {
-                showReopenModal && (
-                    <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                        <div className="modal-dialog modal-dialog-centered">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">Reopen Complaint</h5>
-                                    <button className="btn-close" onClick={() => setShowReopenModal(false)}></button>
-                                </div>
-                                <div className="modal-body">
-                                    <label className="form-label">Reason for Reopening *</label>
-                                    <textarea
-                                        className="form-control"
-                                        rows="4"
-                                        value={reopenReason}
-                                        onChange={(e) => setReopenReason(e.target.value)}
-                                        placeholder="Please explain why you want to reopen this complaint..."
-                                    />
-                                </div>
-                                <div className="modal-footer">
-                                    <button className="btn btn-secondary" onClick={() => setShowReopenModal(false)}>Cancel</button>
-                                    <button className="btn btn-warning" onClick={handleReopen}>Reopen Complaint</button>
-                                </div>
+            {showReopenModal && (
+                <div className="custom-modal-overlay">
+                    <div className="card shadow-premium border-0 rounded-4 overflow-hidden animate-zoomIn" style={{ maxWidth: '450px', width: '90%', background: 'white' }}>
+                        <div className="card-header border-0 p-4 bg-light d-flex justify-content-between align-items-center">
+                            <h5 className="fw-bold mb-0 text-dark">Reopen report</h5>
+                            <button
+                                onClick={() => setShowReopenModal(false)}
+                                className="btn btn-light rounded-circle p-1 border-0"
+                            >
+                                <X size={20} className="text-muted" />
+                            </button>
+                        </div>
+                        <div className="card-body p-4 p-md-5">
+                            <label className="extra-small fw-bold text-muted mb-3 uppercase-tracking d-block">Reason for reopening</label>
+                            <textarea
+                                className="form-control border-0 p-4 bg-light fw-medium shadow-none rounded-4 mb-4"
+                                rows="5"
+                                placeholder="Please describe why the resolution was not satisfactory..."
+                                value={reopenReason}
+                                onChange={e => setReopenReason(e.target.value)}
+                            />
+                            <div className="d-grid gap-3">
+                                <button className="btn btn-danger py-3 fw-bold rounded-pill shadow-premium border-0" onClick={handleReopen}>
+                                    Confirm reopening
+                                </button>
+                                <button className="btn btn-link text-muted py-2 fw-bold text-decoration-none small" onClick={() => setShowReopenModal(false)}>
+                                    Keep as resolved
+                                </button>
                             </div>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* Feedback Modal */}
-            {
-                showFeedbackModal && (
-                    <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                        <div className="modal-dialog modal-dialog-centered">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">Submit Feedback</h5>
-                                    <button className="btn-close" onClick={() => setShowFeedbackModal(false)}></button>
-                                </div>
-                                <div className="modal-body">
-                                    <div className="mb-3">
-                                        <label className="form-label">Rating *</label>
-                                        <div className="d-flex gap-2">
-                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                <Star
-                                                    key={star}
-                                                    size={32}
-                                                    className={star <= rating ? 'text-warning' : 'text-muted'}
-                                                    fill={star <= rating ? 'currentColor' : 'none'}
-                                                    style={{ cursor: 'pointer' }}
-                                                    onClick={() => setRating(star)}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="form-label">Comment</label>
-                                        <textarea
-                                            className="form-control"
-                                            rows="4"
-                                            value={feedbackComment}
-                                            onChange={(e) => setFeedbackComment(e.target.value)}
-                                            placeholder="Share your experience..."
-                                        />
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button className="btn btn-secondary" onClick={() => setShowFeedbackModal(false)}>Cancel</button>
-                                    <button className="btn btn-primary" onClick={handleSubmitFeedback}>Submit Feedback</button>
-                                </div>
+            {showFeedbackModal && (
+                <div className="custom-modal-overlay">
+                    <div className="card shadow-premium border-0 rounded-4 overflow-hidden animate-zoomIn" style={{ maxWidth: '450px', width: '90%', background: 'white' }}>
+                        <div className="card-header border-0 p-5 bg-white text-center pb-4">
+                            <div className="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '80px', height: '80px' }}>
+                                <Star size={40} className="text-warning" fill="#F59E0B" />
                             </div>
+                            <h4 className="fw-bold mb-1">How was our service?</h4>
+                            <p className="text-muted small fw-medium">Your feedback helps us improve municipal response quality.</p>
                         </div>
-                    </div>
-                )
-            }
-
-            {/* Image Upload Modal */}
-            {
-                showImageUpload && (
-                    <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                        <div className="modal-dialog modal-dialog-centered">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">Upload Image</h5>
-                                    <button className="btn-close" onClick={() => setShowImageUpload(false)}></button>
-                                </div>
-                                <div className="modal-body">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                        className="form-control mb-3"
+                        <div className="card-body p-4 p-md-5 pt-0">
+                            <div className="d-flex justify-content-center gap-2 mb-5">
+                                {[1, 2, 3, 4, 5].map(s => (
+                                    <Star
+                                        key={s}
+                                        size={32}
+                                        className="cursor-pointer transition-all hover-scale"
+                                        fill={s <= rating ? '#F59E0B' : 'none'}
+                                        stroke={s <= rating ? '#F59E0B' : '#CBD5E1'}
+                                        onClick={() => setRating(s)}
                                     />
-                                    {imagePreview && (
-                                        <img src={imagePreview} alt="Preview" className="img-fluid rounded" />
-                                    )}
-                                </div>
-                                <div className="modal-footer">
-                                    <button className="btn btn-secondary" onClick={() => setShowImageUpload(false)}>Cancel</button>
-                                    <button
-                                        className="btn btn-primary"
-                                        onClick={handleImageUpload}
-                                        disabled={!selectedFile || uploading}
-                                    >
-                                        {uploading ? 'Uploading...' : 'Upload'}
-                                    </button>
-                                </div>
+                                ))}
+                            </div>
+                            <label className="extra-small fw-bold text-muted mb-3 uppercase-tracking d-block">Additional comments</label>
+                            <textarea
+                                className="form-control border-0 p-4 bg-light fw-medium shadow-none rounded-4 mb-4"
+                                rows="3"
+                                placeholder="Any additional thoughts or suggestions? (optional)"
+                                value={feedbackComment}
+                                onChange={e => setFeedbackComment(e.target.value)}
+                            />
+                            <div className="d-grid gap-3">
+                                <button className="btn btn-primary py-3 fw-bold rounded-pill shadow-premium border-0" style={{ backgroundColor: PRIMARY_COLOR }} onClick={handleSubmitFeedback}>
+                                    Submit feedback
+                                </button>
+                                <button className="btn btn-link text-muted py-2 fw-bold text-decoration-none small" onClick={() => setShowFeedbackModal(false)}>
+                                    Maybe later
+                                </button>
                             </div>
                         </div>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+                .animate-zoomIn { animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+                @keyframes zoomIn { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+                .shadow-premium { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+                .hover-scale:hover { transform: scale(1.1); }
+                .uppercase-tracking { text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+                .extra-small { font-size: 11px; }
+                .animate-spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            `}} />
+        </div>
     );
 };
 

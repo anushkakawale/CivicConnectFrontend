@@ -54,7 +54,7 @@ const ComplaintTimeline = ({ statusHistory }) => {
                                 {/* Icon */}
                                 <div className="flex-shrink-0 me-3">
                                     <div
-                                        className={`rounded-circle d-flex align-items-center justify-content-center ${isCompleted ? 'bg-success' : 'bg-light'
+                                        className={`rounded-0 d-flex align-items-center justify-content-center ${isCompleted ? 'bg-success' : 'bg-light'
                                             }`}
                                         style={{ width: '32px', height: '32px' }}
                                     >

@@ -33,46 +33,27 @@ const EnhancedWardOfficerDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
+            const [analyticsRes, approvalsRes] = await Promise.all([
+                apiService.wardOfficer.getDashboardAnalytics().catch(() => ({ data: {} })),
+                apiService.wardOfficer.getPendingApprovals().catch(() => ({ data: [] }))
+            ]);
 
-            // 1. Fetch Summary Stats
-            // Trying to fetch summary stats, if fails, we might calculate from complaints
-            let summaryStats = {};
-            try {
-                summaryStats = await apiService.wardOfficer.getSummaryStats();
-            } catch (e) {
-                console.warn("Summary stats API not available, falling back to specific calls");
-            }
-
-            // 2. Fetch Pending Approvals
-            try {
-                const approvals = await apiService.wardOfficer.getPendingApprovals();
-                const approvalList = Array.isArray(approvals) ? approvals : (approvals.content || []);
-                setPendingApprovals(approvalList);
-                summaryStats.pendingApprovals = approvalList.length;
-            } catch (e) {
-                console.warn("Approvals API invalid");
-            }
-
-            // 3. Fetch Ward Complaints to calc other stats if needed
-            // If summaryAPI returned active/closed, use it. Else calculate.
-            if (summaryStats.active === undefined) {
-                const complaints = await apiService.wardOfficer.getComplaints();
-                const list = Array.isArray(complaints) ? complaints : (complaints.content || []);
-                summaryStats.active = list.filter(c => c.status !== 'CLOSED' && c.status !== 'RESOLVED').length;
-                summaryStats.closed = list.filter(c => c.status === 'CLOSED').length;
-                // If dashboard distinguishes RESOLVED (Waiting Approval) vs CLOSED
-            }
+            const analytics = analyticsRes.data || analyticsRes;
+            const cards = analytics.cards || {};
 
             setStats({
-                active: summaryStats.active || 0,
-                closed: summaryStats.closed || 0,
-                pendingApprovals: summaryStats.pendingApprovals || 0
+                active: cards.inProgress || 0,
+                closed: cards.closed || 0,
+                pendingApprovals: cards.pendingApproval || 0,
+                wardId: analytics.wardId || 0
             });
-            setError('');
 
+            const approvals = approvalsRes.data || approvalsRes || [];
+            setPendingApprovals(Array.isArray(approvals) ? approvals : (approvals.content || []));
+            setError('');
         } catch (err) {
             console.error('Dashboard data fetch error:', err);
-            setError('Failed to load dashboard data. Please try again.');
+            setError('Failed to load dashboard data. Please check your connection.');
         } finally {
             setLoading(false);
         }
@@ -126,7 +107,7 @@ const EnhancedWardOfficerDashboard = () => {
                                 <AlertTriangle size={24} className="text-warning" />
                             </div>
                             <h2 className="fw-bold mb-1 text-warning display-6">{stats.pendingApprovals}</h2>
-                            <small className="text-muted">Complaints waiting for your review</small>
+                            <small className="text-muted">Complaints pending your review</small>
                             <div className="mt-2 text-primary small d-flex align-items-center">
                                 Review Now <ArrowRight size={14} className="ms-1" />
                             </div>
@@ -214,7 +195,7 @@ const EnhancedWardOfficerDashboard = () => {
                         </div>
                         <div className="list-group list-group-flush">
                             <button className="list-group-item list-group-item-action py-3 d-flex align-items-center" onClick={() => navigate('/ward-officer/complaints')}>
-                                <div className="bg-primary bg-opacity-10 p-2 rounded me-3 text-primary">
+                                <div className="bg-primary bg-opacity-10 p-2 rounded-0 me-3 text-primary">
                                     <ClipboardList size={20} />
                                 </div>
                                 <div>
@@ -223,7 +204,7 @@ const EnhancedWardOfficerDashboard = () => {
                                 </div>
                             </button>
                             <button className="list-group-item list-group-item-action py-3 d-flex align-items-center" onClick={() => navigate('/ward-officer/officers')}>
-                                <div className="bg-success bg-opacity-10 p-2 rounded me-3 text-success">
+                                <div className="bg-success bg-opacity-10 p-2 rounded-0 me-3 text-success">
                                     <Users size={20} />
                                 </div>
                                 <div>
@@ -232,7 +213,7 @@ const EnhancedWardOfficerDashboard = () => {
                                 </div>
                             </button>
                             <button className="list-group-item list-group-item-action py-3 d-flex align-items-center" onClick={() => navigate('/ward-officer/ward-changes')}>
-                                <div className="bg-info bg-opacity-10 p-2 rounded me-3 text-info">
+                                <div className="bg-info bg-opacity-10 p-2 rounded-0 me-3 text-info">
                                     <Users size={20} />
                                 </div>
                                 <div>

@@ -1,74 +1,41 @@
-/**
- * Department Officer Service
- * Handles all API calls for department officer operations
- * Delegates to centralized apiService
- */
-
 import apiService from '../api/apiService';
 
-class DepartmentOfficerService {
-    async getAssignedComplaints(page = 0, size = 10) {
-        return apiService.department.getMyComplaints(page, size);
-    }
+const DepartmentOfficerService = {
+    // ✅ Main analytics dashboard (Consolidated stats)
+    getDashboardAnalytics: () =>
+        apiService.departmentOfficer.getDashboardStats(),
 
-    async getComplaintById(complaintId) {
-        return apiService.complaints.getDetails(complaintId);
-    }
+    // ✅ SLA analytics (Read-only overview)
+    getSlaAnalytics: () =>
+        apiService.departmentOfficer.getSlaStatus(),
 
-    async startWork(complaintId, remarks = 'Work started') {
-        return apiService.complaints.updateStatus(complaintId, 'IN_PROGRESS', remarks);
-    }
+    // ✅ Pending work (Priority list)
+    getPendingWork: () =>
+        apiService.departmentOfficer.getPendingWork(),
 
-    async resolveComplaint(complaintId, remarks, images) {
-        return apiService.complaints.resolve(complaintId, remarks, images);
-    }
+    // ✅ Assigned complaints (Table view)
+    getAssignedComplaints: (params) =>
+        apiService.departmentOfficer.getAssignedComplaints(params),
 
-    async uploadImage(complaintId, imageStage, images) {
-        return apiService.common.uploadImages(complaintId, imageStage, images);
-    }
+    // ✅ Map view (Department filtered)
+    getMapView: () =>
+        apiService.departmentOfficer.getMapData(),
 
-    async getComplaintImages(complaintId) {
-        return apiService.common.getComplaintImages(complaintId);
-    }
+    // ✅ Start work on complaint 
+    startWork: (complaintId) =>
+        apiService.departmentOfficer.startWork(complaintId),
 
-    async getSLAInfo(complaintId) {
-        // SLA details are included in complaint details
-        return apiService.complaints.getDetails(complaintId);
-    }
+    // ✅ Resolve complaint
+    resolveComplaint: (complaintId, remarks) =>
+        apiService.departmentOfficer.resolveComplaint(complaintId, remarks),
 
-    async getSLAAnalytics() {
-        // Dashboard contains SLA stats
-        return apiService.department.getDashboard();
-    }
+    // ✅ Get specific complaint details
+    getComplaintById: (complaintId) =>
+        apiService.departmentOfficer.getComplaintDetails(complaintId),
 
-    async getMapComplaints() {
-        // Use generic map endpoint, potentially filtering by user's department which is handled by backend or filtered here
-        // Current documentation implies /map/active-complaints shows all or filtered by params.
-        // Department officer should probably only see their department's? backend might enforce it or we pass params.
-        // For now, call the common one.
-        return apiService.common.getMapActiveComplaints();
-    }
+    // ✅ Profile
+    getProfile: () =>
+        apiService.departmentOfficer.getProfile()
+};
 
-    async getNotifications() {
-        return apiService.common.getNotifications();
-    }
-
-    async markNotificationAsRead(notificationId) {
-        return apiService.common.markNotificationRead(notificationId);
-    }
-
-    async getProfile() {
-        return apiService.common.getProfile();
-    }
-
-    async updatePassword(passwordData) {
-        return apiService.common.changePassword(passwordData.currentPassword, passwordData.newPassword);
-    }
-
-    async getFeedback() {
-        // Not implemented in documented APIs
-        return { data: [] };
-    }
-}
-
-export default new DepartmentOfficerService();
+export default DepartmentOfficerService;

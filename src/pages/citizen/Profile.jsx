@@ -92,29 +92,12 @@ export default function CitizenProfile() {
 
     return (
         <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9fc', minHeight: '100vh' }}>
-            {/* Header */}
-            <div className="row mb-4">
-                <div className="col-12">
-                    <div className="p-4 rounded-4 text-white" style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    }}>
-                        <div className="d-flex align-items-center gap-3">
-                            <div className="rounded-circle bg-white bg-opacity-25 p-3">
-                                <i className="bi bi-person-circle display-4 text-white"></i>
-                            </div>
-                            <div>
-                                <h1 className="fw-bold mb-1">{profile?.name || 'Citizen'}</h1>
-                                <p className="mb-0 opacity-75">{profile?.areaName || 'Your Ward'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <div className="row g-4">
                 {/* Personal Information */}
                 <div className="col-lg-8">
-                    <div className="card border-0 shadow-sm rounded-4 mb-4">
+                    <div className="card border-0 shadow-sm rounded-0 mb-4">
                         <div className="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
                             <h5 className="fw-bold mb-0">Personal Information</h5>
                             {!editing && (
@@ -170,28 +153,36 @@ export default function CitizenProfile() {
                             ) : (
                                 <div className="row g-3">
                                     <div className="col-md-6">
-                                        <div className="p-3 bg-light rounded">
+                                        <div className="p-3 bg-light rounded-0">
                                             <p className="text-muted small mb-1">Email</p>
                                             <h6 className="mb-0">{profile?.email}</h6>
                                         </div>
                                     </div>
                                     <div className="col-md-6">
-                                        <div className="p-3 bg-light rounded">
+                                        <div className="p-3 bg-light rounded-0">
                                             <p className="text-muted small mb-1">Mobile</p>
                                             <h6 className="mb-0">{profile?.mobile || 'Not provided'}</h6>
                                         </div>
                                     </div>
                                     <div className="col-md-6">
-                                        <div className="p-3 bg-light rounded">
+                                        <div className="p-3 bg-light rounded-0">
                                             <p className="text-muted small mb-1">Ward</p>
                                             <h6 className="mb-0">{profile?.areaName || 'Not assigned'}</h6>
                                         </div>
                                     </div>
                                     <div className="col-md-6">
-                                        <div className="p-3 bg-light rounded">
+                                        <div className="p-3 bg-light rounded-0 shadow-sm border-start border-primary border-4">
+                                            <p className="text-muted small mb-1 fw-bold uppercase tracking-widest" style={{ fontSize: '0.6rem' }}>Access Privileges</p>
+                                            <h6 className="mb-0 fw-black text-dark">
+                                                GOVERNMENT_LEVEL_1
+                                            </h6>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="p-3 bg-light rounded-0">
                                             <p className="text-muted small mb-1">Status</p>
-                                            <h6 className="mb-0 text-success">
-                                                <i className="bi bi-check-circle-fill me-2"></i>Verified
+                                            <h6 className="mb-0 text-success fw-bold">
+                                                <i className="bi bi-patch-check-fill me-2"></i>ACTIVE_OPERATIVE
                                             </h6>
                                         </div>
                                     </div>
@@ -201,7 +192,7 @@ export default function CitizenProfile() {
                     </div>
 
                     {/* Security */}
-                    <div className="card border-0 shadow-sm rounded-4">
+                    <div className="card border-0 shadow-sm rounded-0">
                         <div className="card-header bg-transparent border-0 p-4">
                             <h5 className="fw-bold mb-0">Security Settings</h5>
                         </div>
@@ -250,7 +241,7 @@ export default function CitizenProfile() {
 
                 {/* Stats Sidebar */}
                 <div className="col-lg-4">
-                    <div className="card border-0 shadow-sm rounded-4 mb-4">
+                    <div className="card border-0 shadow-sm rounded-0 mb-4">
                         <div className="card-body p-4 text-center">
                             <h6 className="text-muted mb-3">Community Impact Score</h6>
                             <h1 className="display-4 fw-bold text-primary mb-0">740</h1>
@@ -266,7 +257,7 @@ export default function CitizenProfile() {
                         </div>
                     </div>
 
-                    <div className="card border-0 shadow-sm rounded-4">
+                    <div className="card border-0 shadow-sm rounded-0">
                         <div className="card-body p-4">
                             <h6 className="fw-bold mb-3">Activity Summary</h6>
                             <div className="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">

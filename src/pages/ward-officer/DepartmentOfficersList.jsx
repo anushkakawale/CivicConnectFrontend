@@ -49,10 +49,10 @@ export default function DepartmentOfficersList() {
                 <div className="row g-4">
                     {officers.map((officer, idx) => (
                         <div key={idx} className="col-md-6 col-lg-4">
-                            <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
+                            <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '0' }}>
                                 <div className="card-body p-4">
                                     <div className="text-center mb-3">
-                                        <div className="rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style={{
+                                        <div className="rounded-0 d-inline-flex align-items-center justify-content-center mb-2" style={{
                                             width: '60px',
                                             height: '60px',
                                             background: 'linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%)'

@@ -1,26 +1,66 @@
-import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Sidebar from '../components/layout/Sidebar';
 import TopHeader from '../components/layout/TopHeader';
-import './AdminLayout.css';
 
 const AdminLayout = () => {
-    const userName = localStorage.getItem('userName') || 'Admin';
+    const [userName, setUserName] = useState('Administrator');
+
+    useEffect(() => {
+        const updateName = () => {
+            try {
+                const userStr = localStorage.getItem('user');
+                const nameStr = localStorage.getItem('name');
+
+                if (nameStr) {
+                    setUserName(nameStr);
+                } else if (userStr) {
+                    const user = JSON.parse(userStr);
+                    setUserName(user.name || user.email || 'Admin');
+                }
+            } catch (err) {
+                console.error('Error getting user name:', err);
+            }
+        };
+
+        updateName();
+        window.addEventListener('storage', updateName);
+        return () => window.removeEventListener('storage', updateName);
+    }, []);
 
     return (
-        <div className="admin-layout">
-            {/* Header - Fixed to Top */}
+        <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#F8FAFC' }}>
             <TopHeader role="ADMIN" userName={userName} />
 
-            {/* Sidebar - Fixed Left, Below Header */}
             <Sidebar role="ADMIN" />
 
-            {/* Main Content - Pushed by Header and Sidebar */}
-            <main className="admin-main-content">
-                <div className="content-container">
-                    <Outlet />
+            <div
+                className="gov-main d-flex flex-column"
+                style={{
+                    marginTop: '70px',
+                    marginLeft: '260px',
+                    width: 'calc(100% - 260px)',
+                    transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                    minHeight: 'calc(100vh - 70px)'
+                }}
+            >
+                <div className="flex-grow-1 p-0">
+                    <Outlet context={{ userName }} />
                 </div>
-            </main>
+            </div>
+
+            <style>{`
+                @media (max-width: 1024px) {
+                    .gov-main {
+                        margin-left: 0 !important;
+                        width: 100% !important;
+                    }
+                }
+                
+                body {
+                    overflow-x: hidden;
+                }
+            `}</style>
         </div>
     );
 };

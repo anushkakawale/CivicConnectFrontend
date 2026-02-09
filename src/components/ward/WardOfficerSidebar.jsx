@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import authService from '../../services/authService';
 import {
-    Home, FileText, CheckCircle, Users, UserPlus, BarChart3, Map, Bell, User, LogOut, Shield
+    Home, FileText, CheckCircle, Users, UserPlus, BarChart3, Map as MapIcon, Bell, User, LogOut, Shield
 } from 'lucide-react';
 
 const WardOfficerSidebar = () => {
@@ -20,7 +20,7 @@ const WardOfficerSidebar = () => {
         { path: '/ward-officer/officers', icon: Users, label: 'Officers' },
         { path: '/ward-officer/register-officer', icon: UserPlus, label: 'Register Officer' },
         { path: '/ward-officer/analytics', icon: BarChart3, label: 'Analytics' },
-        { path: '/ward-officer/map', icon: Map, label: 'Map View' },
+        { path: '/ward-officer/map', icon: MapIcon, label: 'Map View' },
         { path: '/ward-officer/notifications', icon: Bell, label: 'Notifications' },
         { path: '/ward-officer/profile', icon: User, label: 'Profile' }
     ];
@@ -47,7 +47,7 @@ const WardOfficerSidebar = () => {
                                 to={item.path}
                                 end
                                 className={({ isActive }) =>
-                                    `nav-link d-flex align-items-center gap-2 rounded px-3 py-2 ${isActive
+                                    `nav-link d-flex align-items-center gap-2 rounded-0 px-3 py-2 ${isActive
                                         ? 'bg-primary text-white'
                                         : 'text-dark hover-bg-light'
                                     }`

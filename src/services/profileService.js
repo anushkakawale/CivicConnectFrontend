@@ -117,9 +117,9 @@ export const requestMobileOTP = async (newMobile) => {
  * @param {string} otp - OTP code
  * @returns {Promise} Response data
  */
-export const verifyMobileOTP = async (otp) => {
+export const verifyMobileOTP = async (otp, newMobile) => {
     try {
-        const response = await api.post('/profile/mobile/verify-otp', { otp });
+        const response = await api.post('/profile/mobile/verify-otp', { otp, newMobile });
         return response.data;
     } catch (error) {
         console.error('Error verifying OTP:', error);

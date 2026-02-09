@@ -3,7 +3,7 @@ import React from 'react';
 // Glass Morphism Card Component
 export const GlassCard = ({ children, className = '', ...props }) => {
   return (
-    <div 
+    <div
       className={`
         relative backdrop-blur-lg bg-white/80 
         border border-white/20 shadow-2xl
@@ -22,17 +22,17 @@ export const GlassCard = ({ children, className = '', ...props }) => {
 };
 
 // Professional Button Component
-export const GovButton = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  loading = false, 
+export const GovButton = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  loading = false,
   disabled = false,
   className = '',
-  ...props 
+  ...props
 }) => {
   const baseClasses = "relative inline-flex items-center justify-center font-medium transition-all duration-300 focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group";
-  
+
   const variants = {
     primary: "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white focus:ring-blue-200 shadow-lg hover:shadow-xl",
     secondary: "bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 focus:ring-gray-200 border border-gray-300",
@@ -41,7 +41,7 @@ export const GovButton = ({
     warning: "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white focus:ring-amber-200 shadow-lg hover:shadow-xl",
     outline: "border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white focus:ring-blue-200 bg-transparent"
   };
-  
+
   const sizes = {
     sm: "px-4 py-2 text-sm rounded-lg",
     md: "px-6 py-3 text-base rounded-xl",
@@ -56,7 +56,7 @@ export const GovButton = ({
     >
       {/* Shimmer effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-      
+
       {/* Loading spinner */}
       {loading && (
         <svg className="animate-spin -ml-1 mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -64,21 +64,21 @@ export const GovButton = ({
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
         </svg>
       )}
-      
+
       <span className="relative z-10">{children}</span>
     </button>
   );
 };
 
 // Professional Input Component
-export const GovInput = ({ 
-  label, 
-  error, 
-  icon: Icon, 
-  type = 'text', 
+export const GovInput = ({
+  label,
+  error,
+  icon: Icon,
+  type = 'text',
   className = '',
   children,
-  ...props 
+  ...props
 }) => {
   return (
     <div className="relative">
@@ -87,14 +87,14 @@ export const GovInput = ({
           {label}
         </label>
       )}
-      
+
       <div className="relative">
         {Icon && type !== 'select' && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
             <Icon className="h-5 w-5" />
           </div>
         )}
-        
+
         {type === 'select' ? (
           <select
             className={`
@@ -123,10 +123,10 @@ export const GovInput = ({
             {...props}
           />
         )}
-        
+
         {children && type !== 'select' && children}
       </div>
-      
+
       {error && (
         <p className="mt-2 text-sm text-red-600 flex items-center">
           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -208,7 +208,7 @@ export const GovBadge = ({ children, variant = 'primary', size = 'sm', className
 // Card Component
 export const GovCard = ({ children, className = '', ...props }) => {
   return (
-    <div 
+    <div
       className={`
         bg-white rounded-xl shadow-lg border border-gray-100
         hover:shadow-xl transition-all duration-300

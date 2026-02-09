@@ -102,7 +102,7 @@ const styles = {
         maxWidth: '600px',
         backgroundColor: 'white',
         padding: '48px',
-        borderRadius: '12px',
+        borderRadius: '0',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
     },
     icon: {
@@ -125,7 +125,7 @@ const styles = {
         marginBottom: '24px',
         padding: '16px',
         backgroundColor: '#fef2f2',
-        borderRadius: '8px',
+        borderRadius: '0',
         border: '1px solid #fecaca'
     },
     summary: {

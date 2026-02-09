@@ -6,7 +6,7 @@ import apiService from '../api/apiService';
 import { WARDS } from '../constants';
 import {
   User, Mail, Phone, Lock, MapPin,
-  Building2, ShieldCheck, Check, Eye, EyeOff
+  Building2, ShieldCheck, Check, Eye, EyeOff, AlertCircle, ArrowLeft, ChevronRight
 } from 'lucide-react';
 
 const RegisterCitizen = () => {
@@ -24,7 +24,11 @@ const RegisterCitizen = () => {
       mobile: '',
       password: '',
       confirmPassword: '',
-      wardNumber: ''
+      wardNumber: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: 'Pune',
+      pincode: ''
     },
     validationSchema: Yup.object({
       name: Yup.string()
@@ -48,7 +52,15 @@ const RegisterCitizen = () => {
       confirmPassword: Yup.string()
         .oneOf([Yup.ref('password'), null], 'Passwords must match')
         .required('Confirm password is required'),
-      wardNumber: Yup.string()
+      wardNumber: Yup.string().required('Ward selection is required'),
+      addressLine1: Yup.string()
+        .min(5, 'Address Line 1 must be at least 5 characters')
+        .required('Address Line 1 is required'),
+      addressLine2: Yup.string(),
+      city: Yup.string().required('City is required'),
+      pincode: Yup.string()
+        .matches(/^[0-9]{6}$/, 'Pincode must be 6 digits')
+        .required('Pincode is required')
     }),
     onSubmit: async (values) => {
       setIsLoading(true);
@@ -61,12 +73,16 @@ const RegisterCitizen = () => {
           email: values.email.toLowerCase().trim(),
           mobile: values.mobile,
           password: values.password,
-          wardId: values.wardNumber ? parseInt(values.wardNumber) : null
+          wardId: values.wardNumber ? parseInt(values.wardNumber) : null,
+          addressLine1: values.addressLine1.trim(),
+          addressLine2: values.addressLine2.trim(),
+          city: values.city.trim(),
+          pincode: values.pincode
         };
 
         await apiService.auth.register(registrationData);
 
-        setSuccess('Registration successful! Redirecting to login...');
+        setSuccess('Registration successful! You can now login.');
 
         setTimeout(() => {
           navigate('/');
@@ -79,10 +95,9 @@ const RegisterCitizen = () => {
     }
   });
 
-  // Password strength checker
   const getPasswordStrength = () => {
     const password = formik.values.password;
-    if (!password) return { strength: 0, label: '', color: '' };
+    if (!password) return { strength: 0, label: '', color: '#CBD5E1' };
 
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -92,12 +107,12 @@ const RegisterCitizen = () => {
     if (/[@$!%*?&]/.test(password)) strength++;
 
     const levels = [
-      { strength: 0, label: '', color: '' },
-      { strength: 1, label: 'Very Weak', color: 'danger' },
-      { strength: 2, label: 'Weak', color: 'warning' },
-      { strength: 3, label: 'Fair', color: 'info' },
-      { strength: 4, label: 'Good', color: 'primary' },
-      { strength: 5, label: 'Strong', color: 'success' }
+      { strength: 0, label: '', color: '#CBD5E1' },
+      { strength: 1, label: 'Very weak', color: '#EF4444' },
+      { strength: 2, label: 'Weak', color: '#F59E0B' },
+      { strength: 3, label: 'So-so', color: '#3B82F6' },
+      { strength: 4, label: 'Good', color: '#6366F1' },
+      { strength: 5, label: 'Strong', color: '#10B981' }
     ];
 
     return levels[strength];
@@ -106,322 +121,344 @@ const RegisterCitizen = () => {
   const passwordStrength = getPasswordStrength();
 
   return (
-    <div className="min-vh-100 bg-light py-5">
-      <div className="container">
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light position-relative overflow-hidden" style={{
+      background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)'
+    }}>
+      {/* Tactical Atmospheric Elements */}
+      <div className="position-absolute top-0 start-0 w-100 h-100 opacity-05 pointer-events-none">
+        <div className="position-absolute bottom-0 start-0 p-5">
+          <User size={400} strokeWidth={0.5} />
+        </div>
+      </div>
+
+      <div className="container position-relative py-5 animate-zoomIn">
         <div className="row justify-content-center">
-          <div className="col-12 col-lg-8 col-xl-7">
+          <div className="col-12 col-xl-11">
 
-            {/* Header */}
-            <div className="text-center mb-4">
-              <div className="d-inline-flex align-items-center justify-content-center bg-primary bg-gradient rounded-circle p-3 mb-3 shadow-lg">
-                <Building2 className="text-white" size={40} />
+            {/* Branding */}
+            <div className="text-center mb-5">
+              <div className="d-inline-flex align-items-center justify-content-center rounded-circle p-4 mb-4 shadow-premium circ-blue anim-float" style={{
+                width: '80px', height: '80px'
+              }}>
+                <User className="text-white" size={36} />
               </div>
-              <h1 className="display-6 fw-bold text-primary mb-2">Citizen Registration</h1>
-              <p className="text-muted fs-5">Join us to make your city better</p>
-
-              <div className="d-inline-flex gap-3 flex-wrap justify-content-center">
-                <div className="badge bg-success bg-gradient px-3 py-2">
-                  <ShieldCheck size={16} className="me-2" />
-                  Secure & Verified
-                </div>
-                <div className="badge bg-info bg-gradient px-3 py-2">
-                  <Building2 size={16} className="me-2" />
-                  Government Portal
-                </div>
+              <h1 className="fw-black mb-1" style={{ color: '#173470', fontSize: '2.2rem' }}>
+                Civic Connect
+              </h1>
+              <div className="d-flex align-items-center justify-content-center gap-2">
+                <span className="text-muted fw-bold small">Citizen Registration</span>
               </div>
             </div>
 
-            {/* Registration Form Card */}
-            <div className="card shadow-lg border-0 rounded-4">
-              <div className="card-body p-4 p-md-5">
-
-                {/* Alerts */}
-                {error && (
-                  <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>⚠️ Registration Failed!</strong> {error}
-                    <button type="button" className="btn-close" onClick={() => setError('')}></button>
-                  </div>
-                )}
-
-                {success && (
-                  <div className="alert alert-success alert-dismissible fade show" role="alert">
-                    <strong>✅ Success!</strong> {success}
-                    <button type="button" className="btn-close" onClick={() => setSuccess('')}></button>
-                  </div>
-                )}
-
-                <form onSubmit={formik.handleSubmit}>
-
-                  {/* Personal Information Section */}
-                  <div className="mb-4">
-                    <h5 className="text-primary mb-3 fw-bold">
-                      <User size={20} className="me-2" />
-                      Personal Information
-                    </h5>
-
-                    <div className="row g-3">
-                      {/* Name */}
-                      <div className="col-md-6">
-                        <label htmlFor="name" className="form-label fw-semibold">
-                          <User size={14} className="me-1" />
-                          Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          className={`form-control form-control-lg ${formik.touched.name && formik.errors.name ? 'is-invalid' : ''}`}
-                          id="name"
-                          placeholder="Enter your full name"
-                          {...formik.getFieldProps('name')}
-                        />
-                        {formik.touched.name && formik.errors.name && (
-                          <div className="invalid-feedback">{formik.errors.name}</div>
-                        )}
+            {/* Registration Card */}
+            <div className="card border-0 shadow-premium rounded-4 overflow-hidden bg-white">
+              <div className="row g-0">
+                {/* Form Side */}
+                <div className="col-lg-8 border-end bg-white">
+                  <div className="p-4 p-md-5">
+                    <div className="d-flex justify-content-between align-items-center mb-5">
+                      <div>
+                        <h4 className="fw-bold mb-1 text-dark">Join the community</h4>
+                        <p className="text-muted small mb-0">Fill in your details to get started</p>
                       </div>
-
-                      {/* Email */}
-                      <div className="col-md-6">
-                        <label htmlFor="email" className="form-label fw-semibold">
-                          <Mail size={14} className="me-1" />
-                          Email Address *
-                        </label>
-                        <input
-                          type="email"
-                          className={`form-control form-control-lg ${formik.touched.email && formik.errors.email ? 'is-invalid' : ''}`}
-                          id="email"
-                          placeholder="your.email@example.com"
-                          {...formik.getFieldProps('email')}
-                        />
-                        {formik.touched.email && formik.errors.email && (
-                          <div className="invalid-feedback">{formik.errors.email}</div>
-                        )}
-                      </div>
-
-                      {/* Mobile */}
-                      <div className="col-md-6">
-                        <label htmlFor="mobile" className="form-label fw-semibold">
-                          <Phone size={14} className="me-1" />
-                          Mobile Number *
-                        </label>
-                        <input
-                          type="tel"
-                          className={`form-control form-control-lg ${formik.touched.mobile && formik.errors.mobile ? 'is-invalid' : ''}`}
-                          id="mobile"
-                          placeholder="10-digit mobile number"
-                          maxLength={10}
-                          {...formik.getFieldProps('mobile')}
-                        />
-                        {formik.touched.mobile && formik.errors.mobile && (
-                          <div className="invalid-feedback">{formik.errors.mobile}</div>
-                        )}
-                      </div>
-
-                      {/* Ward */}
-                      <div className="col-md-6">
-                        <label htmlFor="wardNumber" className="form-label fw-semibold">
-                          <MapPin size={14} className="me-1" />
-                          Ward Number
-                        </label>
-                        <select
-                          className={`form-select form-select-lg ${formik.touched.wardNumber && formik.errors.wardNumber ? 'is-invalid' : ''}`}
-                          id="wardNumber"
-                          {...formik.getFieldProps('wardNumber')}
-                        >
-                          <option value="">Select your ward (optional)</option>
-                          {WARDS.map((ward) => (
-                            <option key={ward.wardId} value={ward.number}>
-                              Ward {ward.number} - {ward.area_name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <button
+                        onClick={() => navigate('/')}
+                        className="btn btn-light rounded-pill px-4 py-2 small fw-bold d-flex align-items-center gap-2 border shadow-sm transition-all"
+                      >
+                        <ArrowLeft size={16} /> Back to Login
+                      </button>
                     </div>
-                  </div>
 
-                  {/* Security Information Section */}
-                  <div className="mb-4">
-                    <h5 className="text-primary mb-3 fw-bold">
-                      <Lock size={20} className="me-2" />
-                      Security Information
-                    </h5>
+                    {error && (
+                      <div className="alert border-0 shadow-sm d-flex align-items-center mb-5 rounded-4 animate-fadeIn" style={{ backgroundColor: '#FEF2F2', color: '#EF4444' }}>
+                        <AlertCircle size={18} className="me-3" />
+                        <div className="small fw-bold">{error}</div>
+                      </div>
+                    )}
 
-                    <div className="row g-3">
-                      {/* Password */}
-                      <div className="col-md-6">
-                        <label htmlFor="password" className="form-label fw-semibold">
-                          <Lock size={14} className="me-1" />
-                          Password *
-                        </label>
-                        <div className="input-group input-group-lg">
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            className={`form-control ${formik.touched.password && formik.errors.password ? 'is-invalid' : ''}`}
-                            id="password"
-                            placeholder="Create a strong password"
-                            {...formik.getFieldProps('password')}
-                          />
-                          <button
-                            className="btn btn-outline-secondary"
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                          </button>
+                    {success && (
+                      <div className="alert border-0 shadow-sm d-flex align-items-center mb-5 rounded-4 animate-fadeIn" style={{ backgroundColor: '#ECFDF5', color: '#10B981' }}>
+                        <ShieldCheck size={18} className="me-3" />
+                        <div className="small fw-bold">{success}</div>
+                      </div>
+                    )}
+
+                    <form onSubmit={formik.handleSubmit}>
+                      <div className="row g-4">
+                        <div className="col-12">
+                          <p className="extra-small fw-bold mb-0 uppercase-tracking" style={{ color: '#173470' }}>1. Account Information</p>
                         </div>
-                        {formik.touched.password && formik.errors.password && (
-                          <div className="text-danger small mt-1">{formik.errors.password}</div>
-                        )}
 
-                        {/* Password Strength Indicator */}
+                        <div className="col-md-6">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Full name</label>
+                          <div className="position-relative">
+                            <div className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40"><User size={18} /></div>
+                            <input
+                              type="text"
+                              className={`form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none ps-11 px-4 ${formik.touched.name && formik.errors.name ? 'is-invalid border-danger border-2' : ''}`}
+                              style={{ paddingLeft: '60px !important' }}
+                              placeholder="Enter your full name"
+                              {...formik.getFieldProps('name')}
+                            />
+                          </div>
+                          {formik.touched.name && formik.errors.name && (
+                            <div className="text-danger extra-small mt-2 ms-3 fw-bold">{formik.errors.name}</div>
+                          )}
+                        </div>
+
+                        <div className="col-md-6">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Email address</label>
+                          <div className="position-relative">
+                            <div className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40"><Mail size={18} /></div>
+                            <input
+                              type="email"
+                              className={`form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none ps-11 px-4 ${formik.touched.email && formik.errors.email ? 'is-invalid border-danger border-2' : ''}`}
+                              style={{ paddingLeft: '60px !important' }}
+                              placeholder="yourname@email.com"
+                              {...formik.getFieldProps('email')}
+                            />
+                          </div>
+                          {formik.touched.email && formik.errors.email && (
+                            <div className="text-danger extra-small mt-2 ms-3 fw-bold">{formik.errors.email}</div>
+                          )}
+                        </div>
+
+                        <div className="col-md-6">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Mobile number</label>
+                          <div className="position-relative">
+                            <div className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40"><Phone size={18} /></div>
+                            <input
+                              type="tel"
+                              className={`form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none ps-11 px-4 ${formik.touched.mobile && formik.errors.mobile ? 'is-invalid border-danger border-2' : ''}`}
+                              style={{ paddingLeft: '60px !important' }}
+                              placeholder="10 digit number"
+                              maxLength={10}
+                              {...formik.getFieldProps('mobile')}
+                            />
+                          </div>
+                          {formik.touched.mobile && formik.errors.mobile && (
+                            <div className="text-danger extra-small mt-2 ms-3 fw-bold">{formik.errors.mobile}</div>
+                          )}
+                        </div>
+
+                        <div className="col-md-6">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Select area ward</label>
+                          <div className="position-relative">
+                            <div className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40"><MapPin size={18} /></div>
+                            <select
+                              className="form-select rounded-pill border-0 bg-light py-3 fw-bold shadow-none ps-11 px-4"
+                              style={{ paddingLeft: '60px !important' }}
+                              {...formik.getFieldProps('wardNumber')}
+                            >
+                              <option value="">Select Ward</option>
+                              {WARDS.map((ward) => (
+                                <option key={ward.wardId} value={ward.number}>
+                                  Ward {ward.number} - {ward.area_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="col-12">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Address Line 1 (Home/Building)</label>
+                          <div className="position-relative">
+                            <div className="position-absolute top-0 start-0 mt-3 ms-4 text-muted opacity-40"><Building2 size={18} /></div>
+                            <input
+                              type="text"
+                              className={`form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none ps-11 px-4 ${formik.touched.addressLine1 && formik.errors.addressLine1 ? 'is-invalid border-danger border-2' : ''}`}
+                              style={{ paddingLeft: '60px !important' }}
+                              placeholder="Flat/House No., Building Name"
+                              {...formik.getFieldProps('addressLine1')}
+                            />
+                          </div>
+                          {formik.touched.addressLine1 && formik.errors.addressLine1 && (
+                            <div className="text-danger extra-small mt-2 ms-3 fw-bold">{formik.errors.addressLine1}</div>
+                          )}
+                        </div>
+
+                        <div className="col-12">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Address Line 2 (Street/Locality)</label>
+                          <div className="position-relative">
+                            <div className="position-absolute top-0 start-0 mt-3 ms-4 text-muted opacity-40"><MapPin size={18} /></div>
+                            <input
+                              type="text"
+                              className="form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none ps-11 px-4"
+                              style={{ paddingLeft: '60px !important' }}
+                              placeholder="Street, Area, Landmark"
+                              {...formik.getFieldProps('addressLine2')}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="col-md-6">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">City</label>
+                          <input
+                            type="text"
+                            className={`form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none px-4 ${formik.touched.city && formik.errors.city ? 'is-invalid border-danger border-2' : ''}`}
+                            placeholder="Pune"
+                            {...formik.getFieldProps('city')}
+                          />
+                          {formik.touched.city && formik.errors.city && (
+                            <div className="text-danger extra-small mt-2 ms-3 fw-bold">{formik.errors.city}</div>
+                          )}
+                        </div>
+
+                        <div className="col-md-6">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Pincode</label>
+                          <input
+                            type="text"
+                            className={`form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none px-4 ${formik.touched.pincode && formik.errors.pincode ? 'is-invalid border-danger border-2' : ''}`}
+                            placeholder="6-digit Pincode"
+                            maxLength={6}
+                            {...formik.getFieldProps('pincode')}
+                          />
+                          {formik.touched.pincode && formik.errors.pincode && (
+                            <div className="text-danger extra-small mt-2 ms-3 fw-bold">{formik.errors.pincode}</div>
+                          )}
+                        </div>
+
+                        <div className="col-12 pt-4">
+                          <p className="extra-small fw-bold mb-0 uppercase-tracking" style={{ color: '#173470' }}>2. Security Setup</p>
+                        </div>
+
+                        <div className="col-md-6">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Password</label>
+                          <div className="position-relative">
+                            <div className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40"><Lock size={18} /></div>
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              className={`form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none ps-11 px-4 ${formik.touched.password && formik.errors.password ? 'is-invalid border-danger border-2' : ''}`}
+                              style={{ paddingLeft: '60px !important' }}
+                              placeholder="Min 8 characters"
+                              {...formik.getFieldProps('password')}
+                            />
+                            <button className="btn border-0 position-absolute end-0 top-50 translate-middle-y me-3 text-muted shadow-none" type="button" onClick={() => setShowPassword(!showPassword)}>
+                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="col-md-6">
+                          <label className="form-label fw-bold small text-muted mb-2 ms-1">Confirm password</label>
+                          <div className="position-relative">
+                            <div className="position-absolute top-50 start-0 translate-middle-y ms-4 text-muted opacity-40"><ShieldCheck size={18} /></div>
+                            <input
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              className={`form-control rounded-pill border-0 bg-light py-3 fw-bold shadow-none ps-11 px-4 ${formik.touched.confirmPassword && formik.errors.confirmPassword ? 'is-invalid border-danger border-2' : ''}`}
+                              style={{ paddingLeft: '60px !important' }}
+                              placeholder="Repeat password"
+                              {...formik.getFieldProps('confirmPassword')}
+                            />
+                            <button className="btn border-0 position-absolute end-0 top-50 translate-middle-y me-3 text-muted shadow-none" type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Password Strength */}
                         {formik.values.password && (
-                          <div className="mt-2">
-                            <div className="progress" style={{ height: '6px' }}>
-                              <div
-                                className={`progress-bar bg-${passwordStrength.color}`}
-                                style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
-                              ></div>
+                          <div className="col-12 animate-fadeIn">
+                            <div className="px-1 d-flex justify-content-between align-items-center mb-2">
+                              <span className="extra-small fw-bold uppercase-tracking" style={{ color: passwordStrength.color }}>Complexity: {passwordStrength.label}</span>
                             </div>
-                            <small className={`text-${passwordStrength.color} fw-semibold`}>
-                              Strength: {passwordStrength.label}
-                            </small>
+                            <div className="progress rounded-pill bg-light overflow-hidden shadow-sm" style={{ height: '8px' }}>
+                              <div className="progress-bar transition-all" style={{ width: `${(passwordStrength.strength / 5) * 100}%`, backgroundColor: passwordStrength.color }}></div>
+                            </div>
                           </div>
                         )}
-                      </div>
 
-                      {/* Confirm Password */}
-                      <div className="col-md-6">
-                        <label htmlFor="confirmPassword" className="form-label fw-semibold">
-                          <Lock size={14} className="me-1" />
-                          Confirm Password *
-                        </label>
-                        <div className="input-group input-group-lg">
-                          <input
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            className={`form-control ${formik.touched.confirmPassword && formik.errors.confirmPassword ? 'is-invalid' : ''}`}
-                            id="confirmPassword"
-                            placeholder="Confirm your password"
-                            {...formik.getFieldProps('confirmPassword')}
-                          />
+                        <div className="col-12 mt-5">
                           <button
-                            className="btn btn-outline-secondary"
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            type="submit"
+                            className="btn w-100 py-3 d-flex align-items-center justify-content-center text-white rounded-pill btn-premium border-0 shadow-premium"
+                            disabled={isLoading}
+                            style={{
+                              backgroundColor: '#173470',
+                              fontSize: '1.1rem',
+                              fontWeight: '700'
+                            }}
                           >
-                            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            {isLoading ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm me-3" role="status"></span>
+                                Creating account...
+                              </>
+                            ) : (
+                              <>
+                                Complete Registration <ChevronRight size={20} className="ms-2" />
+                              </>
+                            )}
                           </button>
                         </div>
-                        {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                          <div className="text-danger small mt-1">{formik.errors.confirmPassword}</div>
-                        )}
                       </div>
-                    </div>
+                    </form>
+                  </div>
+                </div>
 
-                    {/* Password Requirements */}
-                    <div className="card border-primary border-opacity-25 mt-3 mb-0">
-                      <div className="card-body p-3">
-                        <h6 className="card-subtitle mb-3 text-primary fw-semibold">
-                          <ShieldCheck size={16} className="me-2" />
-                          Password Requirements
-                        </h6>
-                        <div className="row g-2">
-                          <div className="col-md-6">
-                            <div className={`d-flex align-items-center ${formik.values.password.length >= 8 ? 'text-success' : 'text-muted'}`}>
-                              <div className={`rounded-circle me-2 d-flex align-items-center justify-content-center ${formik.values.password.length >= 8 ? 'bg-success bg-opacity-10' : 'bg-light'}`} style={{ width: '24px', height: '24px' }}>
-                                <Check size={14} />
-                              </div>
-                              <small className="fw-medium">At least 8 characters</small>
-                            </div>
+                {/* Right Side Panel */}
+                <div className="col-lg-4 bg-light bg-opacity-30 d-none d-lg-block">
+                  <div className="p-5 h-100 d-flex flex-column">
+                    <h5 className="fw-bold text-dark mb-5">System Features</h5>
+                    <div className="d-flex flex-column gap-5">
+                      {[
+                        { i: ShieldCheck, t: "Identity verification", d: "Accounts are linked to municipal records for secure issue reporting." },
+                        { i: MapPin, t: "Localized experience", d: "Issues are automatically routed to your assigned ward officer." },
+                        { i: Lock, t: "Encrypted data", d: "Your personal details are stored using government-grade encryption." }
+                      ].map((item, idx) => (
+                        <div key={idx} className="d-flex gap-4 animate-fadeIn" style={{ animationDelay: `${idx * 0.1}s` }}>
+                          <div className="rounded-4 bg-white shadow-sm flex-shrink-0 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px', color: '#173470' }}>
+                            <item.i size={20} />
                           </div>
-                          <div className="col-md-6">
-                            <div className={`d-flex align-items-center ${/[A-Z]/.test(formik.values.password) ? 'text-success' : 'text-muted'}`}>
-                              <div className={`rounded-circle me-2 d-flex align-items-center justify-content-center ${/[A-Z]/.test(formik.values.password) ? 'bg-success bg-opacity-10' : 'bg-light'}`} style={{ width: '24px', height: '24px' }}>
-                                <Check size={14} />
-                              </div>
-                              <small className="fw-medium">One uppercase letter</small>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className={`d-flex align-items-center ${/[a-z]/.test(formik.values.password) ? 'text-success' : 'text-muted'}`}>
-                              <div className={`rounded-circle me-2 d-flex align-items-center justify-content-center ${/[a-z]/.test(formik.values.password) ? 'bg-success bg-opacity-10' : 'bg-light'}`} style={{ width: '24px', height: '24px' }}>
-                                <Check size={14} />
-                              </div>
-                              <small className="fw-medium">One lowercase letter</small>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className={`d-flex align-items-center ${/\d/.test(formik.values.password) ? 'text-success' : 'text-muted'}`}>
-                              <div className={`rounded-circle me-2 d-flex align-items-center justify-content-center ${/\d/.test(formik.values.password) ? 'bg-success bg-opacity-10' : 'bg-light'}`} style={{ width: '24px', height: '24px' }}>
-                                <Check size={14} />
-                              </div>
-                              <small className="fw-medium">One number</small>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className={`d-flex align-items-center ${/[@$!%*?&]/.test(formik.values.password) ? 'text-success' : 'text-muted'}`}>
-                              <div className={`rounded-circle me-2 d-flex align-items-center justify-content-center ${/[@$!%*?&]/.test(formik.values.password) ? 'bg-success bg-opacity-10' : 'bg-light'}`} style={{ width: '24px', height: '24px' }}>
-                                <Check size={14} />
-                              </div>
-                              <small className="fw-medium">Special character (@$!%*?&)</small>
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <div className={`d-flex align-items-center ${formik.values.password === formik.values.confirmPassword && formik.values.password !== '' ? 'text-success' : 'text-muted'}`}>
-                              <div className={`rounded-circle me-2 d-flex align-items-center justify-content-center ${formik.values.password === formik.values.confirmPassword && formik.values.password !== '' ? 'bg-success bg-opacity-10' : 'bg-light'}`} style={{ width: '24px', height: '24px' }}>
-                                <Check size={14} />
-                              </div>
-                              <small className="fw-medium">Passwords match</small>
-                            </div>
+                          <div>
+                            <h6 className="fw-bold text-dark small mb-2">{item.t}</h6>
+                            <p className="extra-small text-muted mb-0 lh-base fw-medium opacity-75">{item.d}</p>
                           </div>
                         </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-auto pt-5">
+                      <div className="p-4 bg-white border border-dashed rounded-4 text-center shadow-sm">
+                        <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+                          <div className="bg-success rounded-circle animate-pulse" style={{ width: '8px', height: '8px' }}></div>
+                          <span className="extra-small fw-bold text-muted uppercase-tracking">Encryption Active</span>
+                        </div>
+                        <p className="extra-small text-muted mb-0 opacity-40">Civic Connect v2.4.0</p>
                       </div>
                     </div>
                   </div>
-
-                  {/* Submit Buttons */}
-                  <div className="d-grid gap-2">
-                    <button
-                      type="submit"
-                      className="btn btn-primary btn-lg"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
-                          Creating Account...
-                        </>
-                      ) : (
-                        <>
-                          <ShieldCheck size={20} className="me-2" />
-                          Create Account
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-
-                {/* Login Link */}
-                <div className="text-center mt-4 pt-4 border-top">
-                  <p className="text-muted mb-0">
-                    Already have an account?{' '}
-                    <button
-                      onClick={() => navigate('/')}
-                      className="btn btn-link p-0 text-decoration-none fw-semibold"
-                    >
-                      Sign in here
-                    </button>
-                  </p>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="text-center mt-4">
-              <p className="text-muted small mb-0">
-                © 2026 CivicConnect. All rights reserved.
-              </p>
+            <div className="text-center mt-5 text-muted small px-4">
+              <p className="mb-3 fw-medium">© 2026 PMC Municipal Administration</p>
+              <div className="d-flex justify-content-center gap-4 fw-bold extra-small uppercase-tracking">
+                <span className="pointer opacity-50">Support</span>
+                <span className="pointer opacity-50">Privacy Policy</span>
+                <span className="pointer opacity-50">Terms of Service</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+                .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
+                .anim-float { animation: float 6s ease-in-out infinite; }
+                @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+                .animate-pulse { animation: pulse 2s infinite; }
+                @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                .animate-zoomIn { animation: zoomIn 0.3s ease-out; }
+                @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .uppercase-tracking { text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+                .extra-small { font-size: 11px; }
+            `}} />
     </div>
   );
 };

@@ -85,14 +85,14 @@ export default function MyComplaints() {
               <button
                 className={`btn btn-lg ${viewMode === 'my' ? 'btn-gov-primary' : 'btn-outline-secondary'}`}
                 onClick={() => setViewMode('my')}
-                style={{ borderRadius: '8px 0 0 8px', transition: 'all 0.3s ease' }}
+                style={{ borderRadius: '0', transition: 'all 0.3s ease' }}
               >
                 <i className="bi bi-person me-2"></i>My Complaints
               </button>
               <button
                 className={`btn btn-lg ${viewMode === 'ward' ? 'btn-gov-primary' : 'btn-outline-secondary'}`}
                 onClick={() => setViewMode('ward')}
-                style={{ borderRadius: '0 8px 8px 0', transition: 'all 0.3s ease' }}
+                style={{ borderRadius: '0', transition: 'all 0.3s ease' }}
               >
                 <i className="bi bi-geo-alt me-2"></i>Ward/Area Complaints
               </button>

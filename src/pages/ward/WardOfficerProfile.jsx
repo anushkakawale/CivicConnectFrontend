@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Shield, Edit2, Lock, Smartphone, Save, X } from 'lucide-react';
+import {
+    User, Mail, Phone, MapPin, Shield, Edit2, Lock,
+    Smartphone, Save, X, Loader, ShieldCheck, ArrowLeft,
+    Activity, CheckCircle, Clock, ChevronRight, Key, Award, FileText
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import profileService from '../../services/profileService';
+import { useToast } from '../../hooks/useToast';
 import PasswordChangeModal from '../../components/profile/PasswordChangeModal';
-import MobileOTPModal from '../../components/profile/MobileOTPModal';
+
 
 const WardOfficerProfile = () => {
+    const navigate = useNavigate();
+    const { showToast } = useToast();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const [showMobileModal, setShowMobileModal] = useState(false);
+    const [activeTab, setActiveTab] = useState('identity'); // identity, security, stats
 
     const [editedProfile, setEditedProfile] = useState({
         name: '',
         email: '',
         mobile: ''
     });
+
+    const brandColor = '#1254AF';
 
     useEffect(() => {
         fetchProfile();
@@ -35,16 +44,20 @@ const WardOfficerProfile = () => {
             });
         } catch (err) {
             console.error('Failed to load profile:', err);
-            setError('Failed to load profile. Please try again.');
-            // Fallback for development if backend fails 500
+            showToast('Failed to load profile data', 'error');
+            // Fallback for development
             if (process.env.NODE_ENV === 'development') {
-                setProfile({
+                const mock = {
                     name: 'Ward Officer (Dev)',
                     email: 'ward.officer@example.com',
                     mobile: '9876543210',
-                    ward: { name: 'Ward 1' },
-                    stats: { totalApprovals: 0, pendingReviews: 0, officersManaged: 0 }
-                });
+                    wardName: 'Pune Ward 04',
+                    userId: '772',
+                    createdAt: new Date().toISOString(),
+                    stats: { totalApprovals: 42, pendingReviews: 12, officersManaged: 8 }
+                };
+                setProfile(mock);
+                setEditedProfile({ name: mock.name, email: mock.email, mobile: mock.mobile });
             }
         } finally {
             setLoading(false);
@@ -54,252 +67,224 @@ const WardOfficerProfile = () => {
     const handleSave = async () => {
         try {
             setSaving(true);
-            setError('');
             await profileService.updateOfficerProfile(editedProfile);
+            showToast('Profile updated successfully', 'success');
             await fetchProfile();
             setEditing(false);
         } catch (err) {
-            console.error('Failed to update profile:', err);
-            setError(err.response?.data?.message || 'Failed to update profile');
+            showToast('Failed to update profile', 'error');
         } finally {
             setSaving(false);
         }
     };
 
-    const handleCancel = () => {
-        setEditedProfile({
-            name: profile.name || '',
-            email: profile.email || '',
-            mobile: profile.mobile || ''
-        });
-        setEditing(false);
-        setError('');
-    };
+    if (loading) return (
+        <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8F9FA' }}>
+            <Loader className="animate-spin text-primary mb-4" size={56} style={{ color: brandColor }} />
+            <p className="fw-black text-muted text-uppercase tracking-widest small">Loading Profile...</p>
+        </div>
+    );
 
-    const handleMobileUpdate = (newMobile) => {
-        fetchProfile(); // Refresh profile after mobile update
-    };
-
-    if (loading) {
-        return (
-            <div className="container-fluid py-5">
-                <div className="text-center">
-                    <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }}>
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="mt-3 text-muted">Loading profile...</p>
+    const StatCard = ({ label, value, icon: Icon, color }) => (
+        <div className="card border-0 shadow-sm rounded-0 p-4 bg-white h-100 transition-all hover-up-sm border-bottom border-4" style={{ borderColor: color }}>
+            <div className="d-flex align-items-center gap-3">
+                <div className="p-3 rounded-0" style={{ backgroundColor: `${color}15`, color: color }}>
+                    <Icon size={24} />
+                </div>
+                <div>
+                    <h5 className="fw-black mb-0 text-dark">{value}</h5>
+                    <p className="text-muted extra-small fw-bold text-uppercase tracking-widest mb-0">{label}</p>
                 </div>
             </div>
-        );
-    }
+        </div>
+    );
 
     return (
-        <div className="container-fluid py-4">
-            {/* Header */}
-            <div className="row mb-4">
-                <div className="col-12">
-                    <h2 className="fw-bold mb-1">
-                        <Shield size={28} className="me-2 text-primary" />
-                        Ward Officer Profile
-                    </h2>
-                    <p className="text-muted mb-0">Manage your profile information and settings</p>
+        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F0F2F5' }}>
+            <div className="container px-4 py-5">
+                <div className="row g-4 mb-5">
+                    <div className="col-md-4"><StatCard icon={CheckCircle} label="Approvals" value={profile?.stats?.totalApprovals || 0} color="#10B981" /></div>
+                    <div className="col-md-4"><StatCard icon={Activity} label="Pending Tasks" value={profile?.stats?.pendingReviews || 0} color="#F59E0B" /></div>
+                    <div className="col-md-4"><StatCard icon={User} label="Team Members" value={profile?.stats?.officersManaged || 0} color="#1254AF" /></div>
                 </div>
-            </div>
 
-            {error && (
-                <div className="alert alert-danger alert-dismissible fade show">
-                    {error}
-                    <button type="button" className="btn-close" onClick={() => setError('')}></button>
-                </div>
-            )}
-
-            <div className="row g-4">
-                {/* Profile Card */}
-                <div className="col-lg-8">
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-                            <h5 className="mb-0 fw-bold">Personal Information</h5>
-                            {!editing ? (
-                                <button className="btn btn-primary btn-sm" onClick={() => setEditing(true)}>
-                                    <Edit2 size={16} className="me-1" />
-                                    Edit Profile
-                                </button>
-                            ) : (
-                                <div className="d-flex gap-2">
+                <div className="row g-4">
+                    <div className="col-lg-3">
+                        <div className="card border-0 shadow-lg rounded-0 overflow-hidden bg-white p-3">
+                            <div className="d-flex flex-column gap-2">
+                                {[
+                                    { id: 'identity', label: 'My Profile', icon: User },
+                                    { id: 'security', label: 'Security Settings', icon: Lock },
+                                    { id: 'history', label: 'Account Info', icon: FileText }
+                                ].map(tab => (
                                     <button
-                                        className="btn btn-success btn-sm"
-                                        onClick={handleSave}
-                                        disabled={saving}
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`btn w-100 rounded-0 py-3 px-4 text-start d-flex align-items-center justify-content-between transition-all ${activeTab === tab.id ? 'btn-dark shadow-lg' : 'btn-light bg-transparent border-0 text-muted'}`}
                                     >
-                                        {saving ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-1"></span>
-                                                Saving...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save size={16} className="me-1" />
-                                                Save
-                                            </>
-                                        )}
+                                        <div className="d-flex align-items-center gap-3">
+                                            <tab.icon size={18} />
+                                            <span className="fw-black extra-small tracking-widest uppercase">{tab.label}</span>
+                                        </div>
+                                        <ChevronRight size={14} className={activeTab === tab.id ? 'opacity-100' : 'opacity-0'} />
                                     </button>
-                                    <button
-                                        className="btn btn-secondary btn-sm"
-                                        onClick={handleCancel}
-                                        disabled={saving}
-                                    >
-                                        <X size={16} className="me-1" />
-                                        Cancel
-                                    </button>
-                                </div>
-                            )}
+                                ))}
+                            </div>
                         </div>
-                        <div className="card-body p-4">
-                            <div className="row g-3">
-                                {/* Name */}
-                                <div className="col-md-6">
-                                    <label className="form-label fw-semibold">
-                                        <User size={16} className="me-2" />
-                                        Full Name
-                                    </label>
-                                    {editing ? (
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            value={editedProfile.name}
-                                            onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
-                                        />
+                    </div>
+
+                    <div className="col-lg-9">
+                        {activeTab === 'identity' && (
+                            <div className="card border-0 shadow-lg rounded-0 bg-white p-5 animate-fadeIn border-top border-5" style={{ borderColor: brandColor }}>
+                                <div className="d-flex justify-content-between align-items-center mb-5 border-bottom pb-4">
+                                    <h5 className="fw-black mb-0 tracking-widest uppercase text-dark">Personal Identity</h5>
+                                    {!editing ? (
+                                        <button onClick={() => setEditing(true)} className="btn btn-primary rounded-0 px-4 py-2 fw-black extra-small tracking-widest d-flex align-items-center gap-2 shadow-lg" style={{ backgroundColor: brandColor }}>
+                                            <Edit2 size={14} /> EDIT INFO
+                                        </button>
                                     ) : (
-                                        <p className="form-control-plaintext">{profile?.name || 'Not set'}</p>
+                                        <div className="d-flex gap-2">
+                                            <button onClick={() => setEditing(false)} className="btn btn-light rounded-0 px-4 py-2 fw-black extra-small tracking-widest border">CANCEL</button>
+                                            <button onClick={handleSave} disabled={saving} className="btn btn-success rounded-0 px-4 py-2 fw-black extra-small tracking-widest shadow-lg d-flex align-items-center gap-2">
+                                                {saving ? 'SAVING...' : <Save size={14} />} SAVE
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
 
-                                {/* Email */}
-                                <div className="col-md-6">
-                                    <label className="form-label fw-semibold">
-                                        <Mail size={16} className="me-2" />
-                                        Email Address
-                                    </label>
-                                    <p className="form-control-plaintext">{profile?.email || 'Not set'}</p>
-                                    <small className="text-muted">Email cannot be changed</small>
+                                <div className="row g-5">
+                                    <div className="col-md-6">
+                                        <label className="extra-small fw-black text-muted tracking-widest uppercase mb-2 d-block px-1">Legal Name</label>
+                                        <div className={`p-4 rounded-0 transition-all ${editing ? 'bg-white border-primary border-2 shadow-sm' : 'bg-light border-light bg-opacity-50'}`}>
+                                            {editing ? (
+                                                <input
+                                                    type="text"
+                                                    className="form-control border-0 bg-transparent p-0 fw-bold fs-5 shadow-none"
+                                                    value={editedProfile.name}
+                                                    onChange={e => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                                                />
+                                            ) : (
+                                                <p className="mb-0 fw-bold fs-5 text-dark">{profile.name}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="extra-small fw-black text-muted tracking-widest uppercase mb-2 d-block px-1">Officer Role</label>
+                                        <div className="p-4 rounded-0 bg-light bg-opacity-50 border border-light">
+                                            <div className="badge bg-primary rounded-0 px-3 py-1 fw-black extra-small tracking-widest uppercase">Ward Officer</div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="extra-small fw-black text-muted tracking-widest uppercase mb-2 d-block px-1">Mobile Number</label>
+                                        <div className={`p-4 rounded-0 transition-all ${editing ? 'bg-white border-primary border-2 shadow-sm' : 'bg-light border-light bg-opacity-50'}`}>
+                                            {editing ? (
+                                                <input
+                                                    type="text"
+                                                    className="form-control border-0 bg-transparent p-0 fw-bold fs-5 shadow-none"
+                                                    value={editedProfile.mobile}
+                                                    onChange={e => setEditedProfile({ ...editedProfile, mobile: e.target.value })}
+                                                />
+                                            ) : (
+                                                <p className="mb-0 fw-bold fs-5 text-dark">{profile.mobile || 'Not set'}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="extra-small fw-black text-muted tracking-widest uppercase mb-2 d-block px-1">Email Address</label>
+                                        <div className="p-4 rounded-0 bg-light bg-opacity-50 border border-light opacity-75">
+                                            <p className="mb-0 fw-bold fs-5 text-dark">{profile.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="col-12">
+                                        <label className="extra-small fw-black text-muted tracking-widest uppercase mb-2 d-block px-1">Assigned Ward Presence</label>
+                                        <div className="p-4 rounded-0 bg-light bg-opacity-50 border border-light">
+                                            <div className="d-flex align-items-center gap-4">
+                                                <div className="p-3 rounded-0 bg-white shadow-sm text-primary">
+                                                    <MapPin size={24} />
+                                                </div>
+                                                <div>
+                                                    <p className="mb-0 fw-black text-dark fs-5">{profile?.ward?.name || profile?.wardName || 'PMC AREA'}</p>
+                                                    <p className="mb-0 extra-small fw-bold text-muted uppercase tracking-widest mt-1">Ward Identifier: <span className="text-primary">#{profile?.ward?.wardId || profile?.wardId || 'N/A'}</span></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+                        )}
 
-                                {/* Mobile */}
-                                <div className="col-md-6">
-                                    <label className="form-label fw-semibold">
-                                        <Phone size={16} className="me-2" />
-                                        Mobile Number
-                                    </label>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <p className="form-control-plaintext mb-0">{profile?.mobile || 'Not set'}</p>
-                                        <button
-                                            className="btn btn-sm btn-outline-primary"
-                                            onClick={() => setShowMobileModal(true)}
-                                        >
-                                            <Smartphone size={14} className="me-1" />
-                                            Change
+                        {activeTab === 'security' && (
+                            <div className="card border-0 shadow-lg rounded-0 bg-white p-5 animate-fadeIn border-top border-5" style={{ borderColor: '#6366F1' }}>
+                                <h4 className="fw-black mb-5 tracking-widest uppercase text-dark">Account Security</h4>
+                                <div className="p-5 rounded-0 bg-light d-flex flex-column flex-md-row align-items-center gap-5">
+                                    <div className="p-4 rounded-0 bg-white shadow-sm" style={{ color: '#6366F1' }}>
+                                        <Key size={60} />
+                                    </div>
+                                    <div className="flex-grow-1 text-center text-md-start">
+                                        <h5 className="fw-black text-dark mb-2 uppercase tracking-wide">Account Password</h5>
+                                        <p className="text-muted fw-bold mb-4 small">Update your password regularly to keep your account safe.</p>
+                                        <button onClick={() => setShowPasswordModal(true)} className="btn btn-dark rounded-0 px-5 py-3 fw-black extra-small tracking-widest shadow-lg transition-all hover-up border-0">
+                                            CHANGE PASSWORD
                                         </button>
                                     </div>
                                 </div>
+                            </div>
+                        )}
 
-                                {/* Ward */}
-                                <div className="col-md-6">
-                                    <label className="form-label fw-semibold">
-                                        <MapPin size={16} className="me-2" />
-                                        Ward
-                                    </label>
-                                    <p className="form-control-plaintext">
-                                        {profile?.ward?.name || profile?.wardNumber || 'Not assigned'}
-                                    </p>
+                        {activeTab === 'history' && (
+                            <div className="card border-0 shadow-lg rounded-0 bg-white p-5 animate-fadeIn border-top border-5" style={{ borderColor: '#10B981' }}>
+                                <h4 className="fw-black mb-5 tracking-widest uppercase text-dark">Account Info</h4>
+                                <div className="row g-4">
+                                    <div className="col-md-6">
+                                        <div className="p-4 rounded-0 bg-light border-start border-5 border-success h-100">
+                                            <label className="extra-small fw-black text-muted tracking-widest uppercase mb-1 d-block">Official Status</label>
+                                            <div className="badge bg-success rounded-0 px-3 py-1 fw-black extra-small tracking-widest uppercase">STABLE / ACTIVE</div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="p-4 rounded-0 bg-light border-start border-5 border-primary h-100">
+                                            <label className="extra-small fw-black text-muted tracking-widest uppercase mb-1 d-block">Join Date</label>
+                                            <p className="mb-0 fw-black text-dark">
+                                                {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Active Member'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="col-12">
+                                        <div className="p-4 rounded-0 bg-light border-start border-5 border-info">
+                                            <label className="extra-small fw-black text-muted tracking-widest uppercase mb-1 d-block">Officer Identifier</label>
+                                            <p className="mb-0 fw-bold font-monospace">#{profile.userId || profile.id || 'N/A'}</p>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                {/* Role */}
-                                <div className="col-md-6">
-                                    <label className="form-label fw-semibold">
-                                        <Shield size={16} className="me-2" />
-                                        Role
-                                    </label>
-                                    <p className="form-control-plaintext">
-                                        <span className="badge bg-primary">Ward Officer</span>
-                                    </p>
-                                </div>
-
-                                {/* User ID */}
-                                <div className="col-md-6">
-                                    <label className="form-label fw-semibold">User ID</label>
-                                    <p className="form-control-plaintext text-muted">#{profile?.userId || 'N/A'}</p>
-                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Security & Actions */}
-                <div className="col-lg-4">
-                    {/* Security Card */}
-                    <div className="card shadow-sm border-0 mb-4">
-                        <div className="card-header bg-white border-bottom">
-                            <h6 className="mb-0 fw-bold">
-                                <Lock size={18} className="me-2" />
-                                Security
-                            </h6>
-                        </div>
-                        <div className="card-body">
-                            <button
-                                className="btn btn-outline-primary w-100 mb-3"
-                                onClick={() => setShowPasswordModal(true)}
-                            >
-                                <Lock size={16} className="me-2" />
-                                Change Password
-                            </button>
-                            <button
-                                className="btn btn-outline-secondary w-100"
-                                onClick={() => setShowMobileModal(true)}
-                            >
-                                <Smartphone size={16} className="me-2" />
-                                Update Mobile Number
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Stats Card */}
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-white border-bottom">
-                            <h6 className="mb-0 fw-bold">Quick Stats</h6>
-                        </div>
-                        <div className="card-body">
-                            <div className="d-flex justify-content-between mb-3">
-                                <span className="text-muted">Total Approvals</span>
-                                <span className="fw-bold">{profile?.stats?.totalApprovals || 0}</span>
-                            </div>
-                            <div className="d-flex justify-content-between mb-3">
-                                <span className="text-muted">Pending Reviews</span>
-                                <span className="fw-bold text-warning">{profile?.stats?.pendingReviews || 0}</span>
-                            </div>
-                            <div className="d-flex justify-content-between">
-                                <span className="text-muted">Officers Managed</span>
-                                <span className="fw-bold text-info">{profile?.stats?.officersManaged || 0}</span>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Modals */}
-            <PasswordChangeModal
-                show={showPasswordModal}
-                onHide={() => setShowPasswordModal(false)}
-                onSuccess={() => {
-                    alert('Password changed successfully!');
-                }}
-            />
+            {showPasswordModal && (
+                <PasswordChangeModal
+                    show={showPasswordModal}
+                    onHide={() => setShowPasswordModal(false)}
+                    onSuccess={() => setShowPasswordModal(false)}
+                />
+            )}
 
-            <MobileOTPModal
-                show={showMobileModal}
-                onHide={() => setShowMobileModal(false)}
-                currentMobile={profile?.mobile}
-                onSuccess={handleMobileUpdate}
-            />
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .fw-black { font-weight: 800; }
+                .extra-small { font-size: 0.65rem; }
+                .tracking-widest { letter-spacing: 0.25em; }
+                .tracking-wide { letter-spacing: 0.1em; }
+                .animate-spin { animation: spin 1s linear infinite; }
+                .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .transition-all { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+                .hover-up:hover { transform: translateY(-8px); filter: brightness(1.1); }
+                .hover-up-sm:hover { transform: translateY(-3px); }
+                .border-primary { border-color: ${brandColor} !important; }
+            `}} />
         </div>
     );
 };
