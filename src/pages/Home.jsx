@@ -62,7 +62,7 @@ export default function Home() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: 'var(--gov-bg)',
+      backgroundColor: 'var(--bg-deep)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -75,7 +75,7 @@ export default function Home() {
         left: 0,
         right: 0,
         height: '4px',
-        background: 'linear-gradient(to right, var(--gov-primary), var(--gov-secondary), var(--gov-accent))',
+        background: 'linear-gradient(to right, var(--primary), var(--primary-light), var(--warning))',
         zIndex: 1000
       }}></div>
 
@@ -86,77 +86,82 @@ export default function Home() {
             width: '80px',
             height: '80px',
             margin: '0 auto 1rem',
-            backgroundColor: 'var(--gov-primary)',
-            borderRadius: '0',
+            backgroundColor: 'white',
+            borderRadius: '24px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            boxShadow: 'var(--shadow-premium)'
           }}>
-            <i className="bi bi-building" style={{ fontSize: '2.5rem', color: 'white' }}></i>
+            <i className="bi bi-building" style={{ fontSize: '2.5rem', color: 'var(--primary)' }}></i>
           </div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--gov-primary)' }}>
+          <h1 className="fw-black" style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--primary)' }}>
             CivicConnect
           </h1>
-          <p style={{ color: 'var(--gov-text-light)', marginBottom: 0 }}>
+          <p className="text-muted fw-bold uppercase tracking-widest" style={{ fontSize: '0.75rem', marginBottom: 0 }}>
             Municipal Governance Portal
           </p>
-          <p style={{ fontSize: '0.875rem', color: 'var(--gov-text-muted)', marginTop: '0.25rem' }}>
+          <p className="text-light fw-bold uppercase tracking-widest" style={{ fontSize: '0.65rem', marginTop: '0.25rem' }}>
             Government of India
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="gov-card" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', textAlign: 'center' }}>
+        <div className="card border-0 shadow-premium rounded-4 p-4 p-lg-5 bg-white">
+          <h2 className="fw-black text-center mb-2" style={{ fontSize: '1.5rem', color: 'var(--text-main)' }}>
             Unified Login Portal
           </h2>
-          <p style={{ textAlign: 'center', color: 'var(--gov-text-light)', marginBottom: '2rem', fontSize: '0.875rem' }}>
-            Login with your credentials - all roles supported
+          <p className="text-center text-muted mb-4 extra-small fw-bold uppercase tracking-widest">
+            Secure Access • All Roles Supported
           </p>
 
           {error && (
-            <div className="gov-alert gov-alert-danger" style={{ marginBottom: '1.5rem' }}>
+            <div className="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger fw-bold extra-small rounded-3 d-flex align-items-center mb-4">
               <i className="bi bi-exclamation-triangle me-2"></i>
-              <strong>{error}</strong>
+              {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="gov-form-group">
-              <label className="gov-label">
-                <i className="bi bi-envelope me-2"></i>
+            <div className="mb-4">
+              <label className="form-label extra-small fw-black text-muted uppercase tracking-widest mb-2">
                 Email Address
               </label>
-              <input
-                type="email"
-                className="gov-input"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
+              <div className="input-group">
+                <span className="input-group-text bg-light border-0"><i className="bi bi-envelope text-muted"></i></span>
+                <input
+                  type="email"
+                  className="form-control border-0 bg-light fw-bold shadow-none py-3"
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="gov-form-group">
-              <label className="gov-label">
-                <i className="bi bi-lock me-2"></i>
+            <div className="mb-4">
+              <label className="form-label extra-small fw-black text-muted uppercase tracking-widest mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                className="gov-input"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-              />
+              <div className="input-group">
+                <span className="input-group-text bg-light border-0"><i className="bi bi-lock text-muted"></i></span>
+                <input
+                  type="password"
+                  className="form-control border-0 bg-light fw-bold shadow-none py-3"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+              </div>
             </div>
 
             <button
               type="submit"
-              className="gov-btn gov-btn-primary"
+              className="btn btn-primary w-100 rounded-pill py-3 fw-black extra-small uppercase tracking-widest shadow-lg hover-up-small"
               disabled={loading}
-              style={{ width: '100%', marginTop: '0.5rem' }}
+              style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}
             >
               {loading ? (
                 <>
@@ -165,33 +170,21 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <i className="bi bi-box-arrow-in-right me-2"></i>
-                  Login
+                  Enter Secure Portal <i className="bi bi-arrow-right ms-2"></i>
                 </>
               )}
             </button>
           </form>
 
           <div style={{
-            marginTop: '1.5rem',
+            marginTop: '2rem',
             paddingTop: '1.5rem',
-            borderTop: '1px solid var(--gov-border)'
+            borderTop: '1px solid #F1F5F9'
           }}>
-            {/* Supported Roles Info */}
-            <div className="gov-alert gov-alert-info" style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>
-              <strong>Supported Roles:</strong>
-              <ul style={{ marginTop: '0.5rem', marginBottom: 0, paddingLeft: '1.25rem' }}>
-                <li>Citizen</li>
-                <li>Admin</li>
-                <li>Ward Officer</li>
-                <li>Department Officer</li>
-              </ul>
-            </div>
-
-            <p style={{ fontSize: '0.875rem', color: 'var(--gov-text-light)', marginBottom: 0, textAlign: 'center' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 0, textAlign: 'center' }}>
               New citizen?{" "}
-              <Link to="/citizen-register" style={{ color: 'var(--gov-primary)', fontWeight: 600, textDecoration: 'none' }}>
-                Register here
+              <Link to="/citizen-register" style={{ color: 'var(--primary)', fontWeight: 800, textDecoration: 'none' }}>
+                REGISTER ACCOUNT
               </Link>
             </p>
           </div>
@@ -204,24 +197,24 @@ export default function Home() {
           gap: '1rem',
           marginTop: '2rem'
         }}>
-          <div className="gov-card" style={{ padding: '1rem', textAlign: 'center' }}>
-            <i className="bi bi-shield-check" style={{ fontSize: '2rem', color: 'var(--gov-secondary)' }}></i>
-            <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', marginBottom: 0, fontWeight: 600 }}>Secure</p>
+          <div className="card border-0 shadow-sm rounded-4 p-3 text-center bg-white hover-up-small">
+            <i className="bi bi-shield-check mb-2" style={{ fontSize: '1.5rem', color: 'var(--success)' }}></i>
+            <p className="extra-small fw-black text-muted uppercase tracking-widest mb-0">Secure</p>
           </div>
-          <div className="gov-card" style={{ padding: '1rem', textAlign: 'center' }}>
-            <i className="bi bi-clock-history" style={{ fontSize: '2rem', color: 'var(--gov-primary)' }}></i>
-            <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', marginBottom: 0, fontWeight: 600 }}>24/7 Access</p>
+          <div className="card border-0 shadow-sm rounded-4 p-3 text-center bg-white hover-up-small">
+            <i className="bi bi-clock-history mb-2" style={{ fontSize: '1.5rem', color: 'var(--primary)' }}></i>
+            <p className="extra-small fw-black text-muted uppercase tracking-widest mb-0">24/7 Live</p>
           </div>
-          <div className="gov-card" style={{ padding: '1rem', textAlign: 'center' }}>
-            <i className="bi bi-people" style={{ fontSize: '2rem', color: 'var(--gov-accent)' }}></i>
-            <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', marginBottom: 0, fontWeight: 600 }}>All Roles</p>
+          <div className="card border-0 shadow-sm rounded-4 p-3 text-center bg-white hover-up-small">
+            <i className="bi bi-people mb-2" style={{ fontSize: '1.5rem', color: 'var(--info)' }}></i>
+            <p className="extra-small fw-black text-muted uppercase tracking-widest mb-0">Unified</p>
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--gov-text-muted)', fontSize: '0.75rem' }}>
-          <p style={{ marginBottom: '0.25rem' }}>© 2026 CivicConnect - Municipal Governance Portal</p>
-          <p style={{ marginBottom: 0 }}>Government of India</p>
+        <div style={{ textAlign: 'center', marginTop: '3rem', color: 'var(--text-light)', fontSize: '0.65rem' }}>
+          <p className="fw-bold uppercase tracking-widest mb-1">© 2026 CivicConnect • Municipal Governance Portal</p>
+          <p className="fw-bold uppercase tracking-widest opacity-50 mb-0">Government of India</p>
         </div>
       </div>
     </div>

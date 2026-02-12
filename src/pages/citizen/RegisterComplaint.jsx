@@ -15,7 +15,7 @@ const RegisterComplaint = () => {
     const { departments: masterDepartments, wards: masterWards } = useMasterData();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const PRIMARY_COLOR = '#173470';
+    const PRIMARY_COLOR = '#244799'; // Updated to match new design system
     const [userWard, setUserWard] = useState(null);
     const [selectedImages, setSelectedImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
@@ -126,6 +126,7 @@ const RegisterComplaint = () => {
         onSubmit: async (values) => {
             setSubmitting(true);
             setError('');
+            setSuccess('');
             try {
                 // Unified Data Object
                 const complaintData = {
@@ -145,10 +146,27 @@ const RegisterComplaint = () => {
                 // Atomic submission: Details + Image in one request
                 await apiService.citizen.createComplaint(formData);
 
-                setSuccess("Strategic report submitted successfully. Officers notified.");
-                setTimeout(() => navigate('/citizen/complaints'), 2000);
+                setSuccess("✅ Report submitted successfully! Redirecting to your complaints...");
+
+                // Redirect after showing success message
+                setTimeout(() => {
+                    navigate('/citizen/complaints');
+                }, 2000);
             } catch (err) {
-                setError(err.response?.data?.message || err.message || "Something went wrong. Please try again.");
+                console.error('Complaint submission error:', err);
+
+                // Enhanced error handling for 403
+                if (err.response?.status === 403 || err.status === 403) {
+                    setError("🔒 Access Denied: You don't have permission to submit complaints. Please log out and log back in, or contact support if the issue persists.");
+                } else if (err.response?.status === 401 || err.status === 401) {
+                    setError("🔑 Session Expired: Please log in again to submit your complaint.");
+                    setTimeout(() => {
+                        localStorage.clear();
+                        navigate('/');
+                    }, 2000);
+                } else {
+                    setError(err.response?.data?.message || err.message || "❌ Something went wrong. Please try again or contact support.");
+                }
             } finally {
                 setSubmitting(false);
             }
@@ -254,8 +272,8 @@ const RegisterComplaint = () => {
                                 ))}
                             </div>
 
-                            <div className="mt-5 p-3 rounded-4 bg-light border-start border-4" style={{ borderLeftColor: '#173470' }}>
-                                <div className="d-flex gap-2 text-primary mb-2" style={{ color: '#173470' }}>
+                            <div className="mt-5 p-3 rounded-4 bg-light border-start border-4" style={{ borderLeftColor: PRIMARY_COLOR }}>
+                                <div className="d-flex gap-2 text-primary mb-2" style={{ color: PRIMARY_COLOR }}>
                                     <Info size={18} />
                                     <span className="fw-bold small">Tip</span>
                                 </div>
@@ -290,7 +308,7 @@ const RegisterComplaint = () => {
                                             style={{
                                                 width: '24px',
                                                 height: '24px',
-                                                backgroundColor: activeStep >= step ? '#173470' : '#E5E7EB',
+                                                backgroundColor: activeStep >= step ? PRIMARY_COLOR : '#E5E7EB',
                                                 color: activeStep >= step ? 'white' : '#9CA3AF',
                                                 fontSize: '11px'
                                             }}>
@@ -397,7 +415,7 @@ const RegisterComplaint = () => {
                                                     type="button"
                                                     className="btn btn-primary rounded-end-4 px-4 shadow-sm border-0"
                                                     onClick={attemptAutoLocation}
-                                                    style={{ backgroundColor: '#173470' }}
+                                                    style={{ backgroundColor: PRIMARY_COLOR }}
                                                     title="Use current location"
                                                 >
                                                     <Compass size={20} />
@@ -437,8 +455,8 @@ const RegisterComplaint = () => {
                                     <div className="animate-fade-in text-center">
                                         <h5 className="fw-bold text-dark mb-4 text-start">Step 4: Evidence</h5>
                                         <div className="mb-4">
-                                            <label className="btn btn-outline-primary w-100 py-5 rounded-4 border-2 border-dashed fw-bold d-flex flex-column align-items-center justify-content-center gap-3 transition-all" style={{ borderColor: '#E2E8F0', color: '#1254AF', backgroundColor: '#F8FAFC' }}>
-                                                <div className="p-3 rounded-circle bg-white shadow-sm" style={{ color: '#173470' }}>
+                                            <label className="btn btn-outline-primary w-100 py-5 rounded-4 border-2 border-dashed fw-bold d-flex flex-column align-items-center justify-content-center gap-3 transition-all" style={{ borderColor: '#E2E8F0', color: PRIMARY_COLOR, backgroundColor: '#F8FAFC' }}>
+                                                <div className="p-3 rounded-circle bg-white shadow-sm" style={{ color: PRIMARY_COLOR }}>
                                                     <Upload size={32} />
                                                 </div>
                                                 <div>
@@ -493,7 +511,7 @@ const RegisterComplaint = () => {
                                         type="button"
                                         className="btn btn-primary rounded-pill px-5 py-2 fw-bold d-flex align-items-center gap-2 shadow-premium border-0"
                                         onClick={nextStep}
-                                        style={{ backgroundColor: '#173470' }}
+                                        style={{ backgroundColor: PRIMARY_COLOR }}
                                     >
                                         Next step <ChevronRight size={20} />
                                     </button>
@@ -525,7 +543,7 @@ const RegisterComplaint = () => {
                         <div className="card border-0 shadow-premium rounded-4 p-4 bg-white mb-4">
                             <h6 className="fw-bold text-muted mb-4 small uppercase-tracking">📍 Your area</h6>
                             <div className="d-flex align-items-center gap-3 mb-4">
-                                <div className="p-3 rounded-4 bg-primary bg-opacity-10 text-primary" style={{ color: '#173470' }}>
+                                <div className="p-3 rounded-4 bg-primary bg-opacity-10 text-primary" style={{ color: PRIMARY_COLOR }}>
                                     <MapPin size={24} />
                                 </div>
                                 <div>
@@ -545,7 +563,7 @@ const RegisterComplaint = () => {
                             </div>
                         </div>
 
-                        <div className="card border-0 shadow-premium rounded-4 p-4 mb-4 text-white" style={{ background: 'linear-gradient(135deg, #112652 0%, #173470 100%)' }}>
+                        <div className="card border-0 shadow-premium rounded-4 p-4 mb-4 text-white" style={{ background: `linear-gradient(135deg, #112652 0%, ${PRIMARY_COLOR} 100%)` }}>
                             <h6 className="fw-bold mb-4 opacity-75 small uppercase-tracking">Submission info</h6>
                             <ul className="list-unstyled mb-0 small fw-medium">
                                 <li className="mb-3 d-flex gap-3">

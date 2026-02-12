@@ -3,14 +3,18 @@ import {
     Clock, User, MapPin, Calendar, Building2, Image as ImageIcon,
     MessageSquare, Mail, Phone, Eye, CheckCircle, AlertTriangle,
     Shield, ArrowRight, History as HistoryIcon, Info, Camera, Zap, X, Star, FileText, Activity,
-    ShieldCheck, CheckCheck, Quote, Search, Layers, Smartphone, SmartphoneIcon, RotateCcw, Timer, ShieldAlert
+    ShieldCheck, CheckCheck, Quote, Search, Layers, Smartphone, SmartphoneIcon, RotateCcw, Timer, ShieldAlert,
+    Upload, PlayCircle, Settings, XCircle, ThumbsUp, ThumbsDown, Send, AlertCircle, Stamp, Lock, Fingerprint
 } from 'lucide-react';
 import { extractImageUrl, getPlaceholderImage } from '../../utils/imageUtils';
 import { COMPLAINT_STATUS, IMAGE_STAGES } from '../../constants';
+import AuthenticatedImage from '../ui/AuthenticatedImage';
 
 /**
- * Unified Strategic Complaint Detail Engine
- * Premium high-contrast layout with tactical activity streams.
+ * ✨ CivicConnect – Universal Complaint Details Page
+ * 🔐 One common page for ALL users (Citizen, Ward Officer, Department Officer, Admin)
+ * 👁️ Full visibility with role-based action controls
+ * 🎨 Premium tactical government-tech aesthetic
  */
 const ComplaintDetailView = ({
     complaint,
@@ -22,7 +26,9 @@ const ComplaintDetailView = ({
     children
 }) => {
     const [selectedImage, setSelectedImage] = useState(null);
+    const [activeImageTab, setActiveImageTab] = useState('CITIZEN');
     const PRIMARY_COLOR = '#173470';
+    const SECONDARY_COLOR = '#10B981';
 
     const formatDate = (dateString, includeTime = true) => {
         if (!dateString) return '';
@@ -36,14 +42,14 @@ const ComplaintDetailView = ({
 
     const getStatusConfig = (status) => {
         const configs = {
-            'SUBMITTED': { label: 'Reported', icon: FileText, color: '#64748B', bg: '#F8FAFC' },
-            'APPROVED': { label: 'Verified', icon: CheckCheck, color: '#0EA5E9', bg: '#F0F9FF' },
-            'ASSIGNED': { label: 'Dispatched', icon: User, color: '#6366F1', bg: '#F5F5FF' },
-            'IN_PROGRESS': { label: 'Work started', icon: Activity, color: '#F59E0B', bg: '#FFFBEB' },
-            'RESOLVED': { label: 'Fixed', icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' },
-            'CLOSED': { label: 'Closed', icon: ShieldCheck, color: '#173470', bg: '#F1F5F9' },
-            'REJECTED': { label: 'Rejected', icon: AlertTriangle, color: '#EF4444', bg: '#FEF2F2' },
-            'REOPENED': { label: 'Reopened', icon: RotateCcw, color: '#F43F5E', bg: '#FFF1F2' }
+            'SUBMITTED': { label: 'RECEIVED', icon: FileText, color: '#64748B', bg: '#F8FAFC', accent: '#94A3B8' },
+            'APPROVED': { label: 'APPROVED', icon: CheckCheck, color: '#0EA5E9', bg: '#F0F9FF', accent: '#38BDF8' },
+            'ASSIGNED': { label: 'ASSIGNED', icon: User, color: '#6366F1', bg: '#F5F5FF', accent: '#818CF8' },
+            'IN_PROGRESS': { label: 'WORKING', icon: Activity, color: '#F59E0B', bg: '#FFFBEB', accent: '#FBBF24' },
+            'RESOLVED': { label: 'FIXED', icon: CheckCircle, color: '#10B981', bg: '#ECFDF5', accent: '#34D399' },
+            'CLOSED': { label: 'FINISHED', icon: ShieldCheck, color: '#173470', bg: '#F1F5F9', accent: '#1E293B' },
+            'REJECTED': { label: 'RETURNED', icon: AlertTriangle, color: '#EF4444', bg: '#FEF2F2', accent: '#F87171' },
+            'REOPENED': { label: 'BACK OPEN', icon: RotateCcw, color: '#F43F5E', bg: '#FFF1F2', accent: '#FB7185' }
         };
         return configs[status] || configs['SUBMITTED'];
     };
@@ -63,25 +69,27 @@ const ComplaintDetailView = ({
     };
 
     const ImageThumbnail = ({ img, stageKey, onClick }) => {
+        const imageUrl = extractImageUrl(img, complaint.complaintId || complaint.id);
+
         return (
-            <div className="group cursor-pointer position-relative overflow-hidden rounded-4 shadow-sm transition-all hover-up"
-                style={{ height: '140px' }}
+            <div className="group cursor-pointer position-relative overflow-hidden rounded-5 shadow-premium transition-standard border-2 border-white hover-up-tiny"
+                style={{ height: '160px' }}
                 onClick={onClick}>
-                <img
-                    src={extractImageUrl(img, complaint.complaintId || complaint.id)}
-                    className="w-100 h-100 object-fit-cover group-hover-scale-110"
+                <AuthenticatedImage
+                    src={imageUrl}
+                    className="w-100 h-100 object-fit-cover transition-standard group-hover-scale"
                     alt="evidence"
-                    onError={(e) => { e.target.src = getPlaceholderImage(stageKey || 'IMAGE'); }}
+                    placeholderType={stageKey}
                 />
-                <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-10 opacity-0 group-hover-opacity-100 transition-standard d-flex align-items-center justify-content-center">
-                    <div className="circ-white shadow-sm" style={{ width: '36px', height: '36px' }}>
-                        <ImageIcon size={18} className="text-primary" />
+                <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-20 opacity-0 group-hover-opacity-100 transition-standard d-flex align-items-center justify-content-center" style={{ backdropFilter: 'blur(4px)' }}>
+                    <div className="rounded-circle shadow-premium bg-white d-flex align-items-center justify-content-center transition-standard" style={{ width: '48px', height: '48px' }}>
+                        <Eye size={22} style={{ color: PRIMARY_COLOR }} />
                     </div>
                 </div>
-                <div className="position-absolute bottom-0 start-0 w-100 p-2 glass-panel border-0 border-top">
+                <div className="position-absolute bottom-0 start-0 w-100 p-3 bg-white bg-opacity-95 border-top border-white border-opacity-20">
                     <div className="d-flex align-items-center justify-content-between">
-                        <span className="extra-small fw-bold opacity-70" style={{ fontSize: '0.6rem' }}>{stageKey} phase</span>
-                        <Camera size={10} className="opacity-40" />
+                        <span className="extra-small fw-black tracking-widest text-primary uppercase" style={{ fontSize: '0.6rem', color: PRIMARY_COLOR }}>{stageKey} PHASE</span>
+                        <Fingerprint size={12} className="opacity-40" />
                     </div>
                 </div>
             </div>
@@ -101,70 +109,41 @@ const ComplaintDetailView = ({
         });
     };
 
-    const categorizedImageIds = new Set();
-    evidenceStages.forEach(stage => {
-        getStageImages(stage).forEach(img => categorizedImageIds.add(img.id || img.imageUrl));
-    });
-
-    const uncategorizedImages = images.filter(img => !categorizedImageIds.has(img.id || img.imageUrl));
-
-    const EvidenceSection = ({ title, stageImages, icon: Icon, color, stageKey }) => {
-        if (stageImages.length === 0) return null;
-
-        return (
-            <div className="mb-5">
-                <div className="d-flex align-items-center gap-3 mb-4 ps-1">
-                    <div className="circ-white shadow-sm" style={{ width: '40px', height: '40px', backgroundColor: `${color}15`, color: color }}>
-                        <Icon size={18} strokeWidth={2.5} />
-                    </div>
-                    <div>
-                        <h6 className="fw-bold text-dark mb-0 small">{title}</h6>
-                        <span className="extra-small fw-bold text-muted opacity-40">Photo evidence • {stageImages.length} files</span>
-                    </div>
-                </div>
-                <div className="row g-3">
-                    {stageImages.map((img, idx) => (
-                        <div key={idx} className="col-6 col-md-4 col-lg-3">
-                            <ImageThumbnail img={img} stageKey={stageKey} onClick={() => setSelectedImage(img)} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    };
-
     return (
         <div className="complaint-detail-view animate-fadeIn">
-            {/* Top Command Bar & Escalation */}
+            {/* Top Action Protocol */}
             <div className="row mb-5">
                 <div className="col-12">
                     {canReopen() ? (
-                        <div className="alert border-0 shadow-premium p-4 rounded-4" style={{ backgroundColor: '#FEF2F2', borderLeft: '6px solid #EF4444 !important' }}>
-                            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-4">
+                        <div className="p-4 rounded-5 shadow-premium border-0 overflow-hidden bg-white border-top border-5 border-danger anim-pulse-border">
+                            <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-5">
                                 <div className="d-flex align-items-center gap-4">
-                                    <div className="circ-white shadow-premium border text-danger" style={{ width: '64px', height: '64px' }}>
-                                        <ShieldAlert size={32} />
+                                    <div className="p-4 bg-danger bg-opacity-5 rounded-circle text-danger shadow-inner">
+                                        <RotateCcw size={32} />
                                     </div>
                                     <div>
-                                        <h5 className="fw-bold text-danger mb-1">Not satisfied?</h5>
-                                        <p className="extra-small text-muted mb-0 opacity-80">If the work is not done properly, you can ask to reopen this case.</p>
+                                        <h5 className="fw-black text-danger mb-1 uppercase tracking-tight">Resolution Inadequate?</h5>
+                                        <p className="extra-small text-muted fw-bold mb-0 opacity-60 uppercase tracking-widest lh-lg">Initiate higher clearance investigation protocol if resolution standards failed.</p>
                                     </div>
                                 </div>
-                                <button onClick={onReopen} className="btn btn-danger btn-premium px-5 shadow-float">
-                                    <RotateCcw size={18} /> Reopen case
+                                <button onClick={onReopen} className="btn btn-danger px-5 py-3 fw-black rounded-pill shadow-premium border-0 extra-small tracking-widest uppercase hover-up-tiny">
+                                    EXECUTE RE-OPEN
                                 </button>
                             </div>
                         </div>
                     ) : (
-                        <div className="glass-panel p-4 gov-rounded elevation-1 d-flex align-items-center justify-content-between">
-                            <div className="d-flex align-items-center gap-3">
-                                <div className="p-2 bg-primary bg-opacity-10 text-primary rounded-3">
-                                    <Activity size={18} />
+                        <div className="p-4 rounded-5 bg-white shadow-premium border-2 border-dashed d-flex align-items-center justify-content-between strategic-border transition-standard hover-up-tiny">
+                            <div className="d-flex align-items-center gap-4">
+                                <div className="p-3 bg-primary bg-opacity-5 rounded-circle shadow-inner">
+                                    <ShieldCheck size={20} style={{ color: PRIMARY_COLOR }} />
                                 </div>
-                                <span className="extra-small fw-black text-dark uppercase tracking-widest">Complaint ID: {complaint.complaintId || complaint.id}</span>
+                                <div>
+                                    <span className="extra-small fw-black text-dark uppercase tracking-widest">ENCRYPTED CASE TOKEN</span>
+                                    <h6 className="fw-black mb-0 uppercase tracking-tighter" style={{ color: PRIMARY_COLOR }}>#{complaint.complaintId || complaint.id}</h6>
+                                </div>
                             </div>
-                            <div className="d-flex align-items-center gap-2">
-                                <div className={`badge-rect-blue px-3 py-1 border-0 ${complaint.priority === 'HIGH' ? 'bg-danger' : 'bg-primary'}`} style={{ fontSize: '10px' }}>
+                            <div className="d-flex align-items-center gap-3">
+                                <div className={`badge rounded-pill px-4 py-2 extra-small fw-black tracking-widest border-0 ${complaint.priority === 'HIGH' ? 'bg-danger shadow-danger-glow' : 'bg-primary'}`} style={{ backgroundColor: complaint.priority === 'HIGH' ? '#ef4444' : PRIMARY_COLOR }}>
                                     {complaint.priority || 'STANDARD'} PRIORITY
                                 </div>
                                 {children}
@@ -174,141 +153,205 @@ const ComplaintDetailView = ({
                 </div>
             </div>
 
-            <div className="row g-4">
-                {/* Left Column */}
+            <div className="row g-5">
+                {/* Tactical Column: Status & Timeline */}
                 <div className="col-lg-8">
-                    {/* Status Visualization */}
-                    <div className="premium-card p-0 mb-4 overflow-hidden elevation-2">
+                    <div className="card border-0 shadow-premium rounded-5 bg-white overflow-hidden mb-5 transition-standard border-top border-5" style={{ borderColor: PRIMARY_COLOR }}>
                         <div className="row g-0">
-                            <div className="col-md-4 theme-dark-bg p-5 d-flex flex-column justify-content-center text-center position-relative overflow-hidden">
-                                <div className="position-absolute top-0 start-0 w-100 h-100 opacity-10">
-                                    <Activity size={200} className="position-absolute bottom-0 end-0" style={{ transform: 'translate(40%, 40%)' }} />
-                                </div>
+                            <div className="col-md-5 tactical-dark p-5 d-flex flex-column justify-content-center text-center position-relative overflow-hidden" style={{ backgroundColor: '#0f172a' }}>
+                                <div className="strategic-grid position-absolute w-100 h-100 top-0 start-0 opacity-10"></div>
                                 <div className="position-relative z-1">
-                                    <p className="extra-small fw-bold text-white opacity-60 mb-3">Current status</p>
-                                    <h3 className="fw-black text-white mb-4">{currentConf.label}</h3>
-                                    <div className="circ-white mx-auto shadow-float elevation-4" style={{ width: '84px', height: '84px', color: currentConf.color }}>
-                                        <currentConf.icon size={40} strokeWidth={2.5} />
+                                    <div className="mx-auto bg-white bg-opacity-5 rounded-pill px-4 py-2 d-inline-flex align-items-center gap-3 mb-5 border border-white border-opacity-10 animate-fadeIn">
+                                        <div className="bg-success rounded-circle anim-pulse" style={{ width: '8px', height: '8px', boxShadow: '0 0 10px #10b981' }}></div>
+                                        <span className="extra-small fw-black text-white uppercase tracking-[0.25em]">LIVE SECTOR STATUS</span>
+                                    </div>
+                                    <h3 className="fw-black text-white mb-2 display-6 uppercase tracking-tight">{currentConf.label}</h3>
+                                    <p className="extra-small fw-black text-white opacity-40 uppercase tracking-[0.35em] mb-5">OPERATIONAL ARCHIVE STATUS</p>
+
+                                    <div className="rounded-circle mx-auto shadow-lg bg-white d-flex align-items-center justify-content-center anim-float transition-standard" style={{ width: '100px', height: '100px', color: currentConf.color }}>
+                                        <currentConf.icon size={48} strokeWidth={2.5} />
+                                    </div>
+
+                                    <div className="mt-5 pt-5 border-top border-white border-opacity-10">
+                                        <div className="d-flex justify-content-center gap-5">
+                                            <div>
+                                                <div className="extra-small fw-black text-white opacity-40 uppercase tracking-widest mb-2">SECTOR</div>
+                                                <div className="extra-small fw-black text-white tracking-widest uppercase">{(complaint.wardName || 'PMC').toUpperCase()}</div>
+                                            </div>
+                                            <div className="border-start border-white border-opacity-10 ps-5">
+                                                <div className="extra-small fw-black text-white opacity-40 uppercase tracking-widest mb-2">DOMAIN</div>
+                                                <div className="extra-small fw-black text-white tracking-widest uppercase">{(complaint.departmentName || 'CIVIC').replace(/_/g, ' ')}</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="col-md-8 p-5 bg-white">
-                                <div className="d-flex justify-content-between align-items-center mb-5">
+                            <div className="col-md-7 p-5 bg-white">
+                                <div className="d-flex justify-content-between align-items-start mb-5 pb-4 border-bottom">
                                     <div>
-                                        <h6 className="fw-bold text-dark extra-small mb-1 opacity-40">Process flow</h6>
-                                        <p className="extra-small fw-bold text-muted">Tracking work</p>
+                                        <h6 className="fw-black text-dark uppercase tracking-widest small mb-1">Mission Lifecycle</h6>
+                                        <p className="extra-small fw-bold text-muted opacity-60 uppercase mb-0 tracking-widest">Linear intelligence tracking of field protocols.</p>
                                     </div>
-                                    <div className="badge-rect-blue glass-panel-dark border-0" style={{ color: currentConf.color }}>
-                                        Verified
+                                    <div className="p-2 px-3 bg-light rounded-4 shadow-inner">
+                                        <Lock size={12} className="text-primary me-2" style={{ color: PRIMARY_COLOR }} />
+                                        <span className="extra-small fw-black text-muted tracking-widest uppercase">SECURE</span>
                                     </div>
                                 </div>
 
-                                <div className="position-relative py-5 overflow-auto no-scrollbar">
-                                    <div className="d-flex justify-content-between position-relative" style={{ minWidth: '450px' }}>
+                                <div className="workflow-timeline py-4">
+                                    <div className="d-flex justify-content-between position-relative" style={{ minWidth: '400px' }}>
                                         {[
-                                            { id: 'SUBMITTED', l: 'Reported', i: FileText },
-                                            { id: 'APPROVED', l: 'Verified', i: ShieldCheck },
-                                            { id: 'ASSIGNED', l: 'Assigned', i: User },
-                                            { id: 'IN_PROGRESS', l: 'Working', i: Zap },
-                                            { id: 'RESOLVED', l: 'Solved', i: CheckCircle },
-                                            { id: 'CLOSED', l: 'Done', i: CheckCheck }
+                                            { id: 'SUBMITTED', l: 'RECV', i: FileText },
+                                            { id: 'APPROVED', l: 'APRV', i: ShieldCheck },
+                                            { id: 'ASSIGNED', l: 'ASGN', i: User },
+                                            { id: 'IN_PROGRESS', l: 'WORK', i: Activity },
+                                            { id: 'RESOLVED', l: 'FIXD', i: CheckCircle },
+                                            { id: 'CLOSED', l: 'DONE', i: CheckCheck }
                                         ].map((s, idx, arr) => {
-                                            const cIdx = workflowStages.indexOf(complaint.status);
-                                            const isDone = idx <= cIdx;
-                                            const isNow = idx === cIdx;
+                                            const currentStatusIdx = workflowStages.indexOf(complaint.status);
+                                            const stepStatusIdx = workflowStages.indexOf(s.id);
+                                            const isDone = stepStatusIdx <= currentStatusIdx;
+                                            const isNow = stepStatusIdx === currentStatusIdx;
+
                                             return (
                                                 <div key={s.id} className="d-flex flex-column align-items-center flex-grow-1 position-relative" style={{ zIndex: 10 }}>
-                                                    <div className={`circ-white transition-standard ${isNow ? 'animate-heartbeat' : ''}`}
+                                                    <div className={`rounded-circle d-flex align-items-center justify-content-center transition-standard ${isNow ? 'animate-heartbeat' : ''} ${isDone ? 'shadow-premium' : 'opacity-30'}`}
                                                         style={{
-                                                            width: isNow ? '52px' : '44px',
-                                                            height: isNow ? '52px' : '44px',
-                                                            backgroundColor: isNow ? PRIMARY_COLOR : isDone ? `${PRIMARY_COLOR}CC` : '#F8FAFC',
-                                                            color: isDone ? 'white' : '#CBD5E1',
-                                                            boxShadow: isNow ? `0 0 25px ${PRIMARY_COLOR}40` : 'none',
-                                                            border: isNow ? `3px solid white` : '1px solid #E2E8F0'
+                                                            width: isNow ? '56px' : '44px',
+                                                            height: isNow ? '56px' : '44px',
+                                                            backgroundColor: isNow ? PRIMARY_COLOR : isDone ? `${PRIMARY_COLOR}EE` : '#F1F5F9',
+                                                            color: isDone ? 'white' : '#94A3B8',
+                                                            border: isNow ? `5px solid #F1F5F9` : '2px solid white'
                                                         }}>
                                                         <s.i size={isNow ? 24 : 18} strokeWidth={isNow ? 3 : 2} />
                                                     </div>
-                                                    <span className={`extra-small fw-bold mt-3 d-block text-center ${isNow ? 'text-primary' : 'text-muted opacity-40'}`} style={{ fontSize: '0.6rem' }}>
+                                                    <span className={`extra-small fw-black mt-3 d-block uppercase tracking-widest ${isNow ? 'text-primary' : isDone ? 'text-dark' : 'text-muted opacity-30'}`} style={{ fontSize: '0.6rem' }}>
                                                         {s.l}
                                                     </span>
                                                     {idx < arr.length - 1 && (
-                                                        <div className="position-absolute" style={{ height: '3px', width: '100%', backgroundColor: idx < cIdx ? PRIMARY_COLOR : '#F1F5F9', top: isNow ? '26px' : '22px', left: '50%', zIndex: -1 }}></div>
+                                                        <div className="position-absolute" style={{ height: '4px', width: '100%', backgroundColor: stepStatusIdx < currentStatusIdx ? PRIMARY_COLOR : '#F1F5F9', top: isNow ? '28px' : '22px', left: '50%', zIndex: -1, borderBottom: '1px solid rgba(255,255,255,0.2)' }}></div>
                                                     )}
                                                 </div>
                                             );
                                         })}
                                     </div>
                                 </div>
+                                <div className="mt-5 p-4 bg-primary bg-opacity-5 rounded-5 border-2 border-dashed strategic-border d-flex align-items-center gap-4 transition-standard hover-up-tiny">
+                                    <div className="p-3 bg-white shadow-premium rounded-circle">
+                                        <Info size={18} style={{ color: PRIMARY_COLOR }} />
+                                    </div>
+                                    <div>
+                                        <p className="extra-small fw-black text-dark mb-1 uppercase tracking-widest">LATEST TELEMETRY FEED</p>
+                                        <p className="extra-small text-muted mb-0 uppercase tracking-widest fw-black opacity-60">
+                                            {formatDate(statusHistory[0]?.updatedAt || complaint.updatedAt || complaint.createdAt)} • {statusHistory[0]?.remarks || 'CASE PROTOCOL DEPLOYED.'}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Image Collection */}
-                    <div className="premium-card p-5 mb-4 elevation-2">
-                        <div className="d-flex justify-content-between align-items-center mb-5">
-                            <div className="d-flex align-items-center gap-3">
-                                <div className="circ-blue shadow-premium" style={{ width: '48px', height: '48px' }}><Camera size={24} /></div>
-                                <h5 className="fw-bold text-dark mb-0">Photos</h5>
+                    {/* Operational Gallery */}
+                    <div className="card border-0 shadow-premium rounded-5 bg-white overflow-hidden mb-5 transition-standard p-5">
+                        <div className="d-flex justify-content-between align-items-center mb-5 pb-4 border-bottom">
+                            <div className="d-flex align-items-center gap-4">
+                                <div className="p-3 bg-light border shadow-inner rounded-circle">
+                                    <Camera size={24} style={{ color: PRIMARY_COLOR }} />
+                                </div>
+                                <div>
+                                    <h5 className="fw-black text-dark mb-1 uppercase tracking-tight">Case Documentation</h5>
+                                    <p className="extra-small fw-bold text-muted opacity-60 uppercase mb-0 tracking-widest">High-fidelity visual evidence logs.</p>
+                                </div>
                             </div>
-                            <div className="badge-rect-white border" style={{ color: PRIMARY_COLOR }}>{images.length} files</div>
+                            <div className="px-4 py-2 bg-primary bg-opacity-5 rounded-pill border-2 border-dashed extra-small fw-black tracking-widest uppercase" style={{ color: PRIMARY_COLOR, borderColor: `${PRIMARY_COLOR}40` }}>
+                                {images.length} ARCHIVED OBJECTS
+                            </div>
                         </div>
 
-                        {evidenceStages.map(stage => (
-                            <EvidenceSection
-                                key={stage.key}
-                                title={stage.label}
-                                stageImages={getStageImages(stage)}
-                                icon={stage.icon}
-                                color={stage.color}
-                                stageKey={stage.key}
-                            />
-                        ))}
+                        {/* Tactical Tab Interface */}
+                        <div className="bg-light p-2 rounded-5 d-flex gap-2 mb-5 shadow-inner">
+                            {[
+                                { id: 'CITIZEN', label: 'BEFORE', icon: User, stages: ['INITIAL', 'BEFORE', 'SUBMITTED', 'CITIZEN_UPLOAD', 'BEFORE_WORK'] },
+                                { id: 'WORK_STARTED', label: 'STARTED', icon: PlayCircle, stages: ['WORK_STARTED', 'START'] },
+                                { id: 'IN_PROGRESS', label: 'DURING', icon: Activity, stages: ['IN_PROGRESS', 'DURING', 'PROGRESS', 'WORK_IN_PROGRESS'] },
+                                { id: 'RESOLUTION', label: 'AFTER', icon: CheckCircle, stages: ['RESOLVED', 'AFTER', 'FINAL', 'RESOLUTION_PROOF', 'AFTER_RESOLUTION', 'COMPLETED'] }
+                            ].map(tab => {
+                                const tabImages = images.filter(img => tab.stages.includes((img.stage || '').toUpperCase().replace(/ /g, '_')));
+                                const isActive = activeImageTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveImageTab(tab.id)}
+                                        className={`btn flex-fill rounded-pill py-3 px-4 extra-small fw-black uppercase tracking-widest transition-standard d-flex align-items-center justify-content-center gap-3 border-0 ${isActive ? 'bg-primary text-white shadow-premium' : 'text-muted opacity-60 hover-opacity-100'}`}
+                                        style={isActive ? { backgroundColor: PRIMARY_COLOR } : {}}
+                                    >
+                                        <tab.icon size={16} />
+                                        <span className="d-none d-md-inline">{tab.label}</span>
+                                        {tabImages.length > 0 && <span className={`badge rounded-circle shadow-inner ${isActive ? 'bg-white text-primary' : 'bg-secondary text-white'}`} style={{ padding: '4px 6px', fontSize: '9px' }}>{tabImages.length}</span>}
+                                    </button>
+                                );
+                            })}
+                        </div>
 
-                        {uncategorizedImages.length > 0 && (
-                            <EvidenceSection
-                                title="Other photos"
-                                stageImages={uncategorizedImages}
-                                icon={Layers}
-                                color="#64748B"
-                                stageKey="System"
-                            />
-                        )}
+                        {(() => {
+                            const stageMap = {
+                                'CITIZEN': ['INITIAL', 'BEFORE', 'SUBMITTED', 'CITIZEN_UPLOAD', 'BEFORE_WORK'],
+                                'WORK_STARTED': ['WORK_STARTED', 'START'],
+                                'IN_PROGRESS': ['IN_PROGRESS', 'DURING', 'PROGRESS', 'WORK_IN_PROGRESS'],
+                                'RESOLUTION': ['RESOLVED', 'AFTER', 'FINAL', 'RESOLUTION_PROOF', 'AFTER_RESOLUTION', 'COMPLETED']
+                            };
+                            const activeImages = images.filter(img => stageMap[activeImageTab]?.includes((img.stage || '').toUpperCase().replace(/ /g, '_')));
+
+                            if (activeImages.length === 0) {
+                                return (
+                                    <div className="text-center py-5 bg-light bg-opacity-30 rounded-5 border-2 border-dashed strategic-border">
+                                        <div className="p-5 opacity-20">
+                                            <Layers size={64} className="mb-4" />
+                                            <h6 className="fw-black uppercase tracking-widest mb-2">NO VISUAL INTEL ARCHIVED</h6>
+                                            <p className="extra-small fw-bold uppercase">Awaiting field documentation for this phase.</p>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="row g-4 animate-fadeIn">
+                                    {activeImages.map((img, idx) => (
+                                        <div key={idx} className="col-6 col-md-4 col-lg-3">
+                                            <ImageThumbnail img={img} stageKey={activeImageTab} onClick={() => setSelectedImage(img)} />
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()}
                     </div>
 
-                    <div className="premium-card p-0 elevation-3 overflow-hidden bg-white mb-5">
+                    {/* Operational Narrative Log */}
+                    <div className="card border-0 shadow-premium rounded-5 bg-white overflow-hidden mb-5 transition-standard">
                         <div className="p-5">
-                            <div className="timeline-narrative ps-4 border-start border-2 border-primary border-opacity-10" style={{ marginLeft: '1rem' }}>
+                            <h6 className="fw-black text-primary uppercase tracking-[0.25em] mb-5 small" style={{ color: PRIMARY_COLOR }}>PROTOCOL EXECUTION LOG</h6>
+                            <div className="ps-5 border-start border-3 border-primary border-opacity-10 position-relative" style={{ marginLeft: '1rem' }}>
                                 {statusHistory.map((h, i) => {
                                     const st = getStatusConfig(h.status);
-                                    let roleLabel = (h.changedByRole || 'SYSTEM').toUpperCase();
-
-                                    if (roleLabel === 'DEPARTMENT_OFFICER') {
-                                        roleLabel = 'FIELD OPERATIONS OFFICER';
-                                    } else {
-                                        roleLabel = roleLabel.replace(/_/g, ' ');
-                                    }
-
-                                    const isFieldOp = roleLabel === 'FIELD OPERATIONS OFFICER';
-                                    const badgeClass = isFieldOp ? 'badge-rect-blue' : 'badge-rect-white border text-dark';
+                                    let roleLabel = (h.changedByRole || 'SYSTEM').toUpperCase().replace(/_/g, ' ');
 
                                     return (
-                                        <div key={i} className="position-relative mb-5">
-                                            <div className="position-absolute start-0 translate-middle-x circ-white shadow-sm"
-                                                style={{ width: '36px', height: '36px', left: '-1.5rem', backgroundColor: st.bg, color: st.color, border: `2px solid white`, top: '0' }}>
-                                                <st.icon size={16} />
+                                        <div key={i} className="position-relative mb-5 transition-standard hover-up-tiny">
+                                            <div className="position-absolute start-0 translate-middle-x rounded-circle shadow-premium d-flex align-items-center justify-content-center bg-white"
+                                                style={{ width: '40px', height: '40px', left: '-1.5rem', color: st.color, border: `2px solid #f1f5f9`, top: '0' }}>
+                                                <st.icon size={18} />
                                             </div>
                                             <div className="ps-4">
-                                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 className="extra-small fw-bold mb-0" style={{ color: st.color }}>{h.status?.replace(/_/g, ' ')}</h6>
-                                                    <span className="extra-small fw-bold text-muted opacity-40">{formatDate(h.updatedAt)}</span>
+                                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                                    <h6 className="extra-small fw-black mb-0 uppercase tracking-widest" style={{ color: st.color }}>{h.status?.replace(/_/g, ' ')}</h6>
+                                                    <span className="extra-small fw-black text-muted opacity-40 uppercase tracking-widest">{formatDate(h.updatedAt)}</span>
                                                 </div>
-                                                <div className="p-3 bg-light bg-opacity-40 gov-rounded border-0 border-start border-3" style={{ borderColor: st.color }}>
-                                                    <p className="small text-dark mb-0 fw-medium">"{h.remarks || 'Status updated.'}"</p>
+                                                <div className="p-4 bg-light bg-opacity-50 rounded-4 border-start border-4 shadow-inner" style={{ borderColor: st.color }}>
+                                                    <p className="extra-small fw-black text-dark mb-0 uppercase tracking-widest lh-base opacity-80">"{h.remarks || 'Standard status transition recorded.'}"</p>
                                                 </div>
-                                                <div className="mt-2 d-flex gap-2">
-                                                    <span className={`${badgeClass} py-1 px-2`} style={{ fontSize: '0.6rem', ...(isFieldOp ? { opacity: 1 } : { opacity: 0.8 }) }}>{roleLabel}</span>
-                                                    {h.changedByName && <span className="badge-rect-white py-1 px-2 border text-dark fw-bold" style={{ fontSize: '0.6rem' }}>{h.changedByName}</span>}
+                                                <div className="mt-3 d-flex gap-3">
+                                                    <div className="px-3 py-1 bg-white border rounded-pill extra-small fw-black text-muted tracking-widest uppercase">{roleLabel}</div>
+                                                    {h.changedByName && <div className="px-3 py-1 bg-primary bg-opacity-5 rounded-pill extra-small fw-black text-primary tracking-widest uppercase" style={{ color: PRIMARY_COLOR }}>{h.changedByName}</div>}
                                                 </div>
                                             </div>
                                         </div>
@@ -316,155 +359,154 @@ const ComplaintDetailView = ({
                                 })}
                             </div>
                         </div>
-                        <div className="p-4 text-center bg-light border-top">
-                            <p className="extra-small fw-bold text-muted opacity-40 uppercase mb-0 tracking-[0.3em]">End of Official Log</p>
+                        <div className="p-4 text-center bg-light bg-opacity-50 border-top">
+                            <p className="extra-small fw-black text-muted opacity-40 uppercase mb-0 tracking-[0.5em]">SYSTEM_ARCHIVE_TERMINATED</p>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Column */}
+                {/* Tactical Column: Profile & Metadata */}
                 <div className="col-lg-4">
-                    {/* Basic Info */}
-                    <div className="premium-card p-5 mb-4 elevation-3 bg-white">
-                        <div className="d-flex align-items-center gap-3 mb-4">
-                            <Layers className="text-primary" size={20} />
-                            <h6 className="fw-black text-primary uppercase tracking-widest mb-0 small">Record Specification</h6>
+                    {/* Primary Case Ledger Card */}
+                    <div className="card border-0 shadow-premium rounded-5 bg-white overflow-hidden mb-5 transition-standard p-5 border-top border-5" style={{ borderColor: PRIMARY_COLOR }}>
+                        <div className="d-flex align-items-center gap-4 mb-5 pb-4 border-bottom">
+                            <div className="p-3 bg-primary bg-opacity-5 rounded-circle shadow-inner">
+                                <FileText size={24} style={{ color: PRIMARY_COLOR }} />
+                            </div>
+                            <div>
+                                <h6 className="fw-black text-primary uppercase tracking-widest mb-1 small" style={{ color: PRIMARY_COLOR }}>FIELD Intel</h6>
+                                <p className="extra-small fw-bold text-muted opacity-60 uppercase mb-0 tracking-widest">Citizen Submission Data</p>
+                            </div>
                         </div>
 
-                        <div className="p-5 glass-panel-dark gov-rounded mb-4 position-relative border-premium shadow-sm">
-                            <div className="d-flex align-items-center gap-3 mb-4">
-                                <div className="circ-blue" style={{ width: '32px', height: '32px', opacity: 0.1 }}><FileText size={16} /></div>
-                                <h6 className="extra-small fw-black text-primary uppercase tracking-widest mb-0">Record Subject</h6>
-                            </div>
-                            <h4 className="fw-black text-dark mb-4" style={{ fontSize: '1.4rem', lineHeight: '1.2' }}>{complaint.title || 'Untitled Case Record'}</h4>
-
-                            <div className="border-top pt-4 mt-2">
-                                <div className="d-flex align-items-center gap-3 mb-3">
-                                    <div className="circ-blue" style={{ width: '32px', height: '32px', opacity: 0.1 }}><Quote size={16} /></div>
-                                    <h6 className="extra-small fw-black text-primary uppercase tracking-widest mb-0">Strategic Narrative</h6>
+                        <div className="p-4 bg-light bg-opacity-50 rounded-5 mb-5 shadow-inner border border-white position-relative overflow-hidden">
+                            <div className="strategic-grid position-absolute w-100 h-100 top-0 start-0 opacity-05"></div>
+                            <div className="position-relative z-1">
+                                <h4 className="fw-black text-dark mb-4 tracking-tighter uppercase" style={{ fontSize: '1.4rem' }}>{complaint.title || 'Untitled Case'}</h4>
+                                <div className="p-4 bg-white bg-opacity-80 rounded-4 shadow-sm">
+                                    <p className="extra-small fw-black text-muted mb-0 lh-lg tracking-widest opacity-80">{complaint.description}</p>
                                 </div>
-                                <p className="fw-bold text-dark lh-base mb-0 text-break opacity-80" style={{ fontSize: '0.95rem' }}>{complaint.description}</p>
                             </div>
                         </div>
 
                         <div className="vstack gap-3">
                             {[
-                                { l: 'Reported by', v: 'Resident', i: User },
-                                { l: 'Area', v: complaint.wardName || 'PMC District', i: MapPin },
-                                { l: 'Department', v: (complaint.departmentName || 'General').replace(/_/g, ' '), i: Building2 },
-                                { l: 'Date', v: formatDate(complaint.createdAt, false), i: Calendar }
+                                { l: 'SOURCE ENTITY', v: 'VERIFIED RESIDENT', i: User },
+                                { l: 'OPERATIONAL SECTOR', v: complaint.wardName || 'CENTRAL SECTOR', i: MapPin },
+                                { l: 'COMMAND DOMAIN', v: (complaint.departmentName || 'GENERAL').replace(/_/g, ' '), i: Building2 },
+                                { l: 'LEDGER INGRESS', v: formatDate(complaint.createdAt, false), i: Calendar }
                             ].map((m, i) => (
-                                <div key={i} className="d-flex align-items-center justify-content-between p-3 border-bottom border-light">
-                                    <div className="d-flex align-items-center gap-3">
-                                        <div className="circ-white border" style={{ width: '32px', height: '32px', color: PRIMARY_COLOR }}><m.i size={14} /></div>
-                                        <span className="extra-small fw-bold text-muted">{m.l}</span>
+                                <div key={i} className="d-flex align-items-center justify-content-between p-4 rounded-5 bg-light bg-opacity-30 transition-standard hover-up-tiny border border-transparent hover-border-primary">
+                                    <div className="d-flex align-items-center gap-4">
+                                        <div className="p-2 bg-white rounded-circle shadow-sm">
+                                            <m.i size={16} />
+                                        </div>
+                                        <span className="extra-small fw-black text-muted tracking-widest uppercase" style={{ fontSize: '0.6rem' }}>{m.l}</span>
                                     </div>
-                                    <span className="extra-small fw-bold text-dark">{m.v}</span>
+                                    <span className="extra-small fw-black text-dark uppercase tracking-widest opacity-80">{m.v}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* SLA Status Terminal */}
+                    {/* Operational KPI Terminal */}
                     {complaint.createdAt && (
-                        <div className="premium-card p-5 mb-4 elevation-4" style={{
+                        <div className="card border-0 shadow-premium rounded-5 overflow-hidden mb-5 transition-standard p-5 text-white position-relative" style={{
                             background: slaCountdown?.breached
-                                ? 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%)'
-                                : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
+                                ? 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)'
+                                : 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
                         }}>
-                            <div className="d-flex align-items-center justify-content-between mb-5">
-                                <div className="d-flex align-items-center gap-3">
-                                    <Timer className={slaCountdown?.breached ? 'text-danger' : 'text-warning'} size={24} />
-                                    <h6 className="fw-bold text-white mb-0 small uppercase tracking-widest">SLA Countdown</h6>
-                                </div>
-                                <div className={`badge-rect-blue ${slaCountdown?.breached ? 'bg-danger' : 'bg-warning'} bg-opacity-20 ${slaCountdown?.breached ? 'text-white' : 'text-warning'} border-0`} style={{ fontSize: '9px' }}>
-                                    {slaCountdown?.breached ? 'SLA BREACHED' : 'OFFICIAL KPI'}
-                                </div>
-                            </div>
-
-                            <div className="mb-5">
-                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                    <span className="extra-small fw-bold text-white opacity-40 uppercase">Progress Tracker</span>
-                                    <span className={`extra-small fw-bold ${slaCountdown?.breached ? 'text-danger' : 'text-warning'}`}>
-                                        {slaCountdown?.breached
-                                            ? 'DELAYED RESPONSE'
-                                            : slaCountdown?.remainingMinutes
-                                                ? `${Math.floor(slaCountdown.remainingMinutes / 60)}H ${slaCountdown.remainingMinutes % 60}M LEFT`
-                                                : 'EST. 48 HOUR CYCLE'}
-                                    </span>
-                                </div>
-                                <div className="progress overflow-hidden" style={{ height: '6px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '3px' }}>
-                                    <div className="progress-bar progress-bar-striped progress-bar-animated" style={{
-                                        width: ['RESOLVED', 'CLOSED'].includes(complaint.status) ? '100%' : slaCountdown?.breached ? '100%' : '45%',
-                                        backgroundColor: slaCountdown?.breached ? '#EF4444' : '#F59E0B'
-                                    }}></div>
-                                </div>
-                            </div>
-
-                            <div className="row g-3">
-                                <div className="col-6">
-                                    <div className="p-3 bg-white bg-opacity-5 gov-rounded border border-white border-opacity-10">
-                                        <h6 className="extra-small fw-bold text-white mb-1 opacity-40 uppercase">Logged</h6>
-                                        <p className="text-white fw-bold mb-0 small">{formatDate(complaint.createdAt, false)}</p>
+                            <div className="strategic-grid position-absolute w-100 h-100 top-0 start-0 opacity-10"></div>
+                            <div className="position-relative z-1">
+                                <div className="d-flex align-items-center justify-content-between mb-5">
+                                    <div className="d-flex align-items-center gap-4">
+                                        <div className={`p-3 rounded-circle bg-white bg-opacity-10 shadow-inner ${slaCountdown?.breached ? 'text-danger' : 'text-warning'}`}>
+                                            <Timer size={24} />
+                                        </div>
+                                        <div>
+                                            <h6 className="fw-black text-white mb-0 small uppercase tracking-widest">KPI TELEMETRY</h6>
+                                            <p className="extra-small fw-bold text-white opacity-40 uppercase mb-0 tracking-widest">Resolution Clock</p>
+                                        </div>
+                                    </div>
+                                    <div className={`px-4 py-2 rounded-pill extra-small fw-black tracking-widest border-0 ${slaCountdown?.breached ? 'bg-danger shadow-danger-glow' : 'bg-warning bg-opacity-20 text-warning'}`}>
+                                        {slaCountdown?.breached ? 'SLA_VIOLATION' : 'ACTIVE_SLA'}
                                     </div>
                                 </div>
-                                <div className="col-6">
-                                    <div className="p-3 bg-white bg-opacity-5 gov-rounded border border-white border-opacity-10">
-                                        <h6 className="extra-small fw-bold text-white mb-1 opacity-40 uppercase">Deadline</h6>
-                                        <p className={`fw-bold mb-0 small ${slaCountdown?.breached ? 'text-danger' : 'text-white'}`}>
-                                            {slaCountdown?.deadline ? formatDate(slaCountdown.deadline, false) : formatDate(new Date(new Date(complaint.createdAt).getTime() + 48 * 60 * 60 * 1000), false)}
-                                        </p>
+
+                                <div className="mb-5 p-4 bg-white bg-opacity-5 rounded-4 border border-white border-opacity-10 shadow-inner">
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                        <span className="extra-small fw-black text-white opacity-40 uppercase tracking-widest">Target Resolution Window</span>
+                                        <span className={`extra-small fw-black tracking-widest ${slaCountdown?.breached ? 'text-danger' : 'text-warning'}`}>
+                                            {slaCountdown?.breached ? 'PROTOCOL_DELAY' : `${Math.floor(slaCountdown?.remainingMinutes / 60) || 48}H REMAINING`}
+                                        </span>
+                                    </div>
+                                    <div className="progress bg-white bg-opacity-10 overflow-hidden" style={{ height: '10px', borderRadius: '10px' }}>
+                                        <div className={`progress-bar progress-bar-striped progress-bar-animated ${slaCountdown?.breached ? 'bg-danger shadow-danger-glow' : 'bg-warning'}`} style={{ width: '65%' }}></div>
+                                    </div>
+                                </div>
+
+                                <div className="row g-4">
+                                    <div className="col-6">
+                                        <div className="p-4 bg-white bg-opacity-5 rounded-5 border border-white border-opacity-10 text-center transition-standard hover-up-tiny">
+                                            <h6 className="extra-small fw-black text-white mb-2 opacity-40 uppercase tracking-widest">INITIALIZED</h6>
+                                            <p className="text-white fw-black mb-0 small tracking-widest uppercase">{formatDate(complaint.createdAt, false)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="col-6">
+                                        <div className="p-4 bg-white bg-opacity-5 rounded-5 border border-white border-opacity-10 text-center transition-standard hover-up-tiny">
+                                            <h6 className="extra-small fw-black text-white mb-2 opacity-40 uppercase tracking-widest">DEADLINE</h6>
+                                            <p className={`fw-black mb-0 small tracking-widest uppercase ${slaCountdown?.breached ? 'text-danger' : 'text-white'}`}>
+                                                {slaCountdown?.deadline ? formatDate(slaCountdown.deadline, false) : 'AUTO_SLA_48H'}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Personnel Registry & Authority */}
-                    {/* Personnel Registry & Authority */}
+                    {/* Authorized Personel */}
                     {(complaint.wardOfficerName || complaint.departmentOfficerName || complaint.assignedOfficerName) && (
-                        <div className="premium-card p-0 mb-4 elevation-3 overflow-hidden">
-                            <div className="p-4 theme-dark-bg text-white d-flex align-items-center gap-3">
-                                <ShieldCheck size={20} className="text-success" />
-                                <h6 className="fw-black extra-small uppercase tracking-widest mb-0">Verification Authority</h6>
+                        <div className="card border-0 shadow-premium rounded-5 bg-white overflow-hidden mb-5 transition-standard">
+                            <div className="p-4 tactical-dark text-white d-flex align-items-center justify-content-between shadow-premium" style={{ backgroundColor: '#0f172a' }}>
+                                <div className="d-flex align-items-center gap-4">
+                                    <div className="p-2 bg-success bg-opacity-20 rounded-pill shadow-inner">
+                                        <ShieldCheck size={18} className="text-success" />
+                                    </div>
+                                    <h6 className="fw-black extra-small uppercase tracking-widest mb-0">Operational Personnel</h6>
+                                </div>
+                                <div className="px-3 py-1 bg-white bg-opacity-10 rounded-pill extra-small fw-black tracking-widest border border-white border-opacity-10">AUTHORIZED</div>
                             </div>
-                            <div className="p-5 vstack gap-4 bg-white">
+                            <div className="p-5 vstack gap-4">
                                 {complaint.wardOfficerName && (
-                                    <div className="d-flex align-items-start gap-4 p-4 rounded-4 bg-light border-0 transition-standard hover-up-small">
-                                        <div className="circ-blue shadow-premium flex-shrink-0" style={{ width: '52px', height: '52px' }}>
-                                            <Shield size={22} strokeWidth={2.5} />
-                                        </div>
-                                        <div>
-                                            <span className="extra-small fw-black text-primary uppercase tracking-[0.2em] d-block mb-1">Ward Officer</span>
-                                            <h6 className="fw-bold text-dark mb-1">{complaint.wardOfficerName}</h6>
-                                            <div className="d-flex align-items-center gap-3">
-                                                <div className="badge-rect-blue py-1 px-2 border-0 opacity-60" style={{ fontSize: '0.65rem' }}>LOGGED AS AUTH_OFFICER</div>
+                                    <div className="p-4 bg-light bg-opacity-50 rounded-5 border border-white shadow-inner transition-standard hover-up-tiny">
+                                        <div className="d-flex align-items-center gap-4">
+                                            <div className="p-4 bg-primary bg-opacity-5 rounded-circle shadow-premium border-2 border-white">
+                                                <Shield size={24} style={{ color: PRIMARY_COLOR }} />
+                                            </div>
+                                            <div>
+                                                <span className="extra-small fw-black text-primary uppercase tracking-widest d-block mb-1" style={{ fontSize: '0.55rem' }}>WARD_ADMINISTRATOR</span>
+                                                <h6 className="fw-black text-dark mb-2 uppercase tracking-tighter">{complaint.wardOfficerName}</h6>
                                                 {complaint.wardOfficerMobile && (
-                                                    <div className="d-flex align-items-center gap-2 text-primary">
-                                                        <Smartphone size={12} />
-                                                        <span className="extra-small fw-bold">{complaint.wardOfficerMobile}</span>
-                                                    </div>
+                                                    <a href={`tel:${complaint.wardOfficerMobile}`} className="text-decoration-none d-flex align-items-center gap-3 transition-standard hover-translate-x">
+                                                        <Phone size={12} className="text-muted opacity-40" />
+                                                        <span className="extra-small fw-black text-muted tracking-widest uppercase">{complaint.wardOfficerMobile}</span>
+                                                    </a>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
                                 )}
                                 {(complaint.departmentOfficerName || complaint.assignedOfficerName) && (
-                                    <div className="d-flex align-items-start gap-4 p-4 rounded-4 bg-light border-0 transition-standard hover-up-small">
-                                        <div className="circ-white border shadow-sm flex-shrink-0 text-primary" style={{ width: '52px', height: '52px' }}>
-                                            <Building2 size={24} />
-                                        </div>
-                                        <div>
-                                            <span className="extra-small fw-black text-muted uppercase tracking-[0.2em] d-block mb-1">Field Operations Officer</span>
-                                            <h6 className="fw-bold text-dark mb-1">{complaint.departmentOfficerName || complaint.assignedOfficerName}</h6>
-                                            <div className="d-flex align-items-center gap-3">
-                                                <div className="badge-rect-white py-1 px-2 border text-dark opacity-60" style={{ fontSize: '0.6rem' }}>UNIT: {complaint.departmentName || 'TECHNICAL'}</div>
-                                                {(complaint.assignedOfficerMobile || complaint.departmentOfficerMobile) && (
-                                                    <div className="d-flex align-items-center gap-2 text-primary">
-                                                        <Smartphone size={12} />
-                                                        <span className="extra-small fw-bold">{complaint.assignedOfficerMobile || complaint.departmentOfficerMobile}</span>
-                                                    </div>
-                                                )}
+                                    <div className="p-4 bg-light bg-opacity-50 rounded-5 border border-white shadow-inner transition-standard hover-up-tiny">
+                                        <div className="d-flex align-items-center gap-4">
+                                            <div className="p-4 bg-success bg-opacity-5 rounded-circle shadow-premium border-2 border-white">
+                                                <Building2 size={24} className="text-success" />
+                                            </div>
+                                            <div>
+                                                <span className="extra-small fw-black text-success uppercase tracking-widest d-block mb-1" style={{ fontSize: '0.55rem' }}>FIELD_RESOLVER</span>
+                                                <h6 className="fw-black text-dark mb-1 uppercase tracking-tighter">{complaint.departmentOfficerName || complaint.assignedOfficerName}</h6>
+                                                <div className="extra-small fw-black text-muted uppercase tracking-widest opacity-40 bg-white d-inline-block px-3 py-1 rounded-pill mt-2">UNIT: {(complaint.departmentName || 'TECHNICAL').toUpperCase()}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -472,69 +514,26 @@ const ComplaintDetailView = ({
                             </div>
                         </div>
                     )}
-
-                    {/* Citizen Feedback Ledger */}
-                    {complaint.feedback && (
-                        <div className="premium-card p-0 mb-4 elevation-3 overflow-hidden bg-white border-0">
-                            <div className="p-4 bg-warning bg-opacity-10 d-flex align-items-center justify-content-between">
-                                <div className="d-flex align-items-center gap-3">
-                                    <Star size={20} className="text-warning" fill="#F59E0B" />
-                                    <h6 className="fw-black extra-small uppercase tracking-widest mb-0">Citizen Satisfaction</h6>
-                                </div>
-                                <div className="d-flex gap-1">
-                                    {[1, 2, 3, 4, 5].map(s => {
-                                        const rating = typeof complaint.feedback === 'object' ? complaint.feedback.rating : complaint.rating;
-                                        return <Star key={s} size={12} fill={s <= rating ? '#F59E0B' : 'none'} stroke={s <= rating ? '#F59E0B' : '#CBD5E1'} />;
-                                    })}
-                                </div>
-                            </div>
-                            <div className="p-5">
-                                <div className="p-4 bg-light rounded-4 position-relative">
-                                    <Quote className="position-absolute top-0 end-0 p-3 opacity-5" size={40} />
-                                    <p className="small fw-bold text-dark mb-0 lh-base italic">
-                                        "{typeof complaint.feedback === 'object' ? complaint.feedback.comment : complaint.feedback}"
-                                    </p>
-                                </div>
-                                <div className="mt-4 d-flex align-items-center gap-2">
-                                    <div className="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style={{ width: '24px', height: '24px', fontSize: '10px' }}>
-                                        {complaint.citizenName?.charAt(0) || 'C'}
-                                    </div>
-                                    <span className="extra-small fw-bold text-muted uppercase tracking-widest">Logged by Resident</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 
-            {/* Lightbox / Image Zoom */}
+            {/* Tactical Lightbox */}
             {selectedImage && (
-                <div className="locked-modal-overlay animate-fadeIn" style={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', zIndex: 3000, backdropFilter: 'blur(10px)' }}>
-                    <div className="position-absolute top-0 end-0 p-5 z-2">
-                        <button className="btn btn-premium circ-white bg-white text-dark shadow-float border-0" onClick={() => setSelectedImage(null)} style={{ width: '64px', height: '64px' }}>
-                            <X size={32} />
-                        </button>
-                    </div>
-
-                    <div className="container d-flex align-items-center justify-content-center h-100">
-                        <div className="row justify-content-center w-100">
-                            <div className="col-lg-10 col-xl-8">
-                                <div className="card bg-transparent border-0">
-                                    <div className="premium-card overflow-hidden shadow-float elevation-float border-2 border-white border-opacity-20 animate-zoomIn">
-                                        <img
-                                            src={extractImageUrl(selectedImage, complaint.id)}
-                                            className="w-100 h-auto"
-                                            style={{ maxHeight: '75vh', objectFit: 'contain' }}
-                                            alt="full scale evidence"
-                                            onError={(e) => { e.target.src = getPlaceholderImage(selectedImage.stage || 'IMAGE'); }}
-                                        />
-                                    </div>
-                                    <div className="mt-5 text-center">
-                                        <div className="badge-rect-blue btn-premium px-5 py-2 mx-auto" style={{ fontSize: '0.8rem', background: '#173470', color: 'white' }}>
-                                            {(selectedImage.stage || selectedImage.type || 'IMAGE')}
-                                        </div>
-                                    </div>
-                                </div>
+                <div className="modal-overlay animate-fadeIn d-flex align-items-center justify-content-center p-5" style={{ background: 'rgba(15, 23, 42, 0.98)', backdropFilter: 'blur(20px)', zIndex: 3000 }}>
+                    <button className="btn position-absolute top-0 end-0 p-5 text-white border-0 shadow-none hover-rotate transition-standard" onClick={() => setSelectedImage(null)}>
+                        <X size={48} />
+                    </button>
+                    <div className="card bg-transparent border-0 animate-zoomIn w-100" style={{ maxWidth: '1000px' }}>
+                        <div className="rounded-5 overflow-hidden shadow-premium border-2 border-white border-opacity-10 position-relative">
+                            <AuthenticatedImage
+                                src={extractImageUrl(selectedImage, complaint.complaintId || complaint.id)}
+                                className="w-100 h-auto rounded-5"
+                                style={{ maxHeight: '80vh', objectFit: 'contain' }}
+                            />
+                        </div>
+                        <div className="mt-5 text-center">
+                            <div className="px-5 py-3 rounded-pill bg-white bg-opacity-10 d-inline-block border border-white border-opacity-10 extra-small fw-black text-white tracking-[0.4em] uppercase shadow-lg">
+                                CASE_OBJECT_PROOF • {(selectedImage.stage || 'VERIFIED').toUpperCase()}
                             </div>
                         </div>
                     </div>
@@ -543,12 +542,30 @@ const ComplaintDetailView = ({
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                .group:hover .group-hover\\:scale-110 { transform: scale(1.1); }
-                .group:hover .group-hover\\:opacity-100 { opacity: 1 !important; }
-                .backdrop-blur-sm { backdrop-filter: blur(4px); }
-                .animate-zoomIn { animation: zoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-                @keyframes zoomIn { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-                .group-hover\\:scale-110 { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+                .complaint-detail-view { font-family: 'Outfit', sans-serif; }
+                .fw-black { font-weight: 950; }
+                .extra-small { font-size: 0.65rem; }
+                .tracking-widest { letter-spacing: 0.2em; }
+                .tracking-tighter { letter-spacing: -0.05em; }
+                .shadow-premium { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08), 0 5px 20px -5px rgba(0,0,0,0.03); }
+                .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); }
+                .transition-standard { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+                .hover-up-tiny:hover { transform: translateY(-8px); }
+                .hover-scale { transform: scale(1.05); }
+                .group:hover .group-hover-scale { transform: scale(1.1); }
+                .strategic-grid { background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 24px 24px; }
+                .strategic-border { border-color: rgba(23, 52, 112, 0.1) !important; }
+                .anim-pulse { animation: pulse 2s infinite; }
+                @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                .anim-pulse-border { animation: pulse-border 2s infinite; }
+                @keyframes pulse-border { 0%, 100% { border-color: rgba(239, 68, 68, 1); } 50% { border-color: rgba(239, 68, 68, 0.3); } }
+                .anim-float { animation: float 3s ease-in-out infinite; }
+                @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+                .animate-heartbeat { animation: heartbeat 2s infinite; }
+                @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+                .hover-rotate:hover { transform: rotate(90deg); }
+                .hover-translate-x:hover { transform: translateX(8px); }
+                .shadow-danger-glow { box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
             `}} />
         </div>
     );

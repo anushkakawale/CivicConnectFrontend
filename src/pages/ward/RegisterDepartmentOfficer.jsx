@@ -11,10 +11,12 @@ import {
 } from 'lucide-react';
 import DashboardHeader from '../../components/layout/DashboardHeader';
 import { useToast } from '../../hooks/useToast';
+import { useMasterData } from '../../contexts/MasterDataContext';
 
 const RegisterDepartmentOfficer = () => {
     const navigate = useNavigate();
     const { showToast } = useToast();
+    const { departments: masterDepartments, loading: masterLoading } = useMasterData();
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [wardInfo, setWardInfo] = useState(null);
@@ -25,9 +27,14 @@ const RegisterDepartmentOfficer = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch Departments
-                const dRes = await apiService.common.getDepartments();
-                setDepartments(dRes.data || dRes || []);
+                // Use master data if available, otherwise fetch
+                if (masterDepartments && masterDepartments.length > 0) {
+                    setDepartments(masterDepartments);
+                } else {
+                    const dRes = await apiService.common.getDepartments();
+                    const dData = Array.isArray(dRes) ? dRes : (dRes.data || []);
+                    setDepartments(dData);
+                }
 
                 // Resolve Ward Info
                 const userStr = localStorage.getItem('user');
@@ -42,7 +49,7 @@ const RegisterDepartmentOfficer = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [masterDepartments]);
 
     const formik = useFormik({
         initialValues: {
@@ -175,7 +182,7 @@ const RegisterDepartmentOfficer = () => {
                                             <option value="">SELECT FUNCTIONAL UNIT</option>
                                             {departments.map(d => (
                                                 <option key={d.departmentId || d.id} value={d.departmentId || d.id}>
-                                                    {d.departmentName?.toUpperCase().replace(/_/g, ' ')} UNIT {wardInfo ? `(WARD ${wardInfo.wardNumber})` : ''}
+                                                    {(d.departmentName || d.name || 'Unknown Unit').toUpperCase().replace(/_/g, ' ')} UNIT {wardInfo ? `(WARD ${wardInfo.wardNumber})` : ''}
                                                 </option>
                                             ))}
                                         </select>

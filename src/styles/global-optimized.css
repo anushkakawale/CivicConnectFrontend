@@ -1,0 +1,279 @@
+/* 🎨 CivicConnect - Optimized Global Styles */
+
+/* ============================================
+   SPACING OPTIMIZATION
+   ============================================ */
+
+/* Optimized Padding Scale */
+.p-compact { padding: 1rem !important; }
+.p-standard { padding: 1.5rem !important; }
+.p-comfortable { padding: 2rem !important; }
+
+.px-compact { padding-left: 1rem !important; padding-right: 1rem !important; }
+.px-standard { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+.px-comfortable { padding-left: 2rem !important; padding-right: 2rem !important; }
+
+.py-compact { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+.py-standard { padding-top: 1.5rem !important; padding-bottom: 1.5rem !important; }
+.py-comfortable { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+
+/* Optimized Gap Scale */
+.gap-tight { gap: 0.75rem !important; }
+.gap-standard { gap: 1rem !important; }
+.gap-comfortable { gap: 1.5rem !important; }
+.gap-spacious { gap: 2rem !important; }
+
+/* ============================================
+   PREMIUM EFFECTS
+   ============================================ */
+
+/* Enhanced Shadows */
+.shadow-premium {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 
+              0 5px 15px -3px rgba(0, 0, 0, 0.02) !important;
+}
+
+.shadow-premium-lg {
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08), 
+              0 10px 20px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+.shadow-premium-xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12), 
+              0 15px 30px -8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ============================================
+   HOVER EFFECTS
+   ============================================ */
+
+.hover-up {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-up:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hover-up-small {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-up-small:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+.hover-up-tiny {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-up-tiny:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+.hover-scale {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.hover-light:hover {
+  background-color: #F8FAFC !important;
+}
+
+.hover-shadow-sm:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+.fw-black { font-weight: 900 !important; }
+.fw-extra-bold { font-weight: 800 !important; }
+
+.extra-small { font-size: 0.65rem !important; }
+.small-text { font-size: 0.875rem !important; }
+
+.tracking-tight { letter-spacing: -0.025em !important; }
+.tracking-normal { letter-spacing: 0 !important; }
+.tracking-wide { letter-spacing: 0.025em !important; }
+.tracking-wider { letter-spacing: 0.05em !important; }
+.tracking-widest { letter-spacing: 0.25em !important; }
+
+.uppercase { text-transform: uppercase !important; }
+
+/* ============================================
+   BORDERS & SHAPES
+   ============================================ */
+
+.rounded-4 { border-radius: 1rem !important; }
+.rounded-5 { border-radius: 1.5rem !important; }
+
+.border-dashed {
+  border: 2px dashed #E2E8F0 !important;
+}
+
+.border-top-thick {
+  border-top: 5px solid !important;
+}
+
+.border-start-thick {
+  border-left: 5px solid !important;
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+
+.b-none { border: none !important; }
+
+.cursor-pointer { cursor: pointer !important; }
+
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.transition-fast {
+  transition: all 0.15s ease-in-out !important;
+}
+
+.transition-slow {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   ICON CONTAINERS
+   ============================================ */
+
+.icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.icon-rounded {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+}
+
+/* ============================================
+   RESPONSIVE OPTIMIZATIONS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .p-comfortable { padding: 1.5rem !important; }
+  .px-comfortable { padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
+  .gap-comfortable { gap: 1rem !important; }
+  
+  .hover-up:hover {
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 576px) {
+  .p-comfortable { padding: 1rem !important; }
+  .px-comfortable { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .gap-comfortable { gap: 0.75rem !important; }
+  
+  .extra-small { font-size: 0.7rem !important; }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Ensure minimum touch target size */
+.btn, button, a.btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Focus states */
+*:focus-visible {
+  outline: 2px solid #244799;
+  outline-offset: 2px;
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .shadow-premium,
+  .shadow-premium-lg,
+  .shadow-premium-xl {
+    box-shadow: none !important;
+  }
+  
+  .hover-up,
+  .hover-up-small,
+  .hover-up-tiny {
+    transform: none !important;
+  }
+}

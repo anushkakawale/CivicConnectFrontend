@@ -37,8 +37,31 @@ const AdminWardOfficerRegistration = () => {
           apiService.common.getWards(),
           apiService.common.getDepartments()
         ]);
-        setWards(wRes.data || wRes || []);
-        setDepartments(dRes.data || dRes || []);
+
+        // Robust extraction helper
+        const getArrayData = (res) => {
+          if (Array.isArray(res)) return res;
+          if (res && Array.isArray(res.data)) return res.data;
+          if (res && res.data && Array.isArray(res.data.data)) return res.data.data;
+          if (res && Array.isArray(res.payload)) return res.payload;
+          return [];
+        };
+
+        const wData = getArrayData(wRes);
+        const dData = getArrayData(dRes);
+
+        setWards(wData);
+        setDepartments(dData);
+
+        // Handle Query Parameters
+        const params = new URLSearchParams(window.location.search);
+        const qWardId = params.get('wardId');
+        const qRole = params.get('role');
+
+        if (qRole === 'WARD_OFFICER') setOfficerType('WARD');
+        if (qRole === 'DEPARTMENT_OFFICER') setOfficerType('DEPARTMENT');
+        if (qWardId) formik.setFieldValue('wardId', qWardId);
+
       } catch (err) {
         console.error('Master data sync failed:', err);
       } finally {
@@ -116,11 +139,11 @@ const AdminWardOfficerRegistration = () => {
   return (
     <div className="admin-enrollment-view min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
       <DashboardHeader
-        portalName="Register Officer"
-        userName="Add New Staff"
-        wardName="Admin Control"
-        subtitle="Register new ward and department officers to the system"
-        icon={UserPlus}
+        portalName="CIVIC COMMAND CENTER"
+        userName="PERSONNEL ENROLLMENT"
+        wardName="ADMIN CONTROL"
+        subtitle="Tier-1 Operative Registration • Ward & Departmental Units"
+        icon={Shield}
         actions={
           <div className="bg-white p-1 rounded-pill shadow-sm border d-flex gap-1">
             {['WARD', 'DEPARTMENT'].map(type => (
@@ -137,7 +160,11 @@ const AdminWardOfficerRegistration = () => {
         }
       />
 
-      <div className="container-fluid px-3 px-lg-5" style={{ marginTop: '-30px' }}>
+      <div className="tactical-grid-overlay"></div>
+
+      <div className="container-fluid px-3 px-lg-5 position-relative" style={{ marginTop: '-30px', zIndex: 1 }}>
+        <div className="vertical-divider-guide" style={{ left: '33%' }}></div>
+        <div className="vertical-divider-guide" style={{ left: '66%' }}></div>
         <div className="row g-5">
           {/* Enrollment Core */}
           <div className="col-lg-7">
@@ -189,7 +216,7 @@ const AdminWardOfficerRegistration = () => {
                   <div className="input-group border bg-light bg-opacity-50 rounded-4 px-3 overflow-hidden transition-all focus-within-shadow">
                     <span className="input-group-text bg-transparent border-0"><MapPin size={18} className="text-primary opacity-40" style={{ color: PRIMARY_COLOR }} /></span>
                     <select {...formik.getFieldProps('wardId')} className="form-select border-0 bg-transparent py-3 extra-small fw-black shadow-none text-dark">
-                      <option value="">SELECT JURISDICTION</option>
+                      <option value="">SELECT WARD SECTOR</option>
                       {wards.map(w => (
                         <option key={w.wardId || w.id} value={w.wardId || w.id}>
                           WARD {w.wardNumber || (w.wardId || w.id)} - {w.areaName?.toUpperCase()}
@@ -206,13 +233,20 @@ const AdminWardOfficerRegistration = () => {
                     <div className="input-group border bg-light bg-opacity-50 rounded-4 px-3 overflow-hidden transition-all focus-within-shadow animate-slideDown">
                       <span className="input-group-text bg-transparent border-0"><Building2 size={18} className="text-primary opacity-40" style={{ color: PRIMARY_COLOR }} /></span>
                       <select {...formik.getFieldProps('departmentId')} className="form-select border-0 bg-transparent py-3 extra-small fw-black shadow-none text-dark">
-                        <option value="">SELECT FUNCTIONAL UNIT</option>
+                        <option value="">SELECT DEPARTMENT UNIT</option>
                         {departments.map(d => {
-                          const selectedWard = wards.find(w => (w.wardId || w.id) == formik.values.wardId);
-                          const deptName = d.departmentName || d.name || 'Unknown Department';
+                          console.log('Rendering Department Option:', d);
+                          const id = d.departmentId || d.id || d.department_id;
+                          const name = d.departmentName || d.name || d.department_name || 'Unknown Department';
+
+                          // Just for safety if ID is missing
+                          if (!id) return null;
+
+                          const selectedWard = wards.find(w => (w.wardId || w.id || w.ward_id) == formik.values.wardId);
+
                           return (
-                            <option key={d.departmentId || d.id} value={d.departmentId || d.id}>
-                              {deptName.toUpperCase().replace(/_/g, ' ')} UNIT {selectedWard ? `(WARD ${selectedWard.wardNumber || selectedWard.id})` : ''}
+                            <option key={id} value={id}>
+                              {name.toUpperCase().replace(/_/g, ' ')} UNIT {selectedWard ? `(WARD ${selectedWard.wardNumber || selectedWard.id})` : ''}
                             </option>
                           );
                         })}
@@ -223,7 +257,7 @@ const AdminWardOfficerRegistration = () => {
                 )}
 
                 <div className="col-lg-6">
-                  <label className="extra-small fw-black text-muted uppercase mb-3 d-block opacity-60">Password</label>
+                  <label className="extra-small fw-black text-muted uppercase mb-3 d-block opacity-60">Set Password</label>
                   <div className="input-group border bg-light bg-opacity-50 rounded-4 px-3 overflow-hidden transition-all focus-within-shadow">
                     <span className="input-group-text bg-transparent border-0"><Lock size={18} className="text-primary opacity-40" style={{ color: PRIMARY_COLOR }} /></span>
                     <input type={showPassword ? 'text' : 'password'} {...formik.getFieldProps('password')} className="form-control border-0 bg-transparent py-3 extra-small fw-black shadow-none text-dark font-monospace" placeholder="••••••••" />
@@ -247,7 +281,7 @@ const AdminWardOfficerRegistration = () => {
                   <div className="p-4 rounded-4 bg-light border-dashed border">
                     <div className="d-flex align-items-center gap-3 mb-3 border-bottom pb-2">
                       <Activity size={16} className="text-primary" style={{ color: PRIMARY_COLOR }} />
-                      <span className="extra-small fw-black text-dark uppercase">Password Requirements</span>
+                      <span className="extra-small fw-black text-dark uppercase">Security Requirements</span>
                     </div>
                     <div className="row g-3">
                       {getPasswordChecklist().map((item, i) => (
@@ -335,6 +369,30 @@ const AdminWardOfficerRegistration = () => {
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 .animate-slideDown { animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
                 @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+                .tactical-grid-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-image: 
+                        linear-gradient(rgba(23, 52, 112, 0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(23, 52, 112, 0.02) 1px, transparent 1px);
+                    background-size: 50px 50px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                .vertical-divider-guide {
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    width: 1px;
+                    background: linear-gradient(to bottom, transparent, rgba(23, 52, 112, 0.03), transparent);
+                    pointer-events: none;
+                    z-index: -1;
+                }
             `}} />
     </div>
   );

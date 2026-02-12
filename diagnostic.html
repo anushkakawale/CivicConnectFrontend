@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicConnect - 403 Error Diagnostic</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: #244799;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        .content { padding: 30px; }
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #244799;
+        }
+        .section h2 {
+            color: #244799;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn {
+            background: #244799;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        .btn:hover { background: #1a3a7a; transform: translateY(-2px); }
+        .result {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+        }
+        .success { color: #10B981; font-weight: bold; }
+        .error { color: #EF4444; font-weight: bold; }
+        .warning { color: #F59E0B; font-weight: bold; }
+        .info { color: #3B82F6; font-weight: bold; }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .badge-success { background: #ECFDF5; color: #10B981; }
+        .badge-error { background: #FEF2F2; color: #EF4444; }
+        .badge-warning { background: #FEF3C7; color: #F59E0B; }
+        .icon { font-size: 24px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 CivicConnect 403 Error Diagnostic</h1>
+            <p>Diagnose and fix complaint registration issues</p>
+        </div>
+
+        <div class="content">
+            <!-- Token Check -->
+            <div class="section">
+                <h2><span class="icon">🔑</span> Step 1: Check JWT Token</h2>
+                <button class="btn" onclick="checkToken()">Check My Token</button>
+                <div id="tokenResult" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Backend Test -->
+            <div class="section">
+                <h2><span class="icon">🌐</span> Step 2: Test Backend Connection</h2>
+                <button class="btn" onclick="testBackend()">Test Backend</button>
+                <div id="backendResult" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Complaint Test -->
+            <div class="section">
+                <h2><span class="icon">📝</span> Step 3: Test Complaint Endpoint</h2>
+                <button class="btn" onclick="testComplaintEndpoint()">Test Complaint API</button>
+                <div id="complaintResult" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="section">
+                <h2><span class="icon">💡</span> Quick Fix Instructions</h2>
+                <div style="line-height: 1.8;">
+                    <p><strong>If you see 403 error:</strong></p>
+                    <ol style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Restart Spring Boot Backend</strong> (CRITICAL)</li>
+                        <li>Log out from frontend</li>
+                        <li>Clear browser cache (Ctrl+Shift+Delete)</li>
+                        <li>Log back in</li>
+                        <li>Run this diagnostic again</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkToken() {
+            const resultDiv = document.getElementById('tokenResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p class="info">🔍 Checking token...</p>';
+
+            try {
+                const token = localStorage.getItem('token');
+                const role = localStorage.getItem('role');
+
+                if (!token) {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ NO TOKEN FOUND</p>
+                        <p>You are not logged in. Please log in first.</p>
+                    `;
+                    return;
+                }
+
+                // Decode token
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    resultDiv.innerHTML = `<p class="error">❌ Invalid token format</p>`;
+                    return;
+                }
+
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                
+                // Check expiry
+                const now = Date.now() / 1000;
+                const isExpired = payload.exp < now;
+                const hasRoleCitizen = payload.authorities?.includes('ROLE_CITIZEN');
+
+                let html = '<p class="success">✅ Token found and decoded</p>';
+                html += '<pre>' + JSON.stringify(payload, null, 2) + '</pre>';
+                
+                html += '<div style="margin-top: 15px;">';
+                html += `<p><strong>Role:</strong> ${role} ${role === 'CITIZEN' ? '<span class="badge badge-success">✓</span>' : '<span class="badge badge-error">✗</span>'}</p>`;
+                html += `<p><strong>Has ROLE_CITIZEN:</strong> ${hasRoleCitizen ? '<span class="badge badge-success">✓ YES</span>' : '<span class="badge badge-error">✗ NO</span>'}</p>`;
+                html += `<p><strong>Expired:</strong> ${isExpired ? '<span class="badge badge-error">✗ YES</span>' : '<span class="badge badge-success">✓ NO</span>'}</p>`;
+                html += `<p><strong>Expires:</strong> ${new Date(payload.exp * 1000).toLocaleString()}</p>`;
+                html += '</div>';
+
+                if (!hasRoleCitizen) {
+                    html += '<div style="margin-top: 15px; padding: 15px; background: #FEF2F2; border-radius: 8px;">';
+                    html += '<p class="error">❌ PROBLEM: Token missing ROLE_CITIZEN</p>';
+                    html += '<p><strong>Solution:</strong></p>';
+                    html += '<ol style="margin-left: 20px;"><li>Backend must be restarted</li><li>Log out and log back in</li></ol>';
+                    html += '</div>';
+                }
+
+                if (isExpired) {
+                    html += '<div style="margin-top: 15px; padding: 15px; background: #FEF2F2; border-radius: 8px;">';
+                    html += '<p class="error">❌ PROBLEM: Token expired</p>';
+                    html += '<p><strong>Solution:</strong> Log out and log back in</p>';
+                    html += '</div>';
+                }
+
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Error decoding token</p>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        async function testBackend() {
+            const resultDiv = document.getElementById('backendResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p class="info">🌐 Testing backend connection...</p>';
+
+            try {
+                const response = await fetch('http://localhost:8083/api/wards');
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Backend is running!</p>
+                        <p><strong>Status:</strong> ${response.status} OK</p>
+                        <p><strong>Wards found:</strong> ${data.length}</p>
+                        <p class="success">Backend connection is working ✓</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Backend returned error</p>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Cannot connect to backend</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Solution:</strong> Make sure Spring Boot is running on port 8083</p>
+                `;
+            }
+        }
+
+        async function testComplaintEndpoint() {
+            const resultDiv = document.getElementById('complaintResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p class="info">📝 Testing complaint endpoint...</p>';
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                resultDiv.innerHTML = '<p class="error">❌ No token found. Please log in first.</p>';
+                return;
+            }
+
+            try {
+                // Test with a simple GET first (if available)
+                const response = await fetch('http://localhost:8083/api/citizens/complaints', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                let html = `<p><strong>GET /api/citizens/complaints</strong></p>`;
+                html += `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>`;
+
+                if (response.status === 200) {
+                    html += '<p class="success">✅ Endpoint accessible!</p>';
+                    html += '<p>You should be able to submit complaints.</p>';
+                } else if (response.status === 403) {
+                    html += '<p class="error">❌ 403 Forbidden</p>';
+                    html += '<div style="margin-top: 15px; padding: 15px; background: #FEF2F2; border-radius: 8px;">';
+                    html += '<p class="error"><strong>PROBLEM: Backend security blocking request</strong></p>';
+                    html += '<p><strong>Solutions:</strong></p>';
+                    html += '<ol style="margin-left: 20px;">';
+                    html += '<li><strong>RESTART Spring Boot backend</strong> (CRITICAL)</li>';
+                    html += '<li>Verify SecurityConfig has .hasRole("CITIZEN")</li>';
+                    html += '<li>Log out and log back in</li>';
+                    html += '<li>Check token has ROLE_CITIZEN (Step 1)</li>';
+                    html += '</ol>';
+                    html += '</div>';
+                } else if (response.status === 401) {
+                    html += '<p class="error">❌ 401 Unauthorized</p>';
+                    html += '<p>Token invalid or expired. Log out and log back in.</p>';
+                } else {
+                    html += `<p class="warning">⚠️ Unexpected status: ${response.status}</p>`;
+                }
+
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Request failed</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+            }
+        }
+
+        // Auto-run token check on load
+        window.addEventListener('load', () => {
+            setTimeout(checkToken, 500);
+        });
+    </script>
+</body>
+</html>

@@ -41,7 +41,13 @@ const SlaStatus = () => {
         const createdDate = new Date(complaint.createdAt);
         const now = new Date();
         const slaHours = complaint.department?.slaHours || 48; // Default 48h
-        const deadlineDate = new Date(createdDate.getTime() + slaHours * 60 * 60 * 1000);
+
+        let deadlineDate;
+        if (complaint.slaDeadline) {
+            deadlineDate = new Date(complaint.slaDeadline);
+        } else {
+            deadlineDate = new Date(createdDate.getTime() + slaHours * 60 * 60 * 1000);
+        }
 
         let hoursRemaining = (deadlineDate - now) / (1000 * 60 * 60);
         let status = 'ACTIVE';

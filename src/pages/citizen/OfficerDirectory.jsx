@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
     Users, Mail, Phone, Building2, MapPin, RefreshCw, AlertCircle,
     User, Shield, Loader, Search, ChevronRight, AtSign, Info, Filter,
-    Briefcase, Calendar, Star, MessageSquare, ExternalLink, X, ShieldCheck, Zap, CheckCircle
+    Briefcase, Calendar, Star, MessageSquare, ExternalLink, X, ShieldCheck, Zap, CheckCircle,
+    ShieldAlert, Compass, Target
 } from 'lucide-react';
 import apiService from '../../api/apiService';
 import { useToast } from '../../hooks/useToast';
@@ -46,7 +47,8 @@ const OfficerDirectory = () => {
             if (deptsRes.status === 'fulfilled') {
                 setDeptOfficers(deptsRes.value.data || deptsRes.value || []);
             } else {
-                setError('Unable to load department contacts.');
+                console.warn('Unable to load department contacts - likely permission restriction (403). Ignoring.');
+                // Do NOT set global error here, as the user might not have access but still wants to see Ward Officer
             }
 
             if (masterDeptsRes.status === 'fulfilled') {
@@ -55,6 +57,7 @@ const OfficerDirectory = () => {
             }
 
         } catch (err) {
+            console.error(err);
             setError('Unable to load the directory.');
         } finally {
             setLoading(false);
@@ -113,13 +116,15 @@ const OfficerDirectory = () => {
                     )}
                 </div>
 
-                <h5 className="fw-bold text-dark mb-1">{officer.name}</h5>
+                <h5 className="fw-black text-dark mb-1 text-uppercase tracking-tighter">{officer.name}</h5>
                 <div className="d-flex align-items-center gap-2 mb-4">
-                    <Building2 size={12} className="text-muted" />
-                    <span className="small text-muted fw-bold">
+                    <div className={`p-1.5 rounded ${isWardOfficer ? 'bg-primary' : 'bg-secondary'} bg-opacity-10`} style={{ color: isWardOfficer ? brandColor : '#64748B' }}>
+                        {isWardOfficer ? <MapPin size={14} /> : <Building2 size={14} />}
+                    </div>
+                    <span className={`extra-small fw-black text-uppercase tracking-wider ${isWardOfficer ? 'text-primary' : 'text-dark opacity-60'}`} style={isWardOfficer ? { color: brandColor } : {}}>
                         {isWardOfficer
-                            ? `${officer.wardName || 'PMC neighborhood'}`
-                            : (officer.departmentName || officer.department?.name || 'Department official')}
+                            ? `Ward ${officer.wardNumber || officer.wardName || 'PMC Region'}`
+                            : (officer.departmentName || officer.department?.name || 'Municipal Operative')}
                     </span>
                 </div>
 
@@ -202,7 +207,7 @@ const OfficerDirectory = () => {
 
                 <div className="row g-5">
                     {/* Ward Leadership Section */}
-                    {wardOfficer && (
+                    {wardOfficer ? (
                         <div className="col-12 mb-4">
                             <h6 className="small fw-bold text-muted uppercase tracking-wider mb-4 d-flex align-items-center gap-3 opacity-75">
                                 <Shield size={16} style={{ color: brandColor }} /> Ward leadership
@@ -246,6 +251,40 @@ const OfficerDirectory = () => {
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="col-12 mb-4">
+                            <div className="card border-0 shadow-premium rounded-4 overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFF 0%, #F1F5F9 100%)' }}>
+                                <div className="card-body p-5">
+                                    <div className="row align-items-center">
+                                        <div className="col-lg-8">
+                                            <div className="d-flex align-items-center gap-4 mb-4">
+                                                <div className="p-3 rounded-4 bg-warning bg-opacity-10 text-warning shadow-sm">
+                                                    <ShieldAlert size={32} />
+                                                </div>
+                                                <div>
+                                                    <h4 className="fw-black text-dark mb-1">No Ward Officer Assigned</h4>
+                                                    <p className="text-muted mb-0 fw-bold opacity-60">Your current registered area does not have a designated ward commander yet.</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-dark opacity-75 mb-4 fw-bold">
+                                                To receive localized assistance and track reports more effectively, ensure your residential ward is correctly specified in your profile. If your ward is correct, please wait for an administrative appointment.
+                                            </p>
+                                            <div className="d-flex gap-3">
+                                                <button onClick={() => navigate('/citizen/profile')} className="btn btn-primary rounded-pill px-4 py-2 fw-black extra-small tracking-widest shadow-sm border-0 d-flex align-items-center gap-2" style={{ backgroundColor: brandColor }}>
+                                                    <User size={16} /> VALIDATE PROFILE
+                                                </button>
+                                                <button onClick={loadData} className="btn btn-white bg-white rounded-pill px-4 py-2 fw-black extra-small tracking-widest shadow-sm border">
+                                                    <RefreshCw size={16} /> REFRESH STATUS
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="col-lg-4 d-none d-lg-block text-end">
+                                            <Compass size={120} className="text-primary opacity-5" />
                                         </div>
                                     </div>
                                 </div>

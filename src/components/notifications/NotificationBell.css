@@ -20,10 +20,11 @@
 }
 
 .notification-bell-button:hover {
-    background: #F8FAFC;
-    color: #173470;
-    border-color: #E2E8F0;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
+    /* Color is inherited from inline style, not forced to change */
 }
 
 .notification-bell-button.has-unread {
@@ -190,37 +191,32 @@
     padding: 20px 24px;
     border-bottom: 1px solid #F1F5F9;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     align-items: flex-start;
     gap: 16px;
     position: relative;
+    border-left: 0 solid transparent;
 }
 
 .notification-item:hover {
     background: #F8FAFC;
+    transform: translateX(4px);
+    border-left-width: 4px;
+    border-left-color: #173470;
 }
 
 .notification-item:last-child {
     border-bottom: none;
 }
 
-.notification-item.unread {
-    background: #FFFFFF;
-}
-
-.notification-item.unread::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: #173470;
+.notification-item.unread-premium {
+    background: rgba(23, 52, 112, 0.03);
+    border-left: 4px solid #173470;
 }
 
 .notification-item.read {
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 .notification-icon {

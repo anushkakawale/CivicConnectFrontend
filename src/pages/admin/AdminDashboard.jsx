@@ -106,14 +106,19 @@ const AdminDashboard = () => {
                 }
             />
 
-            <div className="container-fluid px-3 px-lg-5" style={{ marginTop: '-30px' }}>
+            <div className="tactical-grid-overlay"></div>
+
+            <div className="container-fluid px-3 px-lg-5 position-relative" style={{ marginTop: '-30px', zIndex: 1 }}>
+                <div className="vertical-divider-guide" style={{ left: '33%' }}></div>
+                <div className="vertical-divider-guide" style={{ left: '66%' }}></div>
+
                 {/* Scorecards */}
                 <div className="row g-4 mb-5">
                     {[
-                        { title: 'Total Registered', value: stats.total, icon: FileText, color: PRIMARY_COLOR, trend: 'Lifetime volume' },
-                        { title: 'Requires Action', value: stats.pending, icon: Activity, color: '#f59e0b', trend: 'In-queue tasks' },
-                        { title: 'Field Resolved', value: stats.resolved, icon: CheckCircle, color: '#10b981', trend: 'Pending archival' },
-                        { title: 'Critical Slips', value: stats.breached, icon: Shield, color: '#ef4444', trend: 'SLA breaches' }
+                        { title: 'Total Registry', value: stats.total, icon: FileText, color: PRIMARY_COLOR, trend: 'Lifetime volume' },
+                        { title: 'Field Deployment', value: stats.pending, icon: Activity, color: '#f59e0b', trend: 'Active units' },
+                        { title: 'Mission Success', value: stats.resolved, icon: CheckCircle, color: '#10b981', trend: 'Pending verification' },
+                        { title: 'SLA Breach', value: stats.breached, icon: Shield, color: '#ef4444', trend: 'Critical latency' }
                     ].map((stat, idx) => (
                         <div key={idx} className="col-12 col-md-6 col-xl-3">
                             <div className="card h-100 border-0 shadow-premium rounded-4 overflow-hidden group hover-up transition-all bg-white">
@@ -144,7 +149,7 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="p-2 bg-light rounded-pill px-3 extra-small fw-black text-primary border">ACTIVE UNITS</div>
                             </div>
-                            <div style={{ height: '350px' }}>
+                            <div style={{ height: '350px', width: '100%', position: 'relative', display: 'block' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={wardData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -164,7 +169,7 @@ const AdminDashboard = () => {
                                 <h5 className="mb-0 fw-black text-dark uppercase tracking-tight">Officer Workload</h5>
                                 <Users size={18} className="text-primary opacity-40" />
                             </div>
-                            <div style={{ height: '300px', position: 'relative' }}>
+                            <div style={{ height: '300px', width: '100%', position: 'relative', display: 'block' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     {workloadData.length > 0 ? (
                                         <PieChart>
@@ -215,8 +220,8 @@ const AdminDashboard = () => {
                 <div className="card border-0 shadow-premium rounded-4 bg-white overflow-hidden">
                     <div className="card-header bg-white border-bottom py-4 px-4 px-lg-5 d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 className="mb-1 fw-black text-dark uppercase tracking-tight">Operational Audit Queue</h5>
-                            <p className="text-muted extra-small fw-bold mb-0 uppercase tracking-widest opacity-60">Cases resolved by field units awaiting final administrative closure</p>
+                            <h5 className="mb-1 fw-black text-dark uppercase tracking-tight">Geospatial Verification Queue</h5>
+                            <p className="text-muted extra-small fw-bold mb-0 uppercase tracking-widest opacity-60">Cases marked MISSION SUCCESS awaiting final verification and archival</p>
                         </div>
                         <button className="btn btn-primary rounded-pill px-4 py-2 extra-small fw-black tracking-widest shadow-sm border-0" style={{ backgroundColor: PRIMARY_COLOR }} onClick={() => navigate('/admin/complaints?status=RESOLVED')}>
                             FULL LEDGER <ArrowRight size={14} className="ms-2" />
@@ -287,6 +292,30 @@ const AdminDashboard = () => {
                 .hover-shadow-md:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
                 .animate-spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+                .tactical-grid-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-image: 
+                        linear-gradient(rgba(36, 71, 153, 0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(36, 71, 153, 0.02) 1px, transparent 1px);
+                    background-size: 50px 50px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                .vertical-divider-guide {
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    width: 1px;
+                    background: linear-gradient(to bottom, transparent, rgba(36, 71, 153, 0.03), transparent);
+                    pointer-events: none;
+                    z-index: -1;
+                }
             `}} />
         </div>
     );

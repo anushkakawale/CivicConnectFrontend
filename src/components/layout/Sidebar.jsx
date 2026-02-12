@@ -22,9 +22,10 @@ export default function Sidebar({ role }) {
                 return [
                     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Home' },
                     { path: '/admin/complaints', icon: List, label: 'Complaints' },
-                    { path: '/admin/users', icon: Users, label: 'Citizens' },
+                    { path: '/admin/close-complaints', icon: ShieldCheck, label: 'Final Closure' },
+                    { path: '/admin/users', icon: Users, label: 'All Users' },
                     { path: '/admin/officers', icon: Shield, label: 'Officers' },
-                    { path: '/admin/register-ward-officer', icon: UserPlus, label: 'Add Officer' },
+                    { path: '/admin/register-officer', icon: UserPlus, label: 'Add Officer' },
                     { path: '/admin/analytics', icon: BarChart2, label: 'Stats' },
                     { path: '/admin/map', icon: MapIcon, label: 'Map' },
                     { path: '/admin/reports', icon: FileText, label: 'Reports' },
@@ -57,7 +58,6 @@ export default function Sidebar({ role }) {
                     { path: '/citizen/complaints', icon: List, label: 'My Complaints' },
                     { path: '/citizen/area-complaints', icon: Activity, label: 'Ward Activity' },
                     { path: '/citizen/map', icon: MapIcon, label: 'City Map' },
-                    { path: '/citizen/sla', icon: Clock, label: 'Tracking' },
                     { path: '/citizen/officers', icon: Users, label: 'Officers' },
                     { path: '/citizen/profile', icon: User, label: 'My Profile' },
                 ];

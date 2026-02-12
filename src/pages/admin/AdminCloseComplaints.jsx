@@ -1,317 +1,378 @@
-/**
- * Professional Admin Close Complaints Console
- * Focused view for finalizing and archiving resolved grievances.
- */
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-    Search, CheckCircle, Activity, Timer, Layers,
-    RefreshCw, ArrowUpDown, Calendar, Eye, ShieldAlert
-} from 'lucide-react';
-
-import apiService from '../../api/apiService';
-import { useToast } from '../../hooks/useToast';
-import StatusBadge from '../../components/ui/StatusBadge';
 import DashboardHeader from '../../components/layout/DashboardHeader';
-import { calculateSlaStatus } from '../../utils/slaUtils';
+import apiService from '../../api/apiService';
+import {
+    CheckCircle,
+    XCircle,
+    Clock,
+    Image as ImageIcon,
+    Eye,
+    FileText,
+    RefreshCw,
+    AlertCircle
+} from 'lucide-react';
+import '../../styles/professional-layout.css';
 
 const AdminCloseComplaints = () => {
     const navigate = useNavigate();
-    const { showToast } = useToast();
-    const PRIMARY_COLOR = '#173470';
-
-    // State
-    const [complaints, setComplaints] = useState([]);
+    const [queue, setQueue] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedIds, setSelectedIds] = useState([]);
-    const [processing, setProcessing] = useState(false);
-    const [sortConfig, setSortConfig] = useState({ key: 'updatedAt', direction: 'desc' });
+    const [selectedComplaint, setSelectedComplaint] = useState(null);
+    const [closureRemarks, setClosureRemarks] = useState('');
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
-        fetchComplaints();
+        fetchQueue();
     }, []);
 
-    const fetchComplaints = async () => {
+    const fetchQueue = async () => {
         try {
             setLoading(true);
-            const response = await apiService.admin.getReadyToClose();
-            const data = response.data || response;
-            const list = Array.isArray(data) ? data : (data.content || data.data || []);
-            setComplaints(list);
+            // Use the correct endpoint for closure queue
+            const response = await apiService.admin.getClosureApprovalQueue({ page: 0, size: 50 });
+            setQueue(response.data.content || []);
         } catch (error) {
-            console.error('Data retrieval failed:', error);
-            showToast('Unable to synchronize complaint records', 'error');
+            console.error('Error fetching closure queue:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleQuickClose = async (id, e) => {
-        e.stopPropagation();
-        try {
-            setProcessing(true);
-            await apiService.admin.closeComplaint(id, { closureNotes: 'Final closure finalized by administrator.' });
-            showToast(`Complaint #${id} closed successfully`, 'success');
-            fetchComplaints();
-        } catch (error) {
-            showToast('Failed to close complaint', 'error');
-        } finally {
-            setProcessing(false);
+    const handleCloseComplaint = async () => {
+        if (!selectedComplaint || !closureRemarks.trim()) {
+            alert('Please provide closure remarks');
+            return;
         }
-    };
-
-    const handleBulkClose = async () => {
-        if (!selectedIds.length) return;
-        if (!window.confirm(`Are you sure you want to close ${selectedIds.length} complaints?`)) return;
 
         try {
-            setProcessing(true);
-            await Promise.all(selectedIds.map(id =>
-                apiService.admin.closeComplaint(id, { closureNotes: 'Bulk closure finalized by administrator.' })
-            ));
-            showToast(`${selectedIds.length} complaints closed successfully`, 'success');
-            setSelectedIds([]);
-            fetchComplaints();
+            const id = selectedComplaint.complaintId || selectedComplaint.id;
+            await apiService.admin.closeComplaint(id, {
+                closureRemarks: closureRemarks
+            });
+
+            setShowModal(false);
+            setSelectedComplaint(null);
+            setClosureRemarks('');
+            fetchQueue(); // Refresh the queue
         } catch (error) {
-            showToast('Bulk closure failed for some complaints', 'error');
-        } finally {
-            setProcessing(false);
+            console.error('Error closing complaint:', error);
+            alert('Failed to close complaint');
         }
     };
 
-    const toggleSelection = (id, e) => {
-        e.stopPropagation();
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-        );
+    const getWaitingTimeColor = (days) => {
+        if (days < 1) return 'success';
+        if (days <= 3) return 'warning';
+        return 'danger';
     };
 
-    const toggleAll = () => {
-        if (selectedIds.length === sortedComplaints.length && sortedComplaints.length > 0) {
-            setSelectedIds([]);
-        } else {
-            setSelectedIds(sortedComplaints.map(c => c.complaintId || c.id));
-        }
+    const headerProps = {
+        title: 'Closure Approval Queue',
+        subtitle: 'Review and close approved complaints',
+        showNotifications: true,
+        showProfile: true
     };
 
-    const handleSort = (key) => {
-        setSortConfig(prev => ({
-            key,
-            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
-        }));
-    };
-
-    const sortedComplaints = useMemo(() => {
-        let filtered = [...complaints];
-        if (searchTerm) {
-            const lower = searchTerm.toLowerCase();
-            filtered = filtered.filter(c =>
-                c.title?.toLowerCase().includes(lower) ||
-                (c.complaintId && c.complaintId.toString().includes(lower))
-            );
-        }
-
-        return filtered.sort((a, b) => {
-            let aVal = a[sortConfig.key];
-            let bVal = b[sortConfig.key];
-
-            if (sortConfig.key === 'complaintId' || sortConfig.key === 'id') {
-                aVal = Number(a.complaintId || a.id);
-                bVal = Number(b.complaintId || b.id);
-            } else if (sortConfig.key === 'createdAt' || sortConfig.key === 'updatedAt') {
-                aVal = new Date(a[sortConfig.key]).getTime();
-                bVal = new Date(b[sortConfig.key]).getTime();
-            }
-
-            if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-    }, [complaints, sortConfig, searchTerm]);
-
-    return (
-        <div className="admin-close-complaints-view min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
-            <DashboardHeader
-                portalName="Closure Console"
-                userName="Finalize Issues"
-                wardName="Audit & Archive"
-                subtitle="Review resolved complaints for final closure"
-                icon={CheckCircle}
-                actions={
-                    <button onClick={fetchComplaints} className="btn btn-white bg-white rounded-circle shadow-sm border p-0 d-flex align-items-center justify-content-center transition-all hover-shadow-md" style={{ width: '42px', height: '42px', color: PRIMARY_COLOR }}>
-                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                    </button>
-                }
-            />
-
-            <div className="container-fluid px-3 px-lg-5" style={{ marginTop: '-30px' }}>
-                {/* Stats Ledger - Simplified for Closure Context */}
-                <div className="row g-4 mb-5">
-                    <div className="col-12 col-md-6 col-lg-4">
-                        <div className="card border-0 shadow-premium rounded-4 p-4 text-white bg-success transition-all hover-up">
-                            <div className="d-flex align-items-center justify-content-between mb-4">
-                                <div className="rounded-4 p-3 shadow-sm bg-white bg-opacity-20 text-white">
-                                    <CheckCircle size={26} />
-                                </div>
-                                <div className="extra-small fw-black text-white uppercase opacity-60">Ready for Closure</div>
-                            </div>
-                            <h1 className="fw-black mb-1 display-5">{sortedComplaints.length}</h1>
-                            <p className="extra-small text-white fw-black uppercase mb-0">Resolved Cases</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Filtration Command Bar */}
-                <div className="card border-0 shadow-premium rounded-4 bg-white mb-5 transition-all">
-                    <div className="card-body p-4 p-lg-5">
-                        <div className="row g-4 align-items-center">
-                            <div className="col-xl-6">
-                                <div className="input-group overflow-hidden border bg-light rounded-pill px-4">
-                                    <span className="input-group-text bg-transparent border-0 pe-2"><Search size={20} className="text-muted" /></span>
-                                    <input
-                                        type="text"
-                                        className="form-control bg-transparent border-0 py-3 small fw-bold shadow-none"
-                                        placeholder="Search resolved cases..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="col-xl-6 text-end">
-                                {selectedIds.length > 0 && (
-                                    <button
-                                        onClick={handleBulkClose}
-                                        disabled={processing}
-                                        className="btn btn-success rounded-pill px-4 py-2 fw-black extra-small tracking-widest text-uppercase shadow-lg animate-slideDown"
-                                    >
-                                        {processing ? <RefreshCw size={14} className="animate-spin me-2" /> : <CheckCircle size={14} className="me-2" />}
-                                        Close Selected ({selectedIds.length})
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Master Records Ledger */}
-                <div className="card border-0 shadow-premium rounded-4 overflow-hidden bg-white">
-                    <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0">
-                            <thead className="bg-light bg-opacity-50">
-                                <tr>
-                                    <th className="px-5 py-4 border-0">
-                                        <div className="form-check">
-                                            <input
-                                                className="form-check-input shadow-none"
-                                                type="checkbox"
-                                                checked={selectedIds.length === sortedComplaints.length && sortedComplaints.length > 0}
-                                                onChange={toggleAll}
-                                            />
-                                        </div>
-                                    </th>
-                                    <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest cursor-pointer" onClick={() => handleSort('complaintId')}>
-                                        ID <ArrowUpDown size={14} className="ms-2 opacity-30" />
-                                    </th>
-                                    <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest cursor-pointer" onClick={() => handleSort('title')}>
-                                        Details <ArrowUpDown size={14} className="ms-2 opacity-30" />
-                                    </th>
-                                    <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest cursor-pointer" onClick={() => handleSort('updatedAt')}>
-                                        Resolved On <ArrowUpDown size={14} className="ms-2 opacity-30" />
-                                    </th>
-                                    <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Department</th>
-                                    <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">SLA Status</th>
-                                    <th className="px-5 py-4 border-0 text-end extra-small fw-black text-muted uppercase">Verification</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan="5" className="text-center py-5">
-                                            <RefreshCw size={48} className="animate-spin text-primary opacity-30 mb-3 mx-auto" style={{ color: PRIMARY_COLOR }} />
-                                            <p className="extra-small fw-black text-muted uppercase">Accessing Registry...</p>
-                                        </td>
-                                    </tr>
-                                ) : sortedComplaints.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="5" className="text-center py-5">
-                                            <div className="rounded-circle bg-light d-inline-flex p-4 mb-4">
-                                                <Layers size={48} className="text-muted opacity-20" />
-                                            </div>
-                                            <h6 className="fw-black text-dark uppercase mb-1">No Resolved Records</h6>
-                                            <p className="extra-small text-muted fw-bold opacity-60">All resolved complaints have been processed.</p>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    sortedComplaints.map(c => (
-                                        <tr
-                                            key={c.complaintId || c.id}
-                                            className={`cursor-pointer transition-all ${selectedIds.includes(c.complaintId || c.id) ? 'bg-primary bg-opacity-5' : 'hover-light'}`}
-                                            onClick={() => navigate(`/admin/complaints/${c.complaintId || c.id}`)}
-                                        >
-                                            <td className="px-5" onClick={(e) => e.stopPropagation()}>
-                                                <div className="form-check">
-                                                    <input
-                                                        className="form-check-input shadow-none"
-                                                        type="checkbox"
-                                                        checked={selectedIds.includes(c.complaintId || c.id)}
-                                                        onChange={(e) => toggleSelection(c.complaintId || c.id, e)}
-                                                    />
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span className="fw-black text-primary extra-small" style={{ color: PRIMARY_COLOR }}>#{c.complaintId || c.id}</span>
-                                            </td>
-                                            <td>
-                                                <div className="fw-black text-dark small mb-1 text-truncate uppercase tracking-tight" style={{ maxWidth: '300px' }}>{c.title}</div>
-                                            </td>
-                                            <td>
-                                                <div className="extra-small text-muted fw-bold uppercase opacity-50 d-flex align-items-center gap-2">
-                                                    <Calendar size={12} /> {c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : 'N/A'}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="extra-small text-muted fw-bold uppercase opacity-50">{c.departmentName || 'GENERAL'}</div>
-                                            </td>
-                                            <td>
-                                                {(() => {
-                                                    const sla = calculateSlaStatus(c);
-                                                    return (
-                                                        <div className={`badge-rect-blue px-2 py-1 extra-small ${sla?.breached ? 'bg-danger text-white' : 'bg-success text-white'}`} style={{ fontSize: '9px' }}>
-                                                            {sla?.breached ? 'SLA BREACHED' : 'WITHIN SLA'}
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </td>
-                                            <td className="px-5 text-end">
-                                                <button
-                                                    disabled={processing}
-                                                    onClick={(e) => handleQuickClose(c.complaintId || c.id, e)}
-                                                    className="btn btn-white bg-white rounded-pill px-4 py-2 shadow-sm border transition-all hover-up-tiny fw-bold extra-small text-success d-flex align-items-center gap-2 ms-auto"
-                                                >
-                                                    {processing ? <RefreshCw size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                                                    QUICK CLOSE
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+    if (loading) {
+        return (
+            <div className="professional-container">
+                <DashboardHeader {...headerProps} />
+                <div className="container-fluid px-3 px-lg-5" style={{ marginTop: '-40px' }}>
+                    <div className="text-center py-5">
+                        <RefreshCw className="spin" size={48} />
+                        <p className="mt-3">Loading closure queue...</p>
                     </div>
                 </div>
             </div>
+        );
+    }
+
+    return (
+        <div className="professional-container position-relative overflow-hidden">
+            <div className="tactical-grid-overlay"></div>
+            <DashboardHeader {...headerProps} />
+
+            <div className="container-fluid px-3 px-lg-5 position-relative" style={{ marginTop: '-40px', zIndex: 1 }}>
+                <div className="vertical-divider-guide" style={{ left: '33%' }}></div>
+                <div className="vertical-divider-guide" style={{ left: '66%' }}></div>
+                {/* Stats Section */}
+                <div className="grid-section">
+                    <div className="grid-header">
+                        <h3>QUEUE STATISTICS</h3>
+                        <div className="grid-header-actions">
+                            <button className="btn-professional" onClick={fetchQueue}>
+                                <RefreshCw size={16} /> REFRESH
+                            </button>
+                        </div>
+                    </div>
+                    <div className="grid-body">
+                        <div className="grid-col-4 grid-col-md-6 grid-col-sm-12">
+                            <div className="stat-card info">
+                                <div className="stat-value">{queue.length}</div>
+                                <div className="stat-label">PENDING CLOSURE</div>
+                            </div>
+                        </div>
+                        <div className="grid-col-4 grid-col-md-6 grid-col-sm-12">
+                            <div className="stat-card warning">
+                                <div className="stat-value">
+                                    {queue.filter(c => c.daysWaitingForClosure > 3).length}
+                                </div>
+                                <div className="stat-label">WAITING &gt; 3 DAYS</div>
+                            </div>
+                        </div>
+                        <div className="grid-col-4 grid-col-md-6 grid-col-sm-12">
+                            <div className="stat-card success">
+                                <div className="stat-value">
+                                    {queue.filter(c => c.afterImageCount > 0).length}
+                                </div>
+                                <div className="stat-label">WITH VERIFICATION</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Complaints Queue */}
+                <div className="grid-section">
+                    <div className="grid-header">
+                        <h3>COMPLAINTS AWAITING CLOSURE ({queue.length})</h3>
+                    </div>
+
+                    {queue.length === 0 ? (
+                        <div className="text-center py-5">
+                            <CheckCircle size={64} className="text-success mb-3" />
+                            <h4>No Complaints Pending Closure</h4>
+                            <p className="text-muted">All approved complaints have been closed.</p>
+                        </div>
+                    ) : (
+                        <div className="grid-body">
+                            {queue.map((complaint) => (
+                                <div key={complaint.complaintId || complaint.id} className="grid-col-12">
+                                    <div className="professional-card with-accent mb-3">
+                                        <div className="card-header-line">
+                                            <div>
+                                                <h5 className="mb-1">
+                                                    COMPLAINT #{complaint.complaintId || complaint.id}
+                                                </h5>
+                                                <span className="badge-professional info">
+                                                    {complaint.priority}
+                                                </span>
+                                            </div>
+                                            <div className="d-flex gap-2 align-items-center">
+                                                <span className={`badge-professional ${getWaitingTimeColor(complaint.daysWaitingForClosure)}`}>
+                                                    <Clock size={12} /> {complaint.daysWaitingForClosure} days waiting
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="row">
+                                            <div className="col-md-8">
+                                                <div className="form-group-line">
+                                                    <label>TITLE</label>
+                                                    <p className="fw-bold mb-0">{complaint.title}</p>
+                                                </div>
+
+                                                <div className="form-group-line">
+                                                    <label>LOCATION</label>
+                                                    <p className="mb-0">
+                                                        {complaint.wardName} - {complaint.departmentName}
+                                                    </p>
+                                                </div>
+
+                                                <div className="row">
+                                                    <div className="col-md-6">
+                                                        <div className="form-group-line">
+                                                            <label>CITIZEN</label>
+                                                            <p className="mb-0">{complaint.citizenName}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-md-6">
+                                                        <div className="form-group-line">
+                                                            <label>ASSIGNED OFFICER</label>
+                                                            <p className="mb-0">{complaint.assignedOfficerName}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="form-group-line">
+                                                    <label>APPROVAL REMARKS</label>
+                                                    <p className="mb-0 fst-italic">
+                                                        "{complaint.approvalRemarks}"
+                                                    </p>
+                                                    <small className="text-muted">
+                                                        - Approved by {complaint.approvedByName}
+                                                    </small>
+                                                </div>
+
+                                                <div className="form-group-line">
+                                                    <label>RESOLUTION REMARKS</label>
+                                                    <p className="mb-0 fst-italic">
+                                                        "{complaint.resolutionRemarks}"
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-md-4">
+                                                <div className="professional-card" style={{ background: '#f8fafc' }}>
+                                                    <div className="form-group-line">
+                                                        <label>IMAGES</label>
+                                                        <div className="d-flex gap-3 align-items-center">
+                                                            <div className="text-center">
+                                                                <ImageIcon size={24} className="text-muted mb-1" />
+                                                                <div className="fw-bold">{complaint.beforeImageCount}</div>
+                                                                <small className="text-muted">Before</small>
+                                                            </div>
+                                                            <div className="text-center">
+                                                                <ImageIcon size={24} className="text-success mb-1" />
+                                                                <div className="fw-bold">{complaint.afterImageCount}</div>
+                                                                <small className="text-muted">After</small>
+                                                            </div>
+                                                            {complaint.afterImageCount > 0 && (
+                                                                <CheckCircle size={20} className="text-success" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="form-group-line">
+                                                        <label>TIMELINE</label>
+                                                        <div className="small">
+                                                            <div className="mb-1">
+                                                                <strong>Created:</strong> {new Date(complaint.createdAt).toLocaleDateString()}
+                                                            </div>
+                                                            <div className="mb-1">
+                                                                <strong>Resolved:</strong> {new Date(complaint.resolvedAt).toLocaleDateString()}
+                                                            </div>
+                                                            <div className="mb-1">
+                                                                <strong>Approved:</strong> {new Date(complaint.approvedAt).toLocaleDateString()}
+                                                            </div>
+                                                            <div className="text-success fw-bold">
+                                                                Resolved in {complaint.daysToResolve} days
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="d-flex gap-2 mt-3">
+                                                        <button
+                                                            className="btn-professional outline flex-fill"
+                                                            onClick={() => navigate(`/admin/complaints/${complaint.complaintId || complaint.id}`)}
+                                                        >
+                                                            <Eye size={16} /> VIEW
+                                                        </button>
+                                                        <button
+                                                            className="btn-professional flex-fill"
+                                                            onClick={() => {
+                                                                setSelectedComplaint(complaint);
+                                                                setShowModal(true);
+                                                            }}
+                                                        >
+                                                            <CheckCircle size={16} /> CLOSE
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Closure Modal */}
+            {showModal && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #173470 0%, #2a4a8f 100%)', color: 'white' }}>
+                                <h5 className="modal-title fw-black">
+                                    <FileText size={20} className="me-2" />
+                                    CLOSE COMPLAINT #{selectedComplaint?.complaintId || selectedComplaint?.id}
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        setSelectedComplaint(null);
+                                        setClosureRemarks('');
+                                    }}
+                                />
+                            </div>
+                            <div className="modal-body">
+                                <div className="alert alert-info d-flex align-items-start">
+                                    <AlertCircle size={20} className="me-2 mt-1" />
+                                    <div>
+                                        <strong>Final Step:</strong> This will permanently close the complaint.
+                                        Please provide final closure remarks.
+                                    </div>
+                                </div>
+
+                                <div className="form-group-line">
+                                    <label>CLOSURE REMARKS *</label>
+                                    <textarea
+                                        className="form-control"
+                                        rows="4"
+                                        value={closureRemarks}
+                                        onChange={(e) => setClosureRemarks(e.target.value)}
+                                        placeholder="Enter final closure remarks..."
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    className="btn-professional outline"
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        setSelectedComplaint(null);
+                                        setClosureRemarks('');
+                                    }}
+                                >
+                                    <XCircle size={16} /> CANCEL
+                                </button>
+                                <button
+                                    className="btn-professional"
+                                    onClick={handleCloseComplaint}
+                                    disabled={!closureRemarks.trim()}
+                                >
+                                    <CheckCircle size={16} /> CLOSE COMPLAINT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                .extra-small { font-size: 0.65rem; }
-                .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
-                .hover-up:hover { transform: translateY(-8px); }
-                .hover-up-tiny:hover { transform: translateY(-3px); }
-                .hover-light:hover { background-color: #F8FAFC !important; }
-                .animate-spin { animation: spin 1s linear infinite; }
+                .tactical-grid-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-image: 
+                        linear-gradient(rgba(23, 52, 112, 0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(23, 52, 112, 0.02) 1px, transparent 1px);
+                    background-size: 50px 50px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                .vertical-divider-guide {
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    width: 1px;
+                    background: linear-gradient(to bottom, transparent, rgba(23, 52, 112, 0.03), transparent);
+                    pointer-events: none;
+                    z-index: -1;
+                }
+
+                .spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .fw-black { font-weight: 900; }
             `}} />
         </div>
     );

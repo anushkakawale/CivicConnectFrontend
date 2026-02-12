@@ -298,10 +298,40 @@ const DepartmentWork = () => {
                                                     <td>
                                                         <div className="d-flex flex-column gap-2">
                                                             <PriorityBadge priority={task.priority} size="sm" />
-                                                            <div className={`d-flex align-items-center gap-1 extra-small fw-black ${task.slaStatus === 'BREACHED' ? 'text-danger' : 'text-success'}`}>
-                                                                <div className={`rounded-0 ${task.slaStatus === 'BREACHED' ? 'bg-danger animate-pulse' : 'bg-success'}`} style={{ width: '6px', height: '6px' }}></div>
-                                                                {task.slaStatus || 'SLA_OK'}
-                                                            </div>
+                                                            {(() => {
+                                                                const deadline = task.slaDeadline ? new Date(task.slaDeadline) : null;
+                                                                const now = new Date();
+                                                                const timeLeft = deadline ? deadline - now : 0;
+                                                                const hoursLeft = deadline ? (timeLeft / (1000 * 60 * 60)) : 0;
+                                                                const isBreached = task.slaStatus === 'BREACHED';
+
+                                                                let label = task.slaStatus || 'SLA_OK';
+                                                                let colorClass = isBreached ? 'text-danger' : 'text-success';
+                                                                let dotClass = isBreached ? 'bg-danger animate-pulse' : 'bg-success';
+
+                                                                if (['RESOLVED', 'CLOSED'].includes(task.status)) {
+                                                                    label = 'FULFILLED';
+                                                                    colorClass = 'text-success';
+                                                                    dotClass = 'bg-success';
+                                                                } else if (deadline) {
+                                                                    if (timeLeft > 0) {
+                                                                        label = `${hoursLeft.toFixed(1)}H LEFT`;
+                                                                        colorClass = hoursLeft < 4 ? 'text-warning' : 'text-primary';
+                                                                        dotClass = hoursLeft < 4 ? 'bg-warning' : 'bg-primary';
+                                                                    } else {
+                                                                        label = `OVERDUE ${Math.abs(hoursLeft).toFixed(1)}H`;
+                                                                        colorClass = 'text-danger';
+                                                                        dotClass = 'bg-danger animate-pulse';
+                                                                    }
+                                                                }
+
+                                                                return (
+                                                                    <div className={`d-flex align-items-center gap-1 extra-small fw-black ${colorClass}`} style={{ whiteSpace: 'nowrap' }}>
+                                                                        <div className={`rounded-circle ${dotClass}`} style={{ width: '6px', height: '6px' }}></div>
+                                                                        {label}
+                                                                    </div>
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </td>
                                                     <td>

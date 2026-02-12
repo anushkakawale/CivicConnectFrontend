@@ -186,7 +186,11 @@ const AdminProfile = () => {
 
     return (
         <div className="admin-profile-premium min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
-            <div className="container-fluid px-3 px-lg-5 pt-5" style={{ maxWidth: '1600px' }}>
+            <div className="tactical-grid-overlay"></div>
+
+            <div className="container-fluid px-3 px-lg-5 pt-5 position-relative" style={{ maxWidth: '1600px', zIndex: 1 }}>
+                <div className="vertical-divider-guide" style={{ left: '33%' }}></div>
+                <div className="vertical-divider-guide" style={{ left: '66%' }}></div>
                 <div className="row g-5">
                     {/* Security Info Panel */}
                     <div className="col-lg-4">
@@ -269,7 +273,7 @@ const AdminProfile = () => {
 
                                         {/* EMAIL (Read-Only) */}
                                         <div className="col-md-6">
-                                            <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2 opacity-50">Connectivity Port (Email)</label>
+                                            <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2 opacity-50">Email Address</label>
                                             <div className="p-4 rounded-4 bg-light bg-opacity-50 border-2 border-transparent">
                                                 <h6 className="fw-black text-dark mb-0 uppercase opacity-60 d-flex align-items-center gap-2">
                                                     <Mail size={14} /> {profile?.email}
@@ -279,7 +283,7 @@ const AdminProfile = () => {
 
                                         {/* ROLE (Read-Only) */}
                                         <div className="col-md-6">
-                                            <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2 opacity-50">Authorized Role</label>
+                                            <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2 opacity-50">Account Role</label>
                                             <div className="p-4 rounded-4 bg-light bg-opacity-50 border-2 border-transparent">
                                                 <h6 className="fw-black text-dark mb-0 uppercase opacity-60 d-flex align-items-center gap-2">
                                                     <Shield size={14} /> {profile?.role || 'ADMINISTRATOR'}
@@ -289,7 +293,7 @@ const AdminProfile = () => {
 
                                         {/* MOBILE (Editable in Edit Mode) */}
                                         <div className="col-md-6">
-                                            <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2 opacity-50">Mobile Communications</label>
+                                            <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2 opacity-50">Mobile Number</label>
                                             <div className={`p-4 rounded-4 border-2 transition-all d-flex align-items-center gap-2
                                                 ${editMode ? 'bg-white border-primary border-opacity-30' : 'bg-light bg-opacity-50 border-transparent text-muted'}
                                             `} style={editMode ? { borderColor: PRIMARY_COLOR } : {}}>
@@ -310,7 +314,7 @@ const AdminProfile = () => {
                                             <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2 opacity-50">Designation</label>
                                             <div className="p-4 rounded-4 bg-light bg-opacity-50 border-2 border-transparent">
                                                 <h6 className="fw-black text-dark mb-0 uppercase opacity-60 d-flex align-items-center gap-2">
-                                                    <Briefcase size={14} /> {profile?.designation || 'Level 1 Supervisory Authority'}
+                                                    <Briefcase size={14} /> {profile?.designation || 'SYSTEM ADMINISTRATOR'}
                                                 </h6>
                                             </div>
                                         </div>
@@ -323,7 +327,7 @@ const AdminProfile = () => {
                                                         <div className="rounded-circle p-2 bg-white text-primary shadow-sm" style={{ color: PRIMARY_COLOR }}><ShieldCheck size={24} /></div>
                                                         <div>
                                                             <div className="extra-small fw-black text-primary uppercase" style={{ color: PRIMARY_COLOR }}>Verification Required</div>
-                                                            <p className="extra-small fw-bold text-muted mb-0 uppercase">Enter the 6-digit key sent to {formData.mobile}</p>
+                                                            <p className="extra-small fw-bold text-muted mb-0 uppercase">Enter the 6-digit code sent to {formData.mobile}</p>
                                                         </div>
                                                     </div>
                                                     <div className="d-flex gap-2">
@@ -337,7 +341,7 @@ const AdminProfile = () => {
                                                             onChange={e => setOtp(e.target.value)}
                                                         />
                                                         <button onClick={handleVerifyMobileOtp} className="btn btn-primary px-4 fw-black extra-small tracking-widest rounded-3" disabled={otpLoading} style={{ backgroundColor: PRIMARY_COLOR }}>
-                                                            {otpLoading ? <Loader size={16} className="animate-spin" /> : 'VERIFY'}
+                                                            {otpLoading ? <Loader size={16} className="animate-spin" /> : 'VERIFY CODE'}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -347,28 +351,28 @@ const AdminProfile = () => {
                                 </div>
                             </div>
 
-                            {/* Credential Rotation Card */}
+                            {/* Password Management Card */}
                             <div className="card border-0 shadow-premium rounded-4 bg-white p-4 p-xl-5">
                                 <div className="d-flex align-items-center gap-3 mb-4 border-bottom pb-4">
                                     <div className="rounded-circle p-2 bg-light text-dark"><Key size={20} /></div>
-                                    <h6 className="fw-black text-dark mb-0 uppercase tracking-widest">Security Core</h6>
+                                    <h6 className="fw-black text-dark mb-0 uppercase tracking-widest">Password Management</h6>
                                 </div>
                                 <div className="row g-4">
                                     <div className="col-12 col-md-4">
-                                        <label className="extra-small fw-black text-muted uppercase mb-2">Current Key</label>
-                                        <input type="password" value={passwordData.currentPassword} onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="form-control rounded-3 py-3 fw-bold bg-light border-0 shadow-none extra-small" placeholder="VERIFY CURRENT" />
+                                        <label className="extra-small fw-black text-muted uppercase mb-2">Current Password</label>
+                                        <input type="password" value={passwordData.currentPassword} onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="form-control rounded-3 py-3 fw-bold bg-light border-0 shadow-none extra-small" placeholder="Enter current password" />
                                     </div>
                                     <div className="col-12 col-md-4">
-                                        <label className="extra-small fw-black text-muted uppercase mb-2">New Key</label>
-                                        <input type="password" value={passwordData.newPassword} onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="form-control rounded-3 py-3 fw-bold bg-light border-0 shadow-none extra-small" placeholder="CREATE NEW" />
+                                        <label className="extra-small fw-black text-muted uppercase mb-2">New Password</label>
+                                        <input type="password" value={passwordData.newPassword} onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="form-control rounded-3 py-3 fw-bold bg-light border-0 shadow-none extra-small" placeholder="Enter new password" />
                                     </div>
                                     <div className="col-12 col-md-4">
-                                        <label className="extra-small fw-black text-muted uppercase mb-2">Confirm Key</label>
-                                        <input type="password" value={passwordData.confirmPassword} onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="form-control rounded-3 py-3 fw-bold bg-light border-0 shadow-none extra-small" placeholder="RE-ENTER" />
+                                        <label className="extra-small fw-black text-muted uppercase mb-2">Confirm Password</label>
+                                        <input type="password" value={passwordData.confirmPassword} onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="form-control rounded-3 py-3 fw-bold bg-light border-0 shadow-none extra-small" placeholder="Confirm new password" />
                                     </div>
                                     <div className="col-12 mt-4 text-end">
                                         <button className="btn btn-dark rounded-pill px-5 py-3 fw-black extra-small tracking-widest text-white border-0" onClick={handleChangePassword} disabled={passwordLoading}>
-                                            {passwordLoading ? <Loader size={16} className="animate-spin" /> : 'ROTATE CREDENTIALS'}
+                                            {passwordLoading ? <Loader size={16} className="animate-spin" /> : 'UPDATE PASSWORD'}
                                         </button>
                                     </div>
                                 </div>
@@ -387,6 +391,30 @@ const AdminProfile = () => {
                 .animate-spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 .uppercase { text-transform: uppercase; }
+
+                .tactical-grid-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-image: 
+                        linear-gradient(rgba(23, 52, 112, 0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(23, 52, 112, 0.02) 1px, transparent 1px);
+                    background-size: 50px 50px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                .vertical-divider-guide {
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    width: 1px;
+                    background: linear-gradient(to bottom, transparent, rgba(23, 52, 112, 0.03), transparent);
+                    pointer-events: none;
+                    z-index: -1;
+                }
             `}} />
         </div>
     );

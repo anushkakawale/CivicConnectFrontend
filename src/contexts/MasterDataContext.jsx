@@ -27,18 +27,37 @@ export const MasterDataProvider = ({ children }) => {
                 apiService.masterData.getDepartments()
             ]);
 
-            // Extract data from response
-            const wardsData = wardsResponse.data || wardsResponse;
-            const deptsData = deptsResponse.data || deptsResponse;
+            // Extract data from response - Handle various Axios/Backend formats
+            // Prioritize: response -> response.data -> response.data.data -> response.payload
+            const getArrayData = (res) => {
+                if (Array.isArray(res)) return res;
+                if (res && Array.isArray(res.data)) return res.data;
+                if (res && res.data && Array.isArray(res.data.data)) return res.data.data;
+                if (res && Array.isArray(res.payload)) return res.payload;
+                return [];
+            };
 
-            setWards(Array.isArray(wardsData) ? wardsData : []);
-            setDepartments(Array.isArray(deptsData) ? deptsData : []);
-            setError(null);
+            const wardsData = getArrayData(wardsResponse);
+            const deptsData = getArrayData(deptsResponse);
 
-            console.log('✅ Master data loaded:', {
-                wards: wardsData.length,
-                departments: deptsData.length
-            });
+            console.log('🔄 Raw Wards API Response:', wardsResponse);
+            console.log('🔄 Raw Depts API Response:', deptsResponse);
+
+            if (Array.isArray(wardsData) && wardsData.length > 0) {
+                console.log(`✅ Loaded ${wardsData.length} Wards`);
+                setWards(wardsData);
+            } else {
+                console.warn("⚠️ Warning: Wards data is empty or invalid format", wardsResponse);
+                setWards([]);
+            }
+
+            if (Array.isArray(deptsData) && deptsData.length > 0) {
+                console.log(`✅ Loaded ${deptsData.length} Departments`);
+                setDepartments(deptsData);
+            } else {
+                console.warn("⚠️ Warning: Departments data is empty or invalid format", deptsResponse);
+                setDepartments([]);
+            }
         } catch (err) {
             console.error('❌ Failed to load master data:', err);
             setError(err.message);

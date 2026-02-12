@@ -29,6 +29,8 @@ const WardOfficerDirectory = () => {
             if (!officers.length) setLoading(true);
             const response = await apiService.wardOfficer.getDepartmentOfficers();
             const data = Array.isArray(response) ? response : (response.data || []);
+            // If data contains department officers, map them to a cleaner structure if needed
+            // But usually the API returns a list of UserDTOs or similar
             setOfficers(data);
         } catch (error) {
             console.error('Error fetching department officers:', error);
@@ -173,7 +175,7 @@ const WardOfficerDirectory = () => {
                                             <div className="d-flex justify-content-between align-items-start mb-4">
                                                 <div>
                                                     <h5 className="fw-black text-dark mb-1 text-uppercase tracking-tight">{officer.name}</h5>
-                                                    <span className="badge bg-light text-muted border rounded-0 px-3 py-1 extra-small fw-black tracking-widest uppercase">
+                                                    <span className={`badge ${officer.status === 'DEACTIVATED' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-light text-muted'} border rounded-0 px-3 py-1 extra-small fw-black tracking-widest uppercase`}>
                                                         {officer.status || 'Active'}
                                                     </span>
                                                 </div>

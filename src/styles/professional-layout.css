@@ -1,0 +1,695 @@
+/**
+ * Professional Layout System
+ * Consistent grid-based design with horizontal and vertical lines
+ */
+
+/* ========================================
+   GLOBAL LAYOUT VARIABLES
+   ======================================== */
+:root {
+    /* Colors */
+    --primary-color: #173470;
+    --primary-dark: #0f2350;
+    --primary-light: #2a4a8f;
+
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --info-color: #6366F1;
+
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+
+    --bg-light: #F8FAFC;
+    --bg-white: #FFFFFF;
+    --bg-dark: #0f172a;
+
+    /* Grid Lines */
+    --line-color: #e2e8f0;
+    --line-color-dark: #cbd5e1;
+    --line-width: 1px;
+
+    /* Spacing */
+    --grid-gap: 1.5rem;
+    --section-padding: 2rem;
+    --card-padding: 1.5rem;
+
+    /* Borders */
+    --border-radius: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-sm: 8px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ========================================
+   PROFESSIONAL GRID CONTAINER
+   ======================================== */
+.professional-container {
+    background: var(--bg-light);
+    min-height: 100vh;
+    padding-bottom: 3rem;
+}
+
+/* ========================================
+   GRID SECTION WITH LINES
+   ======================================== */
+.grid-section {
+    background: var(--bg-white);
+    border: var(--line-width) solid var(--line-color);
+    border-radius: var(--border-radius);
+    padding: var(--section-padding);
+    margin-bottom: var(--grid-gap);
+    position: relative;
+}
+
+.grid-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+/* ========================================
+   GRID HEADER WITH BOTTOM LINE
+   ======================================== */
+.grid-header {
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--line-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.grid-header h1,
+.grid-header h2,
+.grid-header h3 {
+    margin: 0;
+    font-weight: 900;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.grid-header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* ========================================
+   GRID BODY WITH VERTICAL LINES
+   ======================================== */
+.grid-body {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--grid-gap);
+    position: relative;
+}
+
+/* Vertical grid lines */
+.grid-body.with-lines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-image:
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent calc(100% / 12 - 1px),
+            var(--line-color) calc(100% / 12 - 1px),
+            var(--line-color) calc(100% / 12));
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+/* ========================================
+   GRID COLUMNS
+   ======================================== */
+.grid-col-1 {
+    grid-column: span 1;
+}
+
+.grid-col-2 {
+    grid-column: span 2;
+}
+
+.grid-col-3 {
+    grid-column: span 3;
+}
+
+.grid-col-4 {
+    grid-column: span 4;
+}
+
+.grid-col-5 {
+    grid-column: span 5;
+}
+
+.grid-col-6 {
+    grid-column: span 6;
+}
+
+.grid-col-7 {
+    grid-column: span 7;
+}
+
+.grid-col-8 {
+    grid-column: span 8;
+}
+
+.grid-col-9 {
+    grid-column: span 9;
+}
+
+.grid-col-10 {
+    grid-column: span 10;
+}
+
+.grid-col-11 {
+    grid-column: span 11;
+}
+
+.grid-col-12 {
+    grid-column: span 12;
+}
+
+/* Responsive columns */
+@media (max-width: 1200px) {
+    .grid-col-lg-12 {
+        grid-column: span 12;
+    }
+
+    .grid-col-lg-6 {
+        grid-column: span 6;
+    }
+
+    .grid-col-lg-4 {
+        grid-column: span 4;
+    }
+}
+
+@media (max-width: 768px) {
+    .grid-col-md-12 {
+        grid-column: span 12;
+    }
+
+    .grid-col-md-6 {
+        grid-column: span 6;
+    }
+}
+
+@media (max-width: 576px) {
+    .grid-col-sm-12 {
+        grid-column: span 12;
+    }
+}
+
+/* ========================================
+   PROFESSIONAL CARD
+   ======================================== */
+.professional-card {
+    background: var(--bg-white);
+    border: var(--line-width) solid var(--line-color);
+    border-radius: var(--border-radius);
+    padding: var(--card-padding);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.professional-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.professional-card.with-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-color) 0%, var(--primary-light) 100%);
+}
+
+/* ========================================
+   CARD HEADER WITH LINE
+   ======================================== */
+.card-header-line {
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: var(--line-width) solid var(--line-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header-line h4,
+.card-header-line h5,
+.card-header-line h6 {
+    margin: 0;
+    font-weight: 900;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+/* ========================================
+   DATA TABLE WITH GRID LINES
+   ======================================== */
+.professional-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: var(--line-width) solid var(--line-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.professional-table thead {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.professional-table thead th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    border-right: var(--line-width) solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid var(--primary-dark);
+}
+
+.professional-table thead th:last-child {
+    border-right: none;
+}
+
+.professional-table tbody tr {
+    border-bottom: var(--line-width) solid var(--line-color);
+    transition: background-color 0.2s ease;
+}
+
+.professional-table tbody tr:hover {
+    background-color: rgba(23, 52, 112, 0.02);
+}
+
+.professional-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.professional-table tbody td {
+    padding: 1rem;
+    border-right: var(--line-width) solid var(--line-color);
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+.professional-table tbody td:last-child {
+    border-right: none;
+}
+
+/* ========================================
+   STAT CARDS WITH LINES
+   ======================================== */
+.stat-card {
+    background: var(--bg-white);
+    border: var(--line-width) solid var(--line-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-light) 100%);
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.stat-card.success::before {
+    background: linear-gradient(90deg, var(--success-color) 0%, #059669 100%);
+}
+
+.stat-card.warning::before {
+    background: linear-gradient(90deg, var(--warning-color) 0%, #d97706 100%);
+}
+
+.stat-card.danger::before {
+    background: linear-gradient(90deg, var(--danger-color) 0%, #dc2626 100%);
+}
+
+.stat-card.info::before {
+    background: linear-gradient(90deg, var(--info-color) 0%, #4f46e5 100%);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--text-dark);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.stat-change {
+    font-size: 0.875rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: var(--line-width) solid var(--line-color);
+}
+
+/* ========================================
+   FORM GROUPS WITH LINES
+   ======================================== */
+.form-group-line {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: var(--line-width) solid var(--line-color);
+}
+
+.form-group-line:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.form-group-line label {
+    display: block;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.form-group-line input,
+.form-group-line select,
+.form-group-line textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: var(--line-width) solid var(--line-color);
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.form-group-line input:focus,
+.form-group-line select:focus,
+.form-group-line textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(23, 52, 112, 0.1);
+}
+
+/* ========================================
+   DIVIDER LINES
+   ======================================== */
+.divider-horizontal {
+    height: var(--line-width);
+    background: var(--line-color);
+    margin: 1.5rem 0;
+}
+
+.divider-horizontal.thick {
+    height: 2px;
+    background: var(--line-color-dark);
+}
+
+.divider-horizontal.gradient {
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--line-color-dark) 50%, transparent 100%);
+}
+
+.divider-vertical {
+    width: var(--line-width);
+    background: var(--line-color);
+    height: 100%;
+}
+
+.divider-vertical.thick {
+    width: 2px;
+    background: var(--line-color-dark);
+}
+
+/* ========================================
+   SECTION DIVIDERS
+   ======================================== */
+.section-divider {
+    display: flex;
+    align-items: center;
+    margin: 2rem 0;
+    gap: 1rem;
+}
+
+.section-divider::before,
+.section-divider::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--line-color-dark) 50%, transparent 100%);
+}
+
+.section-divider-text {
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* ========================================
+   BUTTON STYLES
+   ======================================== */
+.btn-professional {
+    padding: 0.75rem 1.5rem;
+    border: var(--line-width) solid var(--primary-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--primary-color);
+    color: white;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-professional:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.btn-professional.outline {
+    background: transparent;
+    color: var(--primary-color);
+}
+
+.btn-professional.outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* ========================================
+   BADGE STYLES
+   ======================================== */
+.badge-professional {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border: var(--line-width) solid var(--line-color);
+    border-radius: 20px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.65rem;
+}
+
+.badge-professional.success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.badge-professional.warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--warning-color);
+    color: var(--warning-color);
+}
+
+.badge-professional.danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+.badge-professional.info {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--info-color);
+    color: var(--info-color);
+}
+
+/* ========================================
+   RESPONSIVE UTILITIES
+   ======================================== */
+@media (max-width: 768px) {
+    :root {
+        --section-padding: 1rem;
+        --card-padding: 1rem;
+        --grid-gap: 1rem;
+    }
+
+    .grid-body {
+        grid-template-columns: 1fr;
+    }
+
+    .professional-table {
+        font-size: 0.875rem;
+    }
+
+    .professional-table thead th,
+    .professional-table tbody td {
+        padding: 0.75rem;
+    }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.fw-black {
+    font-weight: 900;
+}
+
+.fw-bold {
+    font-weight: 700;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+.text-uppercase {
+    text-transform: uppercase;
+}
+
+.tracking-widest {
+    letter-spacing: 0.1em;
+}
+
+.tracking-wide {
+    letter-spacing: 0.05em;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mb-1 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-2 {
+    margin-bottom: 1rem;
+}
+
+.mb-3 {
+    margin-bottom: 1.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 2rem;
+}
+
+.mt-0 {
+    margin-top: 0;
+}
+
+.mt-1 {
+    margin-top: 0.5rem;
+}
+
+.mt-2 {
+    margin-top: 1rem;
+}
+
+.mt-3 {
+    margin-top: 1.5rem;
+}
+
+.mt-4 {
+    margin-top: 2rem;
+}
+
+.p-0 {
+    padding: 0;
+}
+
+.p-1 {
+    padding: 0.5rem;
+}
+
+.p-2 {
+    padding: 1rem;
+}
+
+.p-3 {
+    padding: 1.5rem;
+}
+
+.p-4 {
+    padding: 2rem;
+}

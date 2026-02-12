@@ -28,7 +28,7 @@ const ProfessionalWardOfficerDashboard = () => {
   useEffect(() => {
     loadDashboard();
     loadComplaints();
-  }, []);
+  }, [filterStatus]);
 
   const loadDashboard = async () => {
     try {
@@ -44,7 +44,22 @@ const ProfessionalWardOfficerDashboard = () => {
   const loadComplaints = async (pageNum = 0) => {
     try {
       setLoading(true);
-      const response = await wardOfficerService.getWardComplaints({ page: pageNum, size: 20 });
+      const params = { page: pageNum, size: 50 };
+
+      if (filterStatus !== 'ALL') {
+        if (filterStatus === 'PENDING_APPROVAL') {
+          params.status = 'RESOLVED';
+        } else if (filterStatus === 'IN_PROGRESS') {
+          // For IN_PROGRESS view, we might want both ASSIGNED and IN_PROGRESS, 
+          // but backend likely takes one. Let's start with IN_PROGRESS or handled by backend logic if custom.
+          // If backend only assumes one status, let's send 'IN_PROGRESS' for now.
+          params.status = 'IN_PROGRESS';
+        } else {
+          params.status = filterStatus;
+        }
+      }
+
+      const response = await wardOfficerService.getWardComplaints(params);
       const payload = response.data || response;
       const list = payload.content || (Array.isArray(payload) ? payload : []);
       setComplaints(list);
@@ -92,8 +107,8 @@ const ProfessionalWardOfficerDashboard = () => {
     return true;
   });
 
-  const ITEMS_PER_PAGE = 6;
-  const paginatedComplaints = filteredComplaints.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+  /* Removed broken client-side pagination slicing */
+  const paginatedComplaints = filteredComplaints;
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   if (loading && !dashboardData) {
@@ -245,7 +260,7 @@ const ProfessionalWardOfficerDashboard = () => {
                 <Building2 className="text-primary" style={{ color: '#1254AF' }} size={20} />
                 Department Load
               </h5>
-              <div style={{ height: '300px' }}>
+              <div style={{ height: '300px', minHeight: '300px', minWidth: '0' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={deptData} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#EBF6F6" />

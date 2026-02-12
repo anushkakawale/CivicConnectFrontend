@@ -20,132 +20,83 @@ export const USER_ROLES = {
 
 // ==================== COMPLAINT STATUS ====================
 export const COMPLAINT_STATUS = {
-    PENDING: 'PENDING',
-    APPROVED: 'APPROVED',
-    IN_PROGRESS: 'IN_PROGRESS',
-    RESOLVED: 'RESOLVED',
-    CLOSED: 'CLOSED',
-    REJECTED: 'REJECTED',
-    REOPENED: 'REOPENED',
+    SUBMITTED: 'SUBMITTED',     // Citizen
+    ASSIGNED: 'ASSIGNED',       // System
+    IN_PROGRESS: 'IN_PROGRESS', // Department Officer
+    RESOLVED: 'RESOLVED',       // Department Officer
+    APPROVED: 'APPROVED',       // Ward Officer
+    CLOSED: 'CLOSED',           // Admin
+    REOPENED: 'REOPENED',       // Citizen
+    REJECTED: 'REJECTED',       // Admin
+    ON_HOLD: 'ON_HOLD',
     ESCALATED: 'ESCALATED'
 };
 
 // Status labels for display
 export const STATUS_LABELS = {
-    [COMPLAINT_STATUS.PENDING]: 'Pending',
-    [COMPLAINT_STATUS.APPROVED]: 'Approved',
+    [COMPLAINT_STATUS.SUBMITTED]: 'Submitted',
+    [COMPLAINT_STATUS.ASSIGNED]: 'Assigned',
     [COMPLAINT_STATUS.IN_PROGRESS]: 'In Progress',
     [COMPLAINT_STATUS.RESOLVED]: 'Resolved',
+    [COMPLAINT_STATUS.APPROVED]: 'Approved',
     [COMPLAINT_STATUS.CLOSED]: 'Closed',
-    [COMPLAINT_STATUS.REJECTED]: 'Rejected',
     [COMPLAINT_STATUS.REOPENED]: 'Reopened',
+    [COMPLAINT_STATUS.REJECTED]: 'Rejected',
+    [COMPLAINT_STATUS.ON_HOLD]: 'On Hold',
     [COMPLAINT_STATUS.ESCALATED]: 'Escalated'
 };
 
 // Status colors (Modern Palette)
 export const STATUS_COLORS = {
-    [COMPLAINT_STATUS.PENDING]: '#f59e0b',      // Amber
-    [COMPLAINT_STATUS.APPROVED]: '#10b981',     // Emerald
-    [COMPLAINT_STATUS.IN_PROGRESS]: '#3b82f6',  // Blue
-    [COMPLAINT_STATUS.RESOLVED]: '#10b981',     // Emerald
-    [COMPLAINT_STATUS.CLOSED]: '#1e293b',       // Slate 800
-    [COMPLAINT_STATUS.REJECTED]: '#ef4444',     // Red
-    [COMPLAINT_STATUS.REOPENED]: '#6366f1',     // Indigo
-    [COMPLAINT_STATUS.ESCALATED]: '#dc2626'      // Red-600
+    [COMPLAINT_STATUS.SUBMITTED]: '#64748b',   // Slate
+    [COMPLAINT_STATUS.ASSIGNED]: '#3b82f6',    // Blue
+    [COMPLAINT_STATUS.IN_PROGRESS]: '#f59e0b', // Amber
+    [COMPLAINT_STATUS.RESOLVED]: '#10b981',    // Emerald
+    [COMPLAINT_STATUS.APPROVED]: '#059669',    // Green-600
+    [COMPLAINT_STATUS.CLOSED]: '#1e293b',      // Slate-800
+    [COMPLAINT_STATUS.REOPENED]: '#6366f1',    // Indigo
+    [COMPLAINT_STATUS.REJECTED]: '#ef4444',    // Red
+    [COMPLAINT_STATUS.ON_HOLD]: '#8b5cf6',     // Violet
+    [COMPLAINT_STATUS.ESCALATED]: '#dc2626'    // Red-600
 };
 
-// ==================== COMPLAINT CATEGORY ====================
-export const COMPLAINT_CATEGORY = {
-    ROAD_MAINTENANCE: 'ROAD_MAINTENANCE',
-    STREET_LIGHTING: 'STREET_LIGHTING',
-    GARBAGE_COLLECTION: 'GARBAGE_COLLECTION',
-    WATER_SUPPLY: 'WATER_SUPPLY',
-    DRAINAGE: 'DRAINAGE',
-    SEWAGE: 'SEWAGE',
-    PARKS_GARDENS: 'PARKS_GARDENS',
-    TRAFFIC: 'TRAFFIC',
-    NOISE_POLLUTION: 'NOISE_POLLUTION',
-    OTHER: 'OTHER'
+// ==================== APPROVAL STATUS ====================
+export const APPROVAL_STATUS = {
+    PENDING: 'PENDING',
+    APPROVED: 'APPROVED',
+    REJECTED: 'REJECTED'
 };
 
-// Category labels for display
-export const CATEGORY_LABELS = {
-    [COMPLAINT_CATEGORY.ROAD_MAINTENANCE]: 'Road Maintenance',
-    [COMPLAINT_CATEGORY.STREET_LIGHTING]: 'Street Lighting',
-    [COMPLAINT_CATEGORY.GARBAGE_COLLECTION]: 'Garbage Collection',
-    [COMPLAINT_CATEGORY.WATER_SUPPLY]: 'Water Supply',
-    [COMPLAINT_CATEGORY.DRAINAGE]: 'Drainage',
-    [COMPLAINT_CATEGORY.SEWAGE]: 'Sewage',
-    [COMPLAINT_CATEGORY.PARKS_GARDENS]: 'Parks & Gardens',
-    [COMPLAINT_CATEGORY.TRAFFIC]: 'Traffic',
-    [COMPLAINT_CATEGORY.NOISE_POLLUTION]: 'Noise Pollution',
-    [COMPLAINT_CATEGORY.OTHER]: 'Other'
+// ==================== IMAGE STAGE ====================
+export const IMAGE_STAGE = {
+    BEFORE_WORK: 'BEFORE_WORK',
+    IN_PROGRESS: 'IN_PROGRESS',
+    AFTER_RESOLUTION: 'AFTER_RESOLUTION'
 };
 
-// Category icons (using Lucide React icon names)
-export const CATEGORY_ICONS = {
-    [COMPLAINT_CATEGORY.ROAD_MAINTENANCE]: 'Construction',
-    [COMPLAINT_CATEGORY.STREET_LIGHTING]: 'Lightbulb',
-    [COMPLAINT_CATEGORY.GARBAGE_COLLECTION]: 'Trash2',
-    [COMPLAINT_CATEGORY.WATER_SUPPLY]: 'Droplet',
-    [COMPLAINT_CATEGORY.DRAINAGE]: 'Waves',
-    [COMPLAINT_CATEGORY.SEWAGE]: 'Droplets',
-    [COMPLAINT_CATEGORY.PARKS_GARDENS]: 'Trees',
-    [COMPLAINT_CATEGORY.TRAFFIC]: 'Car',
-    [COMPLAINT_CATEGORY.NOISE_POLLUTION]: 'Volume2',
-    [COMPLAINT_CATEGORY.OTHER]: 'MoreHorizontal'
-};
-
-// ==================== PRIORITY ====================
-export const PRIORITY = {
-    LOW: 'LOW',
-    MEDIUM: 'MEDIUM',
-    HIGH: 'HIGH',
-    CRITICAL: 'CRITICAL'
-};
-
-// Priority labels
-export const PRIORITY_LABELS = {
-    [PRIORITY.LOW]: 'Low',
-    [PRIORITY.MEDIUM]: 'Medium',
-    [PRIORITY.HIGH]: 'High',
-    [PRIORITY.CRITICAL]: 'Critical'
-};
-
-// Priority colors
-export const PRIORITY_COLORS = {
-    [PRIORITY.LOW]: '#4caf50',      // Green
-    [PRIORITY.MEDIUM]: '#ff9800',   // Orange
-    [PRIORITY.HIGH]: '#ff5722',     // Deep Orange
-    [PRIORITY.CRITICAL]: '#f44336'  // Red
-};
-
-// ==================== NOTIFICATION TYPES ====================
-export const NOTIFICATION_TYPE = {
-    COMPLAINT_CREATED: 'COMPLAINT_CREATED',
-    APPROVAL_REQUIRED: 'APPROVAL_REQUIRED',
-    ASSIGNMENT: 'ASSIGNMENT',
-    STATUS_UPDATE: 'STATUS_UPDATE',
-    RESOLVED: 'RESOLVED',
-    CLOSED: 'CLOSED',
-    REOPENED: 'REOPENED',
-    SLA_WARNING: 'SLA_WARNING',
-    SLA_BREACHED: 'SLA_BREACHED',
-    SYSTEM: 'SYSTEM'
+// ==================== UPLOADED BY ====================
+export const UPLOADED_BY = {
+    CITIZEN: 'CITIZEN',
+    DEPARTMENT_OFFICER: 'DEPARTMENT_OFFICER',
+    WARD_OFFICER: 'WARD_OFFICER'
 };
 
 // ==================== SLA STATUS ====================
 export const SLA_STATUS = {
-    WITHIN_SLA: 'WITHIN_SLA',
-    NEARING_DEADLINE: 'NEARING_DEADLINE',
-    BREACHED: 'BREACHED'
+    ON_TRACK: 'ON_TRACK',
+    WARNING: 'WARNING',
+    BREACHED: 'BREACHED',
+    MET: 'MET',
+    ACTIVE: 'ACTIVE'
 };
 
 // SLA status colors
 export const SLA_COLORS = {
-    [SLA_STATUS.WITHIN_SLA]: '#4caf50',         // Green
-    [SLA_STATUS.NEARING_DEADLINE]: '#ff9800',   // Orange
-    [SLA_STATUS.BREACHED]: '#f44336'            // Red
+    [SLA_STATUS.ON_TRACK]: '#10b981',   // Emerald
+    [SLA_STATUS.WARNING]: '#f59e0b',    // Amber
+    [SLA_STATUS.BREACHED]: '#ef4444',   // Red
+    [SLA_STATUS.MET]: '#059669',        // Green-600
+    [SLA_STATUS.ACTIVE]: '#3b82f6'      // Blue
 };
 
 // ==================== FILE UPLOAD ====================
@@ -186,6 +137,7 @@ export const ROUTES = {
     CITIZEN_COMPLAINT_DETAILS: '/citizen/complaints/:id',
     CITIZEN_AREA_COMPLAINTS: '/citizen/area-complaints',
     CITIZEN_MAP: '/citizen/map',
+    CITIZEN_WARD_ANALYTICS: '/citizen/ward-analytics',
     CITIZEN_PROFILE: '/citizen/profile',
     CITIZEN_NOTIFICATIONS: '/citizen/notifications',
 

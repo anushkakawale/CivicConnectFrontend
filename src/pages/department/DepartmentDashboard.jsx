@@ -30,6 +30,9 @@ const DepartmentDashboard = () => {
 
     useEffect(() => {
         loadData();
+        // Poll for real-time updates every 30 seconds
+        const interval = setInterval(loadData, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     const loadData = async () => {
@@ -41,43 +44,45 @@ const DepartmentDashboard = () => {
             // Fetch Assigned Work (Active only by default now)
             const assignedPromise = apiService.departmentOfficer.getAssignedComplaints({ page: 0, size: 50 });
 
-            const results = await Promise.allSettled([analyticsPromise, assignedPromise]);
+            const [analyticsRes, assignedRes] = await Promise.all([analyticsPromise, assignedPromise]);
 
-            if (results[0].status === 'fulfilled') {
-                setData(results[0].value.data || results[0].value);
-            } else {
-                console.warn('Dashboard summary restricted, calculating from assigned work.');
-                // Fallback calculation...
-                const work = results[1].status === 'fulfilled' ?
-                    (results[1].value.data?.complaints || results[1].value.data?.content || results[1].value.data || []) : [];
-                setData({
-                    officerName: localStorage.getItem('name') || 'Department Officer',
-                    department: 'Operations',
-                    statistics: {
-                        totalAssigned: work.length,
-                        inProgress: work.filter(c => c.status === 'IN_PROGRESS').length,
-                        resolved: 0, // Cannot know resolved from active-only list
-                        pending: work.filter(c => c.status === 'ASSIGNED').length
-                    },
-                    sla: { breached: work.filter(c => c.slaStatus === 'BREACHED').length }
-                });
-            }
+            const analyticsData = analyticsRes.data || analyticsRes;
 
-            if (results[1].status === 'fulfilled') {
-                const assignedRes = results[1].value;
-                const rawWork = assignedRes.data;
-                const extractedWork = rawWork?.complaints || rawWork?.content || rawWork?.data || (Array.isArray(rawWork) ? rawWork : []);
-                setAssignedWork(extractedWork);
-            } else {
-                if (results[1].reason?.response?.status === 403) {
-                    showToast('Access Denied: You do not have permission to view tasks.', 'error');
-                }
-                setAssignedWork([]);
-            }
+            // Check if statistics are nested or at root
+            const stats = analyticsData.statistics || analyticsData;
+            const sla = analyticsData.sla || analyticsData;
+
+            setData({
+                officerName: analyticsData.officerName || localStorage.getItem('name') || 'Department Officer',
+                department: analyticsData.departmentName || 'Operations',
+                statistics: {
+                    totalAssigned: stats.totalAssigned || stats.assigned || 0,
+                    inProgress: stats.inProgress || stats.active || 0,
+                    resolved: stats.resolved || stats.completed || 0,
+                    pending: stats.pending || 0
+                },
+                sla: { breached: sla.slaBreached || sla.breached || 0 }
+            });
+
+            console.log("📊 Dashboard Data Loaded:", analyticsData);
+
+            const rawWork = assignedRes.data;
+            const extractedWork = rawWork?.complaints || rawWork?.content || rawWork?.data || (Array.isArray(rawWork) ? rawWork : (Array.isArray(rawWork?.data) ? rawWork.data : []));
+            setAssignedWork(extractedWork || []);
 
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
             showToast('Operational sync failure.', 'error');
+            // Retain existing data if refresh failed
+            if (!data) {
+                setData({
+                    officerName: localStorage.getItem('name') || 'Department Officer',
+                    department: 'Operations',
+                    statistics: { totalAssigned: 0, inProgress: 0, resolved: 0, pending: 0 },
+                    sla: { breached: 0 }
+                });
+                setAssignedWork([]);
+            }
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -103,11 +108,11 @@ const DepartmentDashboard = () => {
     }, [assignedWork, searchTerm, filterStatus]);
 
     const kpiCards = useMemo(() => [
-        { label: 'Assigned Work', value: data?.statistics?.totalAssigned || assignedWork.length, icon: ClipboardList, color: '#1E40AF' },
-        { label: 'Active Process', value: data?.statistics?.inProgress || assignedWork.filter(c => c.status === 'IN_PROGRESS').length, icon: PlayCircle, color: '#F59E0B' },
-        { label: 'Units Resolved', value: data?.statistics?.resolved || assignedWork.filter(c => ['RESOLVED', 'CLOSED'].includes(c.status)).length, icon: CheckCheck, color: '#10B981' },
-        { label: 'SLA Breaches', value: data?.sla?.breached || assignedWork.filter(c => c.slaStatus === 'BREACHED').length, icon: AlertCircle, color: '#EF4444' }
-    ], [data, assignedWork]);
+        { label: 'Field Deployment', value: data?.statistics?.totalAssigned || 0, icon: ClipboardList, color: '#1E40AF' },
+        { label: 'In Operations', value: data?.statistics?.inProgress || 0, icon: PlayCircle, color: '#F59E0B' },
+        { label: 'Mission Success', value: data?.statistics?.resolved || 0, icon: CheckCheck, color: '#10B981' },
+        { label: 'SLA Breaches', value: data?.sla?.breached || 0, icon: AlertCircle, color: '#EF4444' }
+    ], [data]);
 
     if (loading && !data) return (
         <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8FAFC' }}>
@@ -194,9 +199,6 @@ const DepartmentDashboard = () => {
                                     borderRadius: '16px',
                                     boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
                                 }}>
-                                <div className="position-absolute top-0 end-0 opacity-10 p-3 transform-group-hover" style={{ transform: 'scale(1.2)' }}>
-                                    <stat.icon size={64} color={stat.color} />
-                                </div>
                                 <div className="card-body p-4 d-flex flex-column justify-content-between h-100 position-relative z-1">
                                     <div className="d-flex align-items-center justify-content-between mb-3">
                                         <div className="p-3 rounded-circle d-flex align-items-center justify-content-center"
@@ -261,9 +263,9 @@ const DepartmentDashboard = () => {
                                     <select className="form-select border-0 bg-transparent fw-black extra-small tracking-widest uppercase shadow-none text-details p-0" style={{ minWidth: '150px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
                                         <option value="ALL">ALL COMMANDS</option>
                                         <option value="ASSIGNED">NEW DEPLOYMENT</option>
-                                        <option value="IN_PROGRESS">IN RECTIFICATION</option>
-                                        <option value="RESOLVED">VALIDATED RESOLUTION</option>
-                                        <option value="CLOSED">FINALIZED ARCHIVE</option>
+                                        <option value="IN_PROGRESS">IN OPERATIONS</option>
+                                        <option value="RESOLVED">MISSION SUCCESS</option>
+                                        <option value="CLOSED">ARCHIVED</option>
                                     </select>
                                 </div>
                             </div>
@@ -362,7 +364,7 @@ const DepartmentDashboard = () => {
                     </div>
                 ) : (
                     <div className="card border-0 shadow-lg gov-rounded overflow-hidden elevation-2 mt-4 animate-fadeIn" style={{ height: '700px' }}>
-                        <DepartmentMap />
+                        <DepartmentMap embedded={true} />
                     </div>
                 )}
             </div>

@@ -28,12 +28,17 @@ const DepartmentAnalyticsEnhanced = () => {
         try {
             if (!data) setLoading(true);
 
-            const getWork = async () => {
+            let workData = null;
+            const loadWork = async () => {
+                if (workData) return workData;
                 try {
-                    const res = await apiService.departmentOfficer.getAssignedComplaints({ page: 0, size: 100 });
+                    const res = await apiService.departmentOfficer.getAssignedComplaints({ page: 0, size: 500 });
                     const raw = res.data;
-                    return raw?.complaints || raw?.content || raw?.data || (Array.isArray(raw) ? raw : []);
-                } catch (e) { return []; }
+                    workData = raw?.complaints || raw?.content || raw?.data || (Array.isArray(raw) ? raw : []);
+                    return workData;
+                } catch (e) {
+                    return [];
+                }
             };
 
             let dashboard = null;
@@ -53,24 +58,46 @@ const DepartmentAnalyticsEnhanced = () => {
                 console.warn("Trend analytics restricted.");
             }
 
-            if (!dashboard || !dashboard.statistics) {
-                const work = await getWork();
-                dashboard = {
-                    officerName: localStorage.getItem('name') || 'Officer',
-                    department: 'Operations',
-                    statistics: {
-                        totalAssigned: work.length,
-                        completionRate: work.length > 0 ? `${Math.round((work.filter(c => c.status === 'RESOLVED').length / work.length) * 100)}%` : '0%',
-                        avgResolutionTimeHours: 24,
-                        inProgress: work.filter(c => c.status === 'IN_PROGRESS').length
-                    },
-                    sla: {
-                        onTrack: work.filter(c => c.slaStatus !== 'BREACHED').length,
-                        breached: work.filter(c => c.slaStatus === 'BREACHED').length,
-                        warning: 0
-                    },
-                    ward: 'Assigned Sector'
-                };
+            if (!dashboard || (!dashboard.statistics && !dashboard.totalAssigned)) {
+                // Try to interpret dashboard as the stats object itself if needed
+                if (dashboard && (dashboard.totalAssigned !== undefined || dashboard.assigned !== undefined)) {
+                    // It's likely the stats object directly
+                    const rawStats = dashboard;
+                    dashboard = {
+                        officerName: localStorage.getItem('name') || 'Department Officer',
+                        department: 'Operations',
+                        statistics: {
+                            totalAssigned: rawStats.totalAssigned || rawStats.assigned || 0,
+                            completionRate: rawStats.completionRate || '0%',
+                            avgResolutionTimeHours: rawStats.avgResolutionTimeHours || 24,
+                            inProgress: rawStats.inProgress || rawStats.active || 0
+                        },
+                        sla: {
+                            onTrack: rawStats.slaOnTrack || 0,
+                            breached: rawStats.slaBreached || rawStats.breached || 0,
+                            warning: rawStats.slaWarning || 0
+                        },
+                        ward: rawStats.wardName || 'Assigned Sector'
+                    };
+                } else {
+                    const work = await loadWork();
+                    dashboard = {
+                        officerName: localStorage.getItem('name') || 'Officer',
+                        department: 'Operations',
+                        statistics: {
+                            totalAssigned: work.length,
+                            completionRate: work.length > 0 ? `${Math.round((work.filter(c => c.status === 'RESOLVED').length / work.length) * 100)}%` : '0%',
+                            avgResolutionTimeHours: 24,
+                            inProgress: work.filter(c => c.status === 'IN_PROGRESS').length
+                        },
+                        sla: {
+                            onTrack: work.filter(c => c.slaStatus !== 'BREACHED').length,
+                            breached: work.filter(c => c.slaStatus === 'BREACHED').length,
+                            warning: 0
+                        },
+                        ward: 'Assigned Sector'
+                    };
+                }
             }
 
             setData(dashboard);
@@ -86,12 +113,33 @@ const DepartmentAnalyticsEnhanced = () => {
                     resolved: monthlyResolved[month] || 0
                 })));
             } else {
-                setTrends([
-                    { month: 'PERIOD 1', assigned: 4, resolved: 3 },
-                    { month: 'PERIOD 2', assigned: 7, resolved: 5 },
-                    { month: 'PERIOD 3', assigned: 5, resolved: 4 },
-                    { month: 'PERIOD 4', assigned: 8, resolved: 7 }
-                ]);
+                // Fallback: Calculate from work data
+                const work = await loadWork();
+                if (work.length > 0) {
+                    const months = {};
+                    work.forEach(w => {
+                        const d = new Date(w.createdAt || Date.now());
+                        const key = d.toLocaleString('default', { month: 'short' });
+                        if (!months[key]) months[key] = { assigned: 0, resolved: 0 };
+                        months[key].assigned++;
+                        if (w.status === 'RESOLVED' || w.status === 'CLOSED') months[key].resolved++;
+                    });
+                    const calculatedTrends = Object.keys(months).map(m => ({
+                        month: m,
+                        assigned: months[m].assigned,
+                        resolved: months[m].resolved
+                    }));
+                    setTrends(calculatedTrends.length > 0 ? calculatedTrends : [
+                        { month: 'CUR', assigned: work.length, resolved: work.filter(w => w.status === 'RESOLVED').length }
+                    ]);
+                } else {
+                    setTrends([
+                        { month: 'PERIOD 1', assigned: 4, resolved: 3 },
+                        { month: 'PERIOD 2', assigned: 7, resolved: 5 },
+                        { month: 'PERIOD 3', assigned: 5, resolved: 4 },
+                        { month: 'PERIOD 4', assigned: 8, resolved: 7 }
+                    ]);
+                }
             }
 
         } catch (err) {
@@ -120,7 +168,7 @@ const DepartmentAnalyticsEnhanced = () => {
     const brandColor = '#173470';
 
     return (
-        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F0F2F5' }}>
+        <div className="min-vh-100 pb-5">
             {/* Tactical Header - Using Standardized DashboardHeader */}
             <DashboardHeader
                 portalName="ANALYTICS COMMAND"
@@ -181,30 +229,36 @@ const DepartmentAnalyticsEnhanced = () => {
                                 </div>
                                 <span className="extra-small fw-black text-muted bg-light px-3 py-2 rounded-pill elevation-1 text-details">LAST 6 MONTHS</span>
                             </div>
-                            <div style={{ width: '100%', height: '350px', minHeight: '350px', minWidth: '0' }}>
-                                <ResponsiveContainer width="100%" height="100%" debounce={50}>
-                                    <AreaChart data={trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                        <defs>
-                                            <linearGradient id="colorAssigned" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#173470" stopOpacity={0.2} />
-                                                <stop offset="95%" stopColor="#173470" stopOpacity={0} />
-                                            </linearGradient>
-                                            <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
-                                                <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} />
-                                        <Tooltip
-                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -3px rgba(0,0,0,0.1)', padding: '15px' }}
-                                            itemStyle={{ fontSize: '12px', fontWeight: 800 }}
-                                        />
-                                        <Area type="monotone" dataKey="assigned" stroke="#173470" strokeWidth={4} fill="url(#colorAssigned)" name="Assigned" />
-                                        <Area type="monotone" dataKey="resolved" stroke="#10B981" strokeWidth={4} fill="url(#colorResolved)" name="Resolved" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
+                            <div style={{ width: '100%', height: '400px', minHeight: '400px', minWidth: 0 }}>
+                                {trends && trends.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorAssigned" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#173470" stopOpacity={0.2} />
+                                                    <stop offset="95%" stopColor="#173470" stopOpacity={0} />
+                                                </linearGradient>
+                                                <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
+                                                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -3px rgba(0,0,0,0.1)', padding: '15px' }}
+                                                itemStyle={{ fontSize: '12px', fontWeight: 800 }}
+                                            />
+                                            <Area type="monotone" dataKey="assigned" stroke="#173470" strokeWidth={4} fill="url(#colorAssigned)" name="Assigned" />
+                                            <Area type="monotone" dataKey="resolved" stroke="#10B981" strokeWidth={4} fill="url(#colorResolved)" name="Resolved" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="d-flex align-items-center justify-content-center h-100">
+                                        <p className="text-muted extra-small">Loading trend data...</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -219,8 +273,8 @@ const DepartmentAnalyticsEnhanced = () => {
                                     <p className="extra-small text-muted fw-bold mb-0 text-details uppercase">Protocol Compliance</p>
                                 </div>
                             </div>
-                            <div style={{ width: '100%', height: '240px', minHeight: '240px', minWidth: '0' }}>
-                                <ResponsiveContainer width="100%" height="100%" debounce={50}>
+                            <div style={{ width: '100%', height: '300px', minHeight: '300px', minWidth: 0 }}>
+                                <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
                                             data={[

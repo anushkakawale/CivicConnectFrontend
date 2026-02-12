@@ -74,40 +74,41 @@ const MyComplaints = () => {
     return (
         <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
             <DashboardHeader
-                portalName="PMC Citizen Portal"
-                title="My reports"
-                subtitle="Track the status of all your submitted municipal issues."
+                portalName="CivicConnect"
+                userName="My Complaints"
+                wardName="Overview"
+                subtitle="Track and manage your reported civic issues"
                 icon={FileText}
                 actions={
                     <button
                         onClick={() => navigate('/citizen/register-complaint')}
-                        className="btn btn-primary shadow-premium rounded-4 d-flex align-items-center gap-2 px-4 py-2"
-                        style={{ backgroundColor: PRIMARY_COLOR, border: 'none' }}
+                        className="btn btn-primary shadow-premium rounded-pill d-flex align-items-center gap-3 px-5 py-3 hover-up transition-all border-0"
+                        style={{ backgroundColor: PRIMARY_COLOR }}
                     >
-                        <Plus size={20} strokeWidth={2.5} />
-                        <span className="fw-bold small">Report issue</span>
+                        <Plus size={20} strokeWidth={3} />
+                        <span className="fw-black extra-small uppercase tracking-widest">File Complaint</span>
                     </button>
                 }
             />
 
-            <div className="container-fluid px-5">
-                {/* Visual Stats Bar */}
+            <div className="container-fluid px-3 px-lg-5" style={{ marginTop: '-40px' }}>
+                {/* Complaint Statistics */}
                 <div className="row g-4 mb-5">
                     {[
-                        { label: 'Total reported', value: stats.total, color: PRIMARY_COLOR, bg: '#EBF2FF', icon: FileText },
+                        { label: 'Total Submitted', value: stats.total, color: PRIMARY_COLOR, bg: '#EBF2FF', icon: FileText },
                         { label: 'Pending', value: stats.pending, color: '#6366F1', bg: '#F5F3FF', icon: Clock },
-                        { label: 'In progress', value: stats.active, color: '#F59E0B', bg: '#FFFCF5', icon: Activity },
-                        { label: 'Resolved', value: stats.resolved, color: '#10B981', bg: '#ECFDF5', icon: CheckCircle }
+                        { label: 'In Progress', value: stats.active, color: '#F59E0B', bg: '#FFF9EB', icon: Activity },
+                        { label: 'Resolved', value: stats.resolved, color: '#10B981', bg: '#EDFDF5', icon: CheckCircle }
                     ].map((s, idx) => (
-                        <div key={idx} className="col-md-3">
-                            <div className="card border-0 shadow-premium rounded-4 p-4 h-100 bg-white border-bottom border-4" style={{ borderColor: s.color }}>
-                                <div className="d-flex align-items-center gap-3">
-                                    <div className="rounded-4 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '44px', height: '44px', backgroundColor: s.bg, color: s.color }}>
-                                        <s.icon size={20} />
+                        <div key={idx} className="col-12 col-md-6 col-lg-3">
+                            <div className="card border-0 shadow-premium rounded-4 p-4 h-100 bg-white border-top border-4 transition-all hover-up-tiny" style={{ borderTopColor: s.color }}>
+                                <div className="d-flex align-items-center gap-4">
+                                    <div className="rounded-4 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '54px', height: '54px', backgroundColor: s.bg, color: s.color }}>
+                                        <s.icon size={24} strokeWidth={2.5} />
                                     </div>
                                     <div>
-                                        <h3 className="fw-bold mb-0 text-dark" style={{ letterSpacing: '-1px' }}>{s.value}</h3>
-                                        <p className="extra-small fw-bold text-muted mb-0 uppercase-tracking">{s.label}</p>
+                                        <h1 className="fw-black mb-0 text-dark" style={{ letterSpacing: '-2px' }}>{s.value}</h1>
+                                        <p className="extra-small fw-black text-muted mb-0 uppercase tracking-widest opacity-60">{s.label}</p>
                                     </div>
                                 </div>
                             </div>
@@ -115,37 +116,37 @@ const MyComplaints = () => {
                     ))}
                 </div>
 
-                {/* Filters and Actions */}
-                <div className="card border-0 shadow-premium rounded-4 p-4 mb-5 bg-white">
+                {/* Filter Complaints */}
+                <div className="card b-none shadow-premium rounded-5 p-4 p-lg-5 mb-5 bg-white overflow-hidden border-top border-5" style={{ borderTopColor: PRIMARY_COLOR }}>
                     <div className="row g-4 align-items-center">
-                        <div className="col-lg-6">
+                        <div className="col-xl-7">
                             <div className="d-flex flex-wrap gap-2">
                                 {[
-                                    { id: 'ALL', label: 'All reports' },
+                                    { id: 'ALL', label: 'All Complaints' },
                                     { id: 'PENDING', label: 'Pending' },
-                                    { id: 'ACTIVE', label: 'In progress' },
+                                    { id: 'ACTIVE', label: 'In Progress' },
                                     { id: 'RESOLVED', label: 'Resolved' }
                                 ].map(btn => (
                                     <button
                                         key={btn.id}
                                         onClick={() => setFilter(btn.id)}
-                                        className={`btn rounded-pill px-4 py-2 fw-bold small transition-all ${filter === btn.id ? 'btn-primary' : 'btn-light border text-muted'}`}
-                                        style={filter === btn.id ? { backgroundColor: PRIMARY_COLOR, border: 'none' } : {}}
+                                        className={`btn rounded-pill px-4 py-2 border-0 fw-black extra-small tracking-widest transition-all ${filter === btn.id ? 'btn-primary shadow-sm' : 'btn-light text-muted'}`}
+                                        style={filter === btn.id ? { backgroundColor: PRIMARY_COLOR } : {}}
                                     >
                                         {btn.label}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="col-lg-6">
-                            <div className="input-group">
-                                <span className="input-group-text bg-light border-0 ps-4 rounded-start-pill text-muted">
+                        <div className="col-xl-5">
+                            <div className="input-group shadow-sm rounded-pill overflow-hidden border">
+                                <span className="input-group-text bg-white border-0 ps-4 text-muted">
                                     <Search size={18} />
                                 </span>
                                 <input
                                     type="text"
-                                    className="form-control bg-light border-0 py-3 rounded-end-pill px-3 fw-medium"
-                                    placeholder="Search by ID or title..."
+                                    className="form-control border-0 py-3 px-3 fw-bold extra-small tracking-wider"
+                                    placeholder="Search by ID or Title..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -154,32 +155,35 @@ const MyComplaints = () => {
                     </div>
                 </div>
 
-                {/* Content Area */}
+                {/* Content Stream */}
                 <div className="row g-4 animate-fadeIn">
                     {loading ? (
-                        <div className="col-12 text-center py-5" style={{ backgroundColor: '#F8FAFC' }}>
-                            <RefreshCw className="animate-spin text-primary opacity-20 mb-3" size={48} style={{ color: PRIMARY_COLOR }} />
-                            <p className="text-muted fw-bold small">Updating reports...</p>
+                        <div className="col-12 text-center py-5">
+                            <RefreshCw className="animate-spin text-primary opacity-20 mb-4" size={60} style={{ color: PRIMARY_COLOR }} />
+                            <p className="text-muted fw-black extra-small uppercase tracking-widest">Loading complaints...</p>
                         </div>
                     ) : (
                         <>
-                            <div className="col-12 mb-4 d-flex align-items-center justify-content-between">
-                                <h5 className="fw-bold text-dark mb-0 border-start border-4 border-primary ps-3">
-                                    Showing {filteredComplaints.length} reports
-                                </h5>
+                            <div className="col-12 mb-4 d-flex align-items-center justify-content-between px-3">
+                                <div>
+                                    <h5 className="fw-black text-dark mb-1 uppercase tracking-tight">
+                                        Total Complaints: {filteredComplaints.length}
+                                    </h5>
+                                    <p className="extra-small text-muted fw-bold uppercase mb-0 opacity-50">Showing your filed complaints</p>
+                                </div>
                                 <button
                                     onClick={fetchComplaints}
-                                    className="btn btn-light rounded-circle shadow-sm p-2 border"
-                                    title="Refresh details"
+                                    className="btn btn-white shadow-premium rounded-circle p-3 border-0 transition-all hover-rotate"
+                                    title="Refresh"
                                 >
-                                    <RefreshCw size={18} className="text-muted" />
+                                    <RefreshCw size={20} style={{ color: PRIMARY_COLOR }} />
                                 </button>
                             </div>
 
                             {filteredComplaints.length > 0 ? (
                                 filteredComplaints.map(c => (
-                                    <div key={c.id || c.complaintId} className="col-md-6 col-lg-4">
-                                        <div className="animate-fadeIn">
+                                    <div key={c.id || c.complaintId} className="col-md-6 col-xl-4">
+                                        <div className="transition-all hover-up-tiny h-100">
                                             <ComplaintCard
                                                 complaint={c}
                                                 onClick={() => navigate(`/citizen/complaints/${c.id || c.complaintId}`)}
@@ -190,17 +194,20 @@ const MyComplaints = () => {
                                 ))
                             ) : (
                                 <div className="col-12">
-                                    <div className="card border-0 shadow-premium p-5 text-center bg-white rounded-4 border-2 border-dashed">
-                                        <div className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '80px', height: '80px' }}>
-                                            <ShieldAlert size={32} className="text-muted opacity-30" />
+                                    <div className="card b-none shadow-premium p-5 text-center bg-white rounded-5 border-dashed border-2">
+                                        <div className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4 anim-float shadow-inner" style={{ width: '100px', height: '100px' }}>
+                                            <ShieldAlert size={48} className="text-muted opacity-20" />
                                         </div>
-                                        <h4 className="fw-bold text-dark mb-2">No reports found</h4>
-                                        <p className="text-muted small fw-medium mt-2">
-                                            We couldn't find any reports matching your current filter.
+                                        <h4 className="fw-black text-dark mb-2 uppercase tracking-widest">No Complaints Found</h4>
+                                        <p className="extra-small text-muted fw-black uppercase mb-5 tracking-wider">
+                                            No complaints match your search or filter criteria.
                                         </p>
-                                        <div className="mt-5">
-                                            <button onClick={() => { setFilter('ALL'); setSearchQuery(''); }} className="btn btn-primary px-5 py-3 rounded-pill fw-bold small shadow-premium border-0" style={{ backgroundColor: PRIMARY_COLOR }}>
-                                                Clear all filters
+                                        <div className="d-flex justify-content-center gap-3">
+                                            <button onClick={() => { setFilter('ALL'); setSearchQuery(''); }} className="btn btn-light px-5 py-3 rounded-pill fw-black extra-small tracking-widest border-2">
+                                                CLEAR SEARCH
+                                            </button>
+                                            <button onClick={() => navigate('/citizen/register-complaint')} className="btn btn-primary px-5 py-3 rounded-pill fw-black extra-small tracking-widest shadow-premium border-0" style={{ backgroundColor: PRIMARY_COLOR }}>
+                                                File Complaint
                                             </button>
                                         </div>
                                     </div>
@@ -213,14 +220,23 @@ const MyComplaints = () => {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                .animate-spin { animation: spin 1s linear infinite; }
+                .fw-black { font-weight: 950; }
+                .extra-small { font-size: 0.65rem; }
+                .tracking-widest { letter-spacing: 0.25em; }
+                .animate-spin { animation: spin 1.2s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
-                .transition-all { transition: all 0.3s ease; }
-                .uppercase-tracking { text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
-                .extra-small { font-size: 11px; }
-                .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .shadow-premium { box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.06), 0 5px 20px -5px rgba(0, 0, 0, 0.02); }
+                .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04); }
+                .transition-all { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+                .hover-up:hover { transform: translateY(-8px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1) !important; }
+                .hover-up-tiny:hover { transform: translateY(-6px); box-shadow: 0 15px 30px -8px rgba(0,0,0,0.1) !important; }
+                .hover-rotate:hover { transform: rotate(90deg); }
+                .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+                .anim-float { animation: float 4s ease-in-out infinite; }
+                @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+                .b-none { border: none !important; }
+                .border-dashed { border: 2px dashed #E2E8F0 !important; }
             `}} />
         </div>
     );

@@ -212,16 +212,31 @@ const WardComplaints = () => {
                                         </div>
                                     </div>
 
-                                    <div className="px-4 py-3 bg-light border-top d-flex justify-content-between align-items-center mt-auto">
-                                        <PriorityBadge priority={complaint.priority} />
-                                        <div className="d-flex align-items-center gap-2">
-                                            {complaint.slaStatus === 'BREACHED' && (
-                                                <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 rounded-0 extra-small fw-black px-2 py-1">SLA BREACHED</span>
-                                            )}
-                                            <div className="text-primary extra-small fw-black tracking-widest text-uppercase d-flex align-items-center gap-1">
-                                                VIEW <ChevronRight size={14} />
-                                            </div>
+                                    <div className="px-4 py-3 bg-light border-top d-flex justify-content-between align-items-center mt-auto gap-3">
+                                        <div className="d-flex flex-column gap-1">
+                                            <PriorityBadge priority={complaint.priority} size="xs" />
+                                            {(() => {
+                                                const deadline = complaint.slaDeadline ? new Date(complaint.slaDeadline) : null;
+                                                const now = new Date();
+                                                const timeLeft = deadline ? deadline - now : 0;
+                                                const hoursLeft = deadline ? (timeLeft / 36e5) : 0;
+                                                const isBreached = complaint.slaStatus === 'BREACHED';
+
+                                                if (['RESOLVED', 'CLOSED'].includes(complaint.status)) {
+                                                    return <span className="text-success extra-small fw-black uppercase tracking-tight">FULFILLED</span>;
+                                                }
+
+                                                if (isBreached) {
+                                                    return <span className="text-danger extra-small fw-black uppercase tracking-tight animate-pulse">OVERDUE {Math.abs(hoursLeft).toFixed(1)}H</span>;
+                                                } else if (deadline && hoursLeft > 0) {
+                                                    return <span className={`extra-small fw-black uppercase tracking-tight ${hoursLeft < 4 ? 'text-warning' : 'text-primary'}`}>{hoursLeft.toFixed(1)}H LEFT</span>;
+                                                }
+                                                return null;
+                                            })()}
                                         </div>
+                                        <button className="btn btn-sm btn-white border shadow-sm rounded-pill px-3 py-1 text-primary extra-small fw-black tracking-widest text-uppercase d-flex align-items-center gap-1 hover-up">
+                                            DETAILS <ChevronRight size={12} />
+                                        </button>
                                     </div>
                                 </div>
                             </div>

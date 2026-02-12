@@ -120,13 +120,16 @@ api.interceptors.request.use(
     }
 
     // Log request in development
-    if (ENABLE_LOGGING) {
+    if (ENABLE_LOGGING && !config._silent) {
       const method = config.method?.toUpperCase();
       const url = config.url;
       const data = config.data;
 
+      // Smart path logging: don't double up if URL is already absolute
+      const fullUrl = url.startsWith('http') ? url : `${config.baseURL}${url}`;
+
       console.group(`🚀 API Request: ${method} ${url}`);
-      console.log("📍 URL:", `${config.baseURL}${url}`);
+      console.log("📍 URL:", fullUrl);
       console.log("🔑 Auth Present:", !!config.headers.Authorization);
       if (data) {
         console.log("📤 Request Data Type:", data instanceof FormData ? 'FormData' : typeof data);
@@ -159,7 +162,7 @@ api.interceptors.response.use(
     const duration = new Date() - response.config.metadata.startTime;
 
     // Log successful response in development
-    if (ENABLE_LOGGING) {
+    if (ENABLE_LOGGING && !response.config._silent) {
       const method = response.config.method?.toUpperCase();
       const url = response.config.url;
       const status = response.status;
@@ -189,14 +192,16 @@ api.interceptors.response.use(
     const errorMessage = backendMessage || error.message || "An unexpected error occurred";
 
     // Enhanced error logging
-    if (ENABLE_LOGGING) {
+    if (ENABLE_LOGGING && !error.config?._silent) {
       const method = error.config?.method?.toUpperCase() || "UNKNOWN";
       const url = error.config?.url || "UNKNOWN";
+      const baseUrl = error.config?.baseURL || "";
+      const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
 
       console.group(`❌ API Error: ${method} ${url}`);
-      console.error("📍 URL:", error.config?.baseURL + url);
+      console.error("📍 URL:", fullUrl);
       console.error("📊 Status:", error.response?.status || "No Response");
-      console.error("� Message:", errorMessage); // Prioritize backend message
+      console.error(" Message:", errorMessage); // Prioritize backend message
 
       if (duration) {
         console.error("⏱️ Duration:", `${duration}ms`);

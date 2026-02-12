@@ -1,17 +1,25 @@
+/**
+ * Citizen Notifications Page - Community Pulse Feed
+ * Premium interface for tracking personal grievances and local municipal updates.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Bell, CheckCircle, Clock, AlertCircle, Info, FileText,
-    RefreshCw, CheckCheck, Filter, Trash2, Shield, Activity,
-    Zap, Ghost, Layers, Navigation
+    RefreshCw, CheckCheck, Filter, Trash2, Activity,
+    Zap, Ghost, Layers, Navigation, Shield, ShieldCheck,
+    ChevronRight, Target, Home
 } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
+import DashboardHeader from '../../components/layout/DashboardHeader';
 
-const Notifications = () => {
+const CitizenNotifications = () => {
     const navigate = useNavigate();
     const {
         notifications,
         unreadCount,
+        readCount,
         loading,
         markAsRead,
         markAllAsRead,
@@ -20,10 +28,7 @@ const Notifications = () => {
     } = useNotifications();
 
     const [filter, setFilter] = useState('all');
-
-    useEffect(() => {
-        fetchNotifications();
-    }, []);
+    const PRIMARY_COLOR = '#173470';
 
     const filteredNotifications = notifications.filter(n => {
         if (filter === 'unread' && n.isRead) return false;
@@ -37,129 +42,171 @@ const Notifications = () => {
             'STATUS_UPDATE': Zap,
             'ASSIGNMENT': Layers,
             'RESOLUTION': CheckCircle,
-            'CLOSURE': Shield,
+            'CLOSURE': ShieldCheck,
             'SLA_WARNING': Clock,
-            'APPROVAL': CheckCircle,
-            'REJECTION': AlertCircle
+            'APPROVAL': CheckCheck,
+            'REJECTION': AlertCircle,
+            'SYSTEM': Shield
         };
         return icons[type] || Bell;
     };
 
     const getTypeColor = (type) => {
         const colors = {
-            'RESOLUTION': '#10B981', // Green
-            'SLA_WARNING': '#EF4444', // Red
-            'ASSIGNMENT': '#244799', // Blue
-            'STATUS_UPDATE': '#3B82F6', // Light Blue
-            'REJECTION': '#EF4444', // Red
-            'APPROVAL': '#10B981', // Green
-            'NEW_COMPLAINT': '#F59E0B' // Amber
+            'RESOLUTION': '#10B981',
+            'SLA_WARNING': '#EF4444',
+            'ASSIGNMENT': '#1254AF',
+            'STATUS_UPDATE': '#3B82F6',
+            'REJECTION': '#EF4444'
         };
-        return colors[type] || '#173470';
+        return colors[type] || PRIMARY_COLOR;
+    };
+
+    const handleNotificationClick = async (n) => {
+        const cId = n.complaintId || n.referenceId;
+        const nId = n.id || n.notificationId;
+        if (!n.isRead) await markAsRead(nId);
+        if (cId) navigate(`/citizen/complaints/${cId}`);
     };
 
     if (loading && notifications.length === 0) return (
         <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8FAFC' }}>
-            <RefreshCw className="animate-spin text-primary mb-4" size={48} style={{ color: '#173470' }} />
-            <p className="fw-bold text-muted small">Accessing Alert Registry...</p>
+            <RefreshCw className="animate-spin text-primary mb-4" size={56} style={{ color: PRIMARY_COLOR }} />
+            <p className="fw-black text-primary text-uppercase tracking-widest small" style={{ color: PRIMARY_COLOR }}>Accessing Personal Alerts...</p>
         </div>
     );
 
     return (
-        <div className="min-vh-100 pb-5 px-3 px-md-5" style={{ backgroundColor: '#F8FAFC' }}>
-            <div className="container-fluid max-ww-1400 py-4">
+        <div className="citizen-notifications-premium min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
+            <DashboardHeader
+                portalName="PMC CITIZEN PORTAL"
+                userName={localStorage.getItem('name') || "Valued Citizen"}
+                wardName="MY NOTIFICATIONS"
+                subtitle="Track the real-time status of your grievances and ward alerts"
+                icon={Bell}
+                actions={
+                    <div className="d-flex align-items-center gap-2">
+                        <button onClick={() => fetchNotifications()} className="btn btn-white bg-white rounded-circle shadow-sm border p-0 d-flex align-items-center justify-content-center transition-all hover-up-tiny" style={{ width: '42px', height: '42px', color: PRIMARY_COLOR }}>
+                            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                        </button>
+                        <button onClick={markAllAsRead} className="btn btn-white bg-white rounded-pill px-4 py-2 shadow-sm fw-black extra-small tracking-widest d-flex align-items-center gap-2 border transition-all hover-up-tiny" style={{ color: PRIMARY_COLOR }}>
+                            <CheckCheck size={16} /> CLEAR ALL
+                        </button>
+                    </div>
+                }
+            />
 
-                {/* Notification Header */}
-                <div className="card border-0 shadow-lg rounded-4 overflow-hidden mb-5" style={{
-                    background: '#173470'
-                }}>
-                    <div className="card-body p-4 p-md-5 position-relative">
-                        <div className="position-absolute top-50 end-0 translate-middle-y p-5 opacity-10">
-                            <Bell size={180} color="white" />
-                        </div>
-                        <div className="row align-items-center position-relative z-1 text-white">
-                            <div className="col-md-8">
-                                <div className="d-flex align-items-center gap-4 mb-3">
-                                    <div className="p-3 rounded-4 bg-white bg-opacity-20 shadow-sm border border-white border-opacity-10">
-                                        <Bell size={40} />
-                                    </div>
-                                    <div>
-                                        <h1 className="h2 fw-bold mb-1 text-white">Notifications</h1>
-                                        <p className="opacity-75 fw-medium mb-0">Stay updated on your reported issues and local activities</p>
-                                    </div>
+            <div className="container-fluid px-3 px-lg-5" style={{ marginTop: '-30px' }}>
+                <div className="row g-4 justify-content-center">
+                    {/* Left Sidebar Control */}
+                    <div className="col-xl-3">
+                        <div className="card border-0 shadow-premium rounded-4 bg-white p-4 p-lg-5 sticky-top" style={{ top: '2rem' }}>
+                            <div className="d-flex align-items-center gap-3 mb-4">
+                                <div className="rounded-4 p-3 bg-light text-primary" style={{ color: PRIMARY_COLOR }}>
+                                    <Filter size={20} />
                                 </div>
+                                <h6 className="fw-black text-dark mb-0 uppercase tracking-widest extra-small opacity-40">Feed Control</h6>
                             </div>
-                            <div className="col-md-4 text-md-end d-flex gap-3 justify-content-md-end mt-4 mt-md-0">
-                                <button onClick={fetchNotifications} className="btn btn-light rounded-pill px-3 shadow-sm" style={{ color: '#173470' }}><RefreshCw size={20} /></button>
-                                <button onClick={markAllAsRead} className="btn btn-light rounded-pill px-4 py-3 fw-bold small shadow-sm d-flex align-items-center gap-2" style={{ color: '#173470' }}>
-                                    <CheckCheck size={18} /> Mark all read
-                                </button>
+
+                            <div className="d-flex flex-column gap-2">
+                                {[
+                                    { id: 'all', label: 'All Alerts', count: notifications.length, icon: Layers },
+                                    { id: 'unread', label: 'Unread Only', count: unreadCount, icon: Bell, activeColor: '#173470' },
+                                    { id: 'read', label: 'History log', count: readCount, icon: ShieldCheck }
+                                ].map(f => (
+                                    <button
+                                        key={f.id}
+                                        onClick={() => setFilter(f.id)}
+                                        className={`btn rounded-4 px-4 py-3 text-start fw-black transition-all d-flex align-items-center justify-content-between border-0 ${filter === f.id ? 'bg-primary text-white shadow-lg' : 'text-muted hover-bg-light'}`}
+                                        style={filter === f.id ? { backgroundColor: f.activeColor || PRIMARY_COLOR } : {}}
+                                    >
+                                        <div className="d-flex align-items-center gap-3">
+                                            <f.icon size={18} opacity={filter === f.id ? 1 : 0.4} />
+                                            <span className="text-uppercase extra-small tracking-widest">{f.label}</span>
+                                        </div>
+                                        <span className={`badge rounded-pill extra-small ${filter === f.id ? 'bg-white text-dark' : 'bg-light text-muted'}`} style={filter === f.id ? { color: f.activeColor || PRIMARY_COLOR } : {}}>
+                                            {f.count}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="mt-5 p-4 rounded-4 bg-light bg-opacity-50 border border-dashed text-center">
+                                <Activity size={24} className="text-primary opacity-20 mb-3 mx-auto d-block" style={{ color: PRIMARY_COLOR }} />
+                                <p className="extra-small fw-black text-muted uppercase tracking-widest mb-1 opacity-40">Connection Live</p>
+                                <div className="extra-small fw-black text-success uppercase">Hub Status: Operational</div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="row g-4 justify-content-center">
-                    <div className="col-12 col-xl-10">
-                        {/* Filters */}
-                        <div className="d-flex gap-2 mb-4">
-                            {['all', 'unread', 'read'].map(f => (
-                                <button
-                                    key={f}
-                                    onClick={() => setFilter(f)}
-                                    className={`btn rounded-pill px-4 py-2 small fw-bold text-capitalize transition-all ${filter === f ? 'btn-primary shadow-sm' : 'btn-light border text-muted'}`}
-                                    style={filter === f ? { backgroundColor: '#173470', borderColor: '#173470' } : {}}
-                                >
-                                    {f} {f === 'unread' && unreadCount > 0 && <span className="ms-2 badge bg-white text-primary rounded-circle" style={{ color: '#173470' }}>{unreadCount}</span>}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* List */}
+                    {/* Main Feed */}
+                    <div className="col-xl-8">
                         {filteredNotifications.length === 0 ? (
-                            <div className="card border-0 shadow-sm p-5 text-center bg-white rounded-4 border-dashed">
-                                <Ghost size={64} className="text-muted opacity-20 mb-4 mx-auto" />
-                                <h4 className="fw-bold text-dark mb-2">No alerts found</h4>
-                                <p className="text-muted small">When we have updates for you, they'll appear here.</p>
+                            <div className="card border-0 shadow-premium rounded-4 bg-white p-5 text-center min-vh-50 d-flex flex-column align-items-center justify-content-center">
+                                <div className="rounded-circle bg-light p-5 mb-4">
+                                    <Ghost size={80} className="text-muted opacity-20" />
+                                </div>
+                                <h4 className="fw-black text-dark tracking-widest uppercase mb-1">Inbox Empty</h4>
+                                <p className="text-muted fw-bold small opacity-60">No notification records localized in the {filter} segment.</p>
+                                {filter !== 'all' && (
+                                    <button onClick={() => setFilter('all')} className="btn btn-primary rounded-pill px-4 mt-3 fw-black extra-small tracking-widest shadow-lg border-0" style={{ backgroundColor: PRIMARY_COLOR }}>
+                                        SHOW ALL ALERTS
+                                    </button>
+                                )}
                             </div>
                         ) : (
-                            <div className="d-grid gap-3">
-                                {filteredNotifications.map((n) => {
+                            <div className="d-flex flex-column gap-3">
+                                {filteredNotifications.map(n => {
                                     const Icon = getIcon(n.type);
                                     const color = getTypeColor(n.type);
-
+                                    const nId = n.id || n.notificationId;
                                     return (
                                         <div
-                                            key={n.id}
-                                            className={`card border-0 shadow-sm rounded-4 overflow-hidden transition-all ${!n.isRead ? 'border-start border-4' : ''}`}
-                                            style={!n.isRead ? { borderLeftColor: color + ' !important' } : {}}
+                                            key={nId}
+                                            className={`card border-0 shadow-premium rounded-4 transition-all cursor-pointer hover-up-tiny position-relative overflow-hidden ${!n.isRead ? 'bg-white shadow-md' : 'bg-light bg-opacity-30 opacity-75'}`}
+                                            onClick={() => handleNotificationClick(n)}
                                         >
-                                            <div className="card-body p-4 d-flex align-items-start gap-4">
-                                                <div className="p-3 rounded-4 shadow-sm border" style={{ backgroundColor: color + '10', color: color }}>
-                                                    <Icon size={24} />
-                                                </div>
-                                                <div className="flex-grow-1">
-                                                    <div className="d-flex justify-content-between align-items-start mb-1">
-                                                        <h6 className={`fw-bold mb-0 ${!n.isRead ? 'text-dark' : 'text-muted'}`}>{n.title}</h6>
-                                                        <span className="extra-small text-muted fw-medium">{new Date(n.createdAt).toLocaleString()}</span>
+                                            {!n.isRead && <div className="position-absolute h-100 top-0 start-0" style={{ width: '5px', backgroundColor: PRIMARY_COLOR }}></div>}
+
+                                            <div className="card-body p-4 p-md-5">
+                                                <div className="row align-items-center g-4">
+                                                    <div className="col-auto">
+                                                        <div className="rounded-4 p-3 shadow-sm d-flex align-items-center justify-content-center" style={{ backgroundColor: color + '15', color: color, width: '58px', height: '58px' }}>
+                                                            <Icon size={26} strokeWidth={2.5} />
+                                                        </div>
                                                     </div>
-                                                    <p className={`small mb-3 ${!n.isRead ? 'text-secondary' : 'text-muted opacity-60'} line-clamp-2`}>{n.message}</p>
-                                                    <div className="d-flex gap-3">
-                                                        {!n.isRead && (
-                                                            <button
-                                                                onClick={() => markAsRead(n.id)}
-                                                                className="btn btn-link p-0 text-decoration-none extra-small fw-bold text-primary"
-                                                                style={{ color: '#173470' }}
-                                                            >
-                                                                Mark read
-                                                            </button>
+                                                    <div className="col">
+                                                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-2">
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                {!n.isRead && <span className="p-1 rounded-circle bg-primary animate-pulse" style={{ backgroundColor: PRIMARY_COLOR }}></span>}
+                                                                <h6 className={`fw-black mb-0 uppercase tracking-tight small ${!n.isRead ? 'text-dark' : 'text-muted'}`}>{n.title || 'System Alert'}</h6>
+                                                            </div>
+                                                            <div className="d-flex align-items-center gap-3">
+                                                                <div className="extra-small fw-black text-muted opacity-40 uppercase d-flex align-items-center gap-2">
+                                                                    <Clock size={12} /> {new Date(n.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
+                                                                </div>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); deleteNotification(nId); }}
+                                                                    className="btn btn-link p-0 text-muted opacity-10 hover-opacity-100 transition-all border-0"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <p className={`extra-small fw-bold mb-3 ${!n.isRead ? 'text-dark' : 'text-muted opacity-60'} line-clamp-2`} style={{ lineHeight: '1.6' }}>{n.message}</p>
+
+                                                        {(n.complaintId || n.referenceId) && (
+                                                            <div className="d-flex align-items-center gap-3">
+                                                                <div className="extra-small fw-black uppercase tracking-widest px-3 py-1 rounded-pill bg-light border d-flex align-items-center gap-2" style={{ color: PRIMARY_COLOR }}>
+                                                                    <Activity size={12} /> COMPLAINT ID: #{n.complaintId || n.referenceId}
+                                                                </div>
+                                                                {!n.isRead && (
+                                                                    <button className="btn btn-link p-0 extra-small fw-black text-primary uppercase tracking-widest text-decoration-none border-0" style={{ color: PRIMARY_COLOR }}>
+                                                                        VIEW DETAILS <ChevronRight size={14} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         )}
-                                                        <button
-                                                            onClick={() => deleteNotification(n.id)}
-                                                            className="btn btn-link p-0 text-decoration-none extra-small fw-bold text-muted hover-text-danger"
-                                                        >
-                                                            Dismiss
-                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -174,16 +221,24 @@ const Notifications = () => {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                .text-primary { color: #173470 !important; }
-                .bg-primary { background-color: #173470 !important; }
-                .extra-small { font-size: 0.7rem; }
-                .transition-all { transition: all 0.2s ease-in-out; }
+                .citizen-notifications-premium { font-family: 'Outfit', sans-serif; }
+                .fw-black { font-weight: 900; }
+                .extra-small { font-size: 0.65rem; }
+                .tracking-widest { letter-spacing: 0.15em; }
+                .tracking-tight { letter-spacing: -0.01em; }
+                .transition-all { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+                .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
+                .hover-bg-light:hover { background-color: #F8FAFC !important; transform: translateX(5px); }
+                .hover-up-tiny:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08) !important; }
+                .animate-pulse { animation: pulse 2s infinite; }
+                @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .animate-spin { animation: spin 1s linear infinite; }
+                .min-vh-50 { min-height: 50vh; }
                 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-                .hover-text-danger:hover { color: #EF4444 !important; background-color: rgba(239, 68, 68, 0.1) !important; }
-                .border-dashed { border: 2px dashed #E2E8F0 !important; }
             `}} />
         </div>
     );
 };
 
-export default Notifications;
+export default CitizenNotifications;

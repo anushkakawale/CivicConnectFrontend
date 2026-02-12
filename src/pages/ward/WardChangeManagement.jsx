@@ -210,12 +210,12 @@ const WardChangeManagement = () => {
                                                 </div>
                                             </div>
 
-                                            {req.remarks && (
+                                            {(req.reason || req.remarks) && (
                                                 <div className="p-4 rounded-4 mb-4 bg-light border-start border-4 border-primary">
                                                     <div className="d-flex align-items-center gap-2 extra-small fw-black text-primary uppercase tracking-widest mb-2">
                                                         <MessageSquare size={14} /> Official Justification
                                                     </div>
-                                                    <p className="extra-small text-dark fw-bold mb-0 opacity-80 italic lh-base uppercase tracking-wider">"{req.remarks}"</p>
+                                                    <p className="extra-small text-dark fw-bold mb-0 opacity-80 italic lh-base uppercase tracking-wider">"{req.reason || req.remarks}"</p>
                                                 </div>
                                             )}
 

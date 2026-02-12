@@ -9,138 +9,229 @@ import { StatCard, StatusBadge } from '../components/common';
 const ProfessionalCitizenDashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const userName = localStorage.getItem('email')?.split('@')[0] || 'Citizen';
+  const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    totalComplaints: 0,
+    pendingComplaints: 0,
+    resolvedComplaints: 0,
+    closedComplaints: 0,
+    slaBreached: 0,
+    recentComplaints: []
+  });
+
+  const userName = localStorage.getItem('user')
+    ? JSON.parse(localStorage.getItem('user')).name
+    : (localStorage.getItem('email')?.split('@')[0] || 'Citizen');
+
+  const fetchDashboardData = async (isSilent = false) => {
+    try {
+      if (!isSilent) setLoading(true);
+      else setRefreshing(true);
+
+      const response = await apiService.citizen.getDashboard();
+      const data = response.data || response;
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to fetch citizen dashboard:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    // Simple loading delay for UX feel
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
+    fetchDashboardData();
+    // Auto refresh every 30 seconds
+    const interval = setInterval(() => fetchDashboardData(true), 30000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
     return (
-      <div className="page-container flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center">
-          <div className="gov-loader mb-4"></div>
-          <p className="text-slate-500 font-medium">Synchronizing Citizen Portal...</p>
-        </div>
+      <div className="d-flex flex-column align-items-center justify-content-center min-vh-100 bg-light">
+        <RefreshCw className="animate-spin text-primary mb-3" size={48} />
+        <p className="text-muted fw-bold uppercase tracking-widest extra-small">Synchronizing Citizen Portal...</p>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      {/* Reduced Height Hero */}
-      <div className="dashboard-hero" style={{ padding: '2rem' }}>
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="max-w-2xl">
-            <h1 className="text-white text-3xl mb-2 font-bold">Welcome back, {userName}</h1>
-            <p className="text-blue-100 text-sm opacity-90 mb-6 font-medium max-w-lg">
-              Manage your complaints and track status updates efficiently.
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => navigate('/register-complaint')}
-                className="btn-premium btn-premium-primary py-3 px-8 bg-white text-blue-900 border-none shadow-lg hover:scale-105"
-                style={{ color: '#1254AF' }}
-              >
-                <Plus size={18} className="stroke-[3]" /> New Complaint
-              </button>
-              <button
-                className="btn-premium btn-premium-secondary bg-white/10 text-white border border-white/20 hover:bg-white/20 py-3 px-6"
-                onClick={() => window.location.reload()}
-              >
-                <RefreshCw size={16} /> Refresh
-              </button>
+    <div className="citizen-dashboard-premium pb-5" style={{ backgroundColor: '#F8FAFC' }}>
+      {/* Hero Section */}
+      <div className="premium-gradient py-5 mb-5 shadow-lg position-relative overflow-hidden" style={{ borderRadius: '0 0 32px 32px' }}>
+        <div className="position-absolute top-0 end-0 p-5 opacity-10">
+          <Shield size={200} />
+        </div>
+        <div className="container-fluid px-4 px-lg-5 position-relative z-10">
+          <div className="row align-items-center">
+            <div className="col-lg-7">
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <span className="badge-rect-white">Live Operations Hub</span>
+                <span className="text-white opacity-40">•</span>
+                <span className="extra-small fw-bold text-white opacity-60 uppercase tracking-widest">Citizen Directive</span>
+              </div>
+              <h1 className="text-white display-5 fw-black mb-3">Welcome, {userName}</h1>
+              <p className="text-white opacity-70 mb-5 max-w-lg fw-medium">
+                Official Municipal Resource Access Cluster. Track your active missions and regional status updates in real-time.
+              </p>
+              <div className="d-flex flex-wrap gap-3">
+                <button
+                  onClick={() => navigate('/register-complaint')}
+                  className="btn btn-white bg-white rounded-pill px-5 py-3 fw-black extra-small tracking-widest shadow-lg d-flex align-items-center gap-2 transition-all hover-up"
+                  style={{ color: '#173470' }}
+                >
+                  <Plus size={18} strokeWidth={3} /> NEW COMPLAINT
+                </button>
+                <button
+                  className="btn btn-outline-light rounded-pill px-4 py-3 fw-black extra-small tracking-widest d-flex align-items-center gap-2"
+                  onClick={() => fetchDashboardData(true)}
+                  disabled={refreshing}
+                >
+                  <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> REFRESH
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="stat-grid mt-6">
-        <StatCard icon={FileText} value="12" label="Total Complaints" trend={{ direction: 'up', value: 15 }} />
-        <StatCard icon={Activity} value="2" label="In Progress" variant="info" />
-        <StatCard icon={CheckCircle} value="8" label="Resolved" variant="success" />
-        <StatCard icon={Star} value="4.8" label="My Rating" variant="secondary" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
-        {/* Historical Log */}
-        <div className="lg:col-span-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-slate-800">Recent Complaints</h2>
-            <button onClick={() => navigate('/citizen/complaints')} className="text-blue-600 font-semibold text-sm flex items-center gap-1 hover:underline" style={{ color: '#1254AF' }}>
-              View All <ChevronRight size={14} />
-            </button>
+      <div className="container-fluid px-4 px-lg-5">
+        {/* Stats Overview */}
+        <div className="row g-4 mb-5">
+          <div className="col-12 col-md-6 col-xl-3">
+            <StatCard icon={FileText} value={stats.totalComplaints} label="Total Records" />
           </div>
-
-          <div className="table-container">
-            <table className="premium-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Subject</th>
-                  <th>Status</th>
-                  <th>Ward</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { id: 'CMP-102', title: 'Street Light Issue', status: 'IN_PROGRESS', ward: 'Shivaji-2' },
-                  { id: 'CMP-098', title: 'Garbage Collection', status: 'RESOLVED', ward: 'Kothrud-1' },
-                  { id: 'CMP-084', title: 'Water Leakage', status: 'PENDING', ward: 'Hadapsar-A' }
-                ].map((item, idx) => (
-                  <tr key={idx}>
-                    <td className="font-bold text-slate-900">#{item.id}</td>
-                    <td className="font-semibold text-slate-700">{item.title}</td>
-                    <td><StatusBadge status={item.status} size="small" /></td>
-                    <td className="text-sm font-medium text-slate-500">{item.ward}</td>
-                    <td>
-                      <button className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all" style={{ color: '#1254AF' }}>
-                        <ChevronRight size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="col-12 col-md-6 col-xl-3">
+            <StatCard icon={Activity} value={stats.pendingComplaints} label="Active Pipeline" variant="info" />
+          </div>
+          <div className="col-12 col-md-6 col-xl-3">
+            <StatCard icon={CheckCircle} value={stats.resolvedComplaints} label="Mission Success" variant="success" />
+          </div>
+          <div className="col-12 col-md-6 col-xl-3">
+            <StatCard icon={AlertCircle} value={stats.slaBreached} label="SLA Breached" variant="danger" />
           </div>
         </div>
 
-        {/* Operations Center */}
-        <div className="lg:col-span-4 space-y-6">
-          <h2 className="text-xl font-bold text-slate-800">Quick Links</h2>
-
-          <div className="grid grid-cols-1 gap-3">
-            {[
-              { label: 'Notifications', icon: Bell, path: '/notifications', count: 3, color: 'text-amber-600', bg: 'bg-amber-50' },
-              { label: 'Ward Map', icon: MapPin, path: '/map', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { label: 'My Profile', icon: User, path: '/citizen/profile', color: 'text-blue-600', bg: 'bg-blue-50' }
-            ].map((hub, i) => (
-              <button key={i} onClick={() => navigate(hub.path)} className={`flex items-center justify-between p-4 ${hub.bg} rounded-xl border border-transparent hover:border-slate-200 transition-all group`}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-white shadow-sm transition-transform group-hover:scale-110 ${hub.color}`}>
-                    <hub.icon size={20} />
-                  </div>
-                  <span className="font-semibold text-slate-800">{hub.label}</span>
-                </div>
-                {hub.count && <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{hub.count}</span>}
+        <div className="row g-5">
+          {/* Recent Complaints Table */}
+          <div className="col-lg-8">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h4 className="fw-black text-dark mb-1 uppercase tracking-tight">Active Deployments</h4>
+                <p className="extra-small text-muted fw-bold uppercase opacity-60 m-0">Latest entries in your personal ledger</p>
+              </div>
+              <button onClick={() => navigate('/citizen/complaints')} className="btn btn-link text-primary fw-black extra-small tracking-widest uppercase text-decoration-none d-flex align-items-center gap-2">
+                FULL REGISTRY <ChevronRight size={14} />
               </button>
-            ))}
+            </div>
+
+            <div className="card b-none shadow-premium rounded-4 overflow-hidden bg-white">
+              <div className="table-responsive">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="bg-light bg-opacity-50">
+                    <tr>
+                      <th className="px-4 py-3 text-muted extra-small fw-black uppercase tracking-widest border-0">ID</th>
+                      <th className="py-3 text-muted extra-small fw-black uppercase tracking-widest border-0">Service Detail</th>
+                      <th className="py-3 text-muted extra-small fw-black uppercase tracking-widest border-0">Status</th>
+                      <th className="py-3 text-muted extra-small fw-black uppercase tracking-widest border-0">Sector</th>
+                      <th className="px-4 py-3 text-end text-muted extra-small fw-black uppercase tracking-widest border-0">Inspect</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.recentComplaints?.length > 0 ? (
+                      stats.recentComplaints.map((item, idx) => (
+                        <tr key={idx} className="cursor-pointer" onClick={() => navigate(`/citizen/complaints/${item.complaintId || item.id}`)}>
+                          <td className="px-4"><span className="fw-black text-primary">#{item.complaintId || item.id}</span></td>
+                          <td>
+                            <div className="fw-bold text-dark">{item.title}</div>
+                            <div className="extra-small text-muted opacity-60">{new Date(item.createdAt).toLocaleDateString()}</div>
+                          </td>
+                          <td><StatusBadge status={item.status} size="small" /></td>
+                          <td><span className="badge bg-light text-dark rounded-pill px-3 py-1 extra-small fw-bold">{item.wardName || 'N/A'}</span></td>
+                          <td className="px-4 text-end">
+                            <button className="btn btn-light rounded-circle p-2 text-primary shadow-sm border">
+                              <ChevronRight size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="text-center py-5">
+                          <div className="rounded-circle bg-light d-inline-flex p-4 mb-3">
+                            <FileText size={48} className="text-muted opacity-20" />
+                          </div>
+                          <h6 className="fw-black text-dark uppercase mb-1">No Active Records</h6>
+                          <p className="extra-small text-muted fw-bold">Synchronize with municipal server to update ledger.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-slate-900 p-6 rounded-0xl text-white relative overflow-hidden shadow-lg group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl group-hover:bg-blue-600/30 transition-all"></div>
-            <h3 className="text-lg font-bold mb-2 relative z-10">Help & Support</h3>
-            <p className="text-slate-400 text-xs mb-4 relative z-10 font-medium leading-relaxed">Need assistance? Contact our support team for help with your grievances.</p>
-            <button className="w-full py-3 bg-white text-slate-900 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-blue-50 transition-colors">
-              Contact Us
-            </button>
+          {/* Side Panel: Quick Access */}
+          <div className="col-lg-4">
+            <h4 className="fw-black text-dark mb-4 uppercase tracking-tight">Tactical Nodes</h4>
+
+            <div className="vstack gap-3 mb-5">
+              {[
+                { label: 'Intelligence Feed', icon: Bell, path: '/notifications', count: 0, color: '#f59e0b', bg: '#fffbeb' },
+                { label: 'Geospatial Map', icon: MapPin, path: '/citizen/map', color: '#10b981', bg: '#ecfdf5' },
+                { label: 'Personal Matrix', icon: User, path: '/citizen/profile', color: '#3b82f6', bg: '#eff6ff' }
+              ].map((hub, i) => (
+                <button
+                  key={i}
+                  onClick={() => navigate(hub.path)}
+                  className="btn text-start p-4 rounded-4 border-0 shadow-sm transition-all hover-up-tiny d-flex align-items-center justify-content-between group"
+                  style={{ backgroundColor: hub.bg }}
+                >
+                  <div className="d-flex align-items-center gap-4">
+                    <div className="p-3 rounded-4 bg-white shadow-sm transition-transform scale-hover" style={{ color: hub.color }}>
+                      <hub.icon size={22} />
+                    </div>
+                    <span className="fw-black text-dark uppercase tracking-tight" style={{ fontSize: '0.9rem' }}>{hub.label}</span>
+                  </div>
+                  <ChevronRight size={18} className="text-muted opacity-40" />
+                </button>
+              ))}
+            </div>
+
+            {/* Support Card */}
+            <div className="card b-none bg-dark text-white rounded-4 p-5 position-relative overflow-hidden shadow-2xl border-0">
+              <div className="position-absolute top-0 end-0 p-5 mt-n5 me-n5 opacity-10">
+                <Shield size={180} />
+              </div>
+              <div className="position-relative z-10">
+                <h3 className="fw-black mb-3 display-6 uppercase tracking-widest">COMMAND SUPPORT</h3>
+                <p className="text-white opacity-60 mb-5 fw-medium leading-relaxed" style={{ fontSize: '0.85rem' }}>
+                  Encountering operational latency? Our technical command units are ready to assist with your deployment.
+                </p>
+                <button className="btn btn-white bg-white rounded-pill w-100 py-3 fw-black extra-small tracking-widest shadow-lg border-0" style={{ color: '#0f172a' }}>
+                  OPEN SUPPORT TICKET
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .citizen-dashboard-premium { font-family: 'Outfit', 'Inter', sans-serif; }
+        .fw-black { font-weight: 900; }
+        .extra-small { font-size: 0.65rem; }
+        .tracking-widest { letter-spacing: 0.15em; }
+        .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03), 0 4px 6px -2px rgba(0, 0, 0, 0.01); }
+        .premium-gradient { background: linear-gradient(135deg, #173470 0%, #112652 100%); }
+        .hover-up:hover { transform: translateY(-8px); shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .hover-up-tiny:hover { transform: translateY(-4px); }
+        .scale-hover:hover { transform: scale(1.1); }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}} />
     </div>
   );
 };

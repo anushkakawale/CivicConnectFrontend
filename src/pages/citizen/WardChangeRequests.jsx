@@ -28,8 +28,8 @@ const WardChangeRequests = () => {
     const fetchRequests = async () => {
         try {
             setLoading(true);
-            const data = await apiService.getMyWardChangeRequests();
-            setRequests(data);
+            const res = await apiService.profile.getMyWardChangeRequests();
+            setRequests(res.data || res || []);
         } catch (error) {
             console.error('Error fetching ward change requests:', error);
             showToast('Failed to load request history', 'error');
@@ -46,7 +46,10 @@ const WardChangeRequests = () => {
 
         try {
             setSubmitting(true);
-            await apiService.createWardChangeRequest(parseInt(selectedWard));
+            await apiService.profile.requestWardChange({
+                requestedWardId: parseInt(selectedWard),
+                reason: "Requested via Unified Portal"
+            });
             showToast('Request submitted successfully', 'success');
             setShowNewRequestModal(false);
             setSelectedWard('');

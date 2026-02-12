@@ -75,7 +75,12 @@ const AdminAuditLogs = () => {
                 }
             />
 
-            <div className="container-fluid px-3 px-lg-5" style={{ marginTop: '-30px' }}>
+            <div className="tactical-grid-overlay"></div>
+
+            <div className="container-fluid px-3 px-lg-5 position-relative" style={{ marginTop: '-30px', zIndex: 1 }}>
+                <div className="vertical-divider-guide" style={{ left: '33%' }}></div>
+                <div className="vertical-divider-guide" style={{ left: '66%' }}></div>
+
                 {/* Filtration Hub */}
                 <div className="card border-0 shadow-premium rounded-4 bg-white mb-5">
                     <div className="card-body p-4 p-lg-5">
@@ -191,6 +196,30 @@ const AdminAuditLogs = () => {
                 .hover-light:hover { background-color: #F8FAFC !important; }
                 .animate-spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+                .tactical-grid-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-image: 
+                        linear-gradient(rgba(23, 52, 112, 0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(23, 52, 112, 0.02) 1px, transparent 1px);
+                    background-size: 50px 50px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                .vertical-divider-guide {
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    width: 1px;
+                    background: linear-gradient(to bottom, transparent, rgba(23, 52, 112, 0.03), transparent);
+                    pointer-events: none;
+                    z-index: -1;
+                }
             `}} />
         </div>
     );

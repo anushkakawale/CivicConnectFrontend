@@ -44,7 +44,8 @@ const AdminLayout = () => {
                     minHeight: 'calc(100vh - 70px)'
                 }}
             >
-                <div className="flex-grow-1 p-0">
+                <div className="flex-grow-1 p-0 position-relative" style={{ overflow: 'hidden' }}>
+                    <div className="tactical-grid-overlay"></div>
                     <Outlet context={{ userName }} />
                 </div>
             </div>

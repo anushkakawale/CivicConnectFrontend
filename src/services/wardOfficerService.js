@@ -14,9 +14,11 @@ const wardOfficerService = {
         apiService.wardOfficer.getDepartmentDistribution(),
 
     // ✅ Complaint Management
-    // ✅ Complaint Management
-    getWardComplaints: () =>
-        apiService.wardOfficer.getWardComplaints(),
+    getWardComplaints: (params) =>
+        apiService.wardOfficer.getComplaints(params),
+
+    getPendingApprovals: (params) =>
+        apiService.wardOfficer.getPendingApprovals(params),
 
     // ✅ Approve Request
     approveComplaint: (id, data) =>

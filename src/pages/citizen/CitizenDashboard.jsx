@@ -57,8 +57,11 @@ const CitizenDashboard = () => {
                 // Fetch area activity if profile is available and not in dashboard data
                 const wardId = profile.wardId || profile.ward?.id || profile.ward?.wardId;
                 if (wardId && (!dashRes.value?.data?.wardComplaints)) {
-                    apiService.citizen.getAreaComplaints({ wardId, size: 20 })
-                        .then(res => setWardComplaints(res.content || res.data || []))
+                    apiService.citizen.getWardComplaints()
+                        .then(res => {
+                            const data = res.data?.content || res.content || res.data || res;
+                            setWardComplaints(Array.isArray(data) ? data : []);
+                        })
                         .catch(() => { });
                 }
             }
@@ -124,17 +127,17 @@ const CitizenDashboard = () => {
                 }
             />
 
-            <div className="container-fluid px-3 px-lg-5 animate-fadeIn" style={{ marginTop: '-40px' }}>
+            <div className="container-fluid px-4 animate-fadeIn" style={{ marginTop: '-40px' }}>
                 {/* Tactical KPI Matrix */}
                 <div className="row g-4 mb-5">
                     {[
                         { label: 'REPORTED', val: dashboardData?.totalComplaints || 0, icon: FileText, color: PRIMARY_COLOR, bg: '#EBF2FF' },
                         { label: 'PENDING', val: (dashboardData?.pendingComplaints || 0) + (dashboardData?.submittedComplaints || 0), icon: Clock, color: '#6366F1', bg: '#F5F3FF' },
-                        { label: 'ACTIVE', val: (dashboardData?.inProgressComplaints || 0) + (dashboardData?.assignedComplaints || 0), icon: Activity, color: '#F59E0B', bg: '#FFFCF5' },
-                        { label: 'EXECUTED', val: (dashboardData?.resolvedComplaints || 0) + (dashboardData?.closedComplaints || 0), icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' }
+                        { label: 'ACTIVE', val: (dashboardData?.inProgressComplaints || 0) + (dashboardData?.assignedComplaints || 0) + (dashboardData?.resolvedComplaints || 0), icon: Activity, color: '#F59E0B', bg: '#FFFCF5' },
+                        { label: 'EXECUTED', val: (dashboardData?.closedComplaints || 0) + (dashboardData?.approvedComplaints || 0), icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' }
                     ].map((s, idx) => (
                         <div key={idx} className="col-6 col-sm-6 col-lg-3">
-                            <div className="card b-none shadow-premium p-4 p-lg-5 h-100 bg-white rounded-4 transition-all hover-up border-top border-5" style={{ borderTopColor: s.color }}>
+                            <div className="card b-none shadow-premium p-4 h-100 bg-white rounded-4 transition-all hover-up border-top border-5" style={{ borderTopColor: s.color }}>
                                 <div className="d-flex align-items-center justify-content-between mb-4">
                                     <div className="rounded-4 d-flex align-items-center justify-content-center shadow-sm" style={{ width: '54px', height: '54px', backgroundColor: s.bg, color: s.color }}>
                                         <s.icon size={26} strokeWidth={2.5} />
@@ -148,16 +151,16 @@ const CitizenDashboard = () => {
                     ))}
                 </div>
 
-                <div className="row g-5">
+                <div className="row g-4">
                     {/* Primary Feed Quadrant */}
                     <div className="col-xl-8">
                         {/* Section 1: My Reports */}
                         <div className="d-flex align-items-center justify-content-between mb-5 bg-white p-4 rounded-4 shadow-sm border-start border-5" style={{ borderColor: PRIMARY_COLOR }}>
                             <div>
-                                <h5 className="fw-black text-dark mb-1 uppercase tracking-tight">My Personal Reports</h5>
-                                <p className="extra-small text-muted fw-bold uppercase mb-0 opacity-50">Pulse of your reported concerns</p>
+                                <h5 className="fw-black text-dark mb-1 uppercase tracking-tight">Recent Activity</h5>
+                                <p className="extra-small text-muted fw-bold uppercase mb-0 opacity-50">Status of your personal reports</p>
                             </div>
-                            <button onClick={() => navigate('/citizen/complaints')} className="btn btn-dark rounded-pill px-4 py-2 extra-small fw-black transition-all hover-up-tiny">ACCESS FULL ARCHIVE</button>
+                            <button onClick={() => navigate('/citizen/complaints')} className="btn btn-dark rounded-pill px-4 py-2 extra-small fw-black transition-all hover-up-tiny">VIEW ALL REPORTS</button>
                         </div>
 
                         {(!Array.isArray(recentComplaints) || recentComplaints.length === 0) ? (
@@ -165,13 +168,13 @@ const CitizenDashboard = () => {
                                 <div className="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-4" style={{ width: '100px', height: '100px' }}>
                                     <ShieldAlert size={48} className="text-muted opacity-20" />
                                 </div>
-                                <h4 className="fw-black text-dark mb-2">Zero Active Incursions</h4>
+                                <h4 className="fw-black text-dark mb-2 uppercase">No Active Reports</h4>
                                 <p className="extra-small text-muted fw-bold uppercase mb-4 px-lg-5">
-                                    You have not registered any tactical reports. <br />
-                                    Reporting helps maintain city integrity.
+                                    You have not submitted any reports yet. <br />
+                                    Reporting helps improve your neighborhood.
                                 </p>
                                 <button onClick={() => navigate('/citizen/register-complaint')} className="btn btn-primary px-5 py-3 rounded-pill fw-black extra-small shadow-premium border-0" style={{ backgroundColor: PRIMARY_COLOR }}>
-                                    INITIALIZE REPORT
+                                    REPORT NEW ISSUE
                                 </button>
                             </div>
                         ) : (
@@ -205,8 +208,8 @@ const CitizenDashboard = () => {
                         {/* Section 2: Entire Ward Complaints Archive */}
                         <div className="d-flex align-items-center justify-content-between mb-5 bg-dark p-4 rounded-4 shadow-lg">
                             <div>
-                                <h5 className="fw-black text-white mb-1 uppercase tracking-tight">My Area Complaints</h5>
-                                <p className="extra-small text-white uppercase mb-0 opacity-50">Active city management within your sector</p>
+                                <h5 className="fw-black text-white mb-1 uppercase tracking-tight">Area Activity</h5>
+                                <p className="extra-small text-white uppercase mb-0 opacity-50">Local reports in your neighborhood</p>
                             </div>
                             <span className="badge bg-primary px-3 py-2 rounded-pill extra-small fw-black" style={{ backgroundColor: PRIMARY_COLOR }}>LIVE FEED</span>
                         </div>
@@ -216,10 +219,10 @@ const CitizenDashboard = () => {
                                 <table className="table table-hover align-middle mb-0">
                                     <thead className="bg-light">
                                         <tr>
-                                            <th className="px-5 py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Descriptor</th>
-                                            <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Division</th>
-                                            <th className="py-4 border-0 text-center extra-small fw-black text-muted uppercase tracking-widest">Intelligence</th>
-                                            <th className="px-5 py-4 border-0 text-end extra-small fw-black text-muted uppercase">Visual</th>
+                                            <th className="px-5 py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Issue Details</th>
+                                            <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Department</th>
+                                            <th className="py-4 border-0 text-center extra-small fw-black text-muted uppercase tracking-widest">Current Status</th>
+                                            <th className="px-5 py-4 border-0 text-end extra-small fw-black text-muted uppercase">View</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -265,7 +268,7 @@ const CitizenDashboard = () => {
                     {/* Navigation Control Panel */}
                     <div className="col-xl-4">
                         <div className="sticky-top" style={{ top: '110px' }}>
-                            <div className="card b-none shadow-premium bg-white p-5 mb-5 rounded-4 border-top border-5" style={{ borderTopColor: '#10B981' }}>
+                            <div className="card b-none shadow-premium bg-white p-4 mb-4 rounded-4 border-top border-5" style={{ borderTopColor: '#10B981' }}>
                                 <h6 className="fw-black text-dark mb-4 uppercase tracking-[0.2em] opacity-40 border-bottom pb-4">Mission Links</h6>
                                 <div className="d-grid gap-3">
                                     {[
@@ -294,7 +297,7 @@ const CitizenDashboard = () => {
                             </div>
 
                             {/* Operational Integrity */}
-                            <div className="card b-none shadow-premium p-5 rounded-4 position-relative overflow-hidden bg-dark">
+                            <div className="card b-none shadow-premium p-4 rounded-4 position-relative overflow-hidden bg-dark">
                                 <div className="position-absolute bottom-0 end-0 p-3 opacity-10">
                                     <ShieldCheck size={160} strokeWidth={1} className="text-white" />
                                 </div>

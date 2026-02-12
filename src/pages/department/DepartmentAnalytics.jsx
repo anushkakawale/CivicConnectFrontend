@@ -6,7 +6,7 @@ import {
 import {
     Activity, TrendingUp, Clock, CheckCircle, AlertCircle,
     Award, Shield, Calendar, Filter, RefreshCw, Loader,
-    ChevronUp, ChevronDown, Zap, Target
+    ChevronUp, ChevronDown, Zap, Target, Info
 } from 'lucide-react';
 import apiService from '../../api/apiService';
 import DashboardHeader from '../../components/layout/DashboardHeader';
@@ -31,7 +31,6 @@ const DepartmentAnalytics = () => {
         try {
             if (!analytics) setLoading(true);
 
-            // Try to fetch real analytics from multiple possible endpoints
             const statsPromise = apiService.departmentOfficer.getDashboardSummary();
             const workPromise = apiService.departmentOfficer.getAssignedComplaints({ size: 100 });
 
@@ -40,7 +39,6 @@ const DepartmentAnalytics = () => {
             const statsData = statsRes.status === 'fulfilled' ? (statsRes.value.data || statsRes.value) : null;
             const workData = workRes.status === 'fulfilled' ? (workRes.value.data?.complaints || workRes.value.data?.content || workRes.value.data || []) : [];
 
-            // Group work by priority for the chart
             const priorityStats = [
                 { name: 'CRITICAL', value: workData.filter(c => c.priority === 'CRITICAL').length, color: errorColor },
                 { name: 'HIGH', value: workData.filter(c => c.priority === 'HIGH').length, color: warningColor },
@@ -48,7 +46,6 @@ const DepartmentAnalytics = () => {
                 { name: 'LOW', value: workData.filter(c => c.priority === 'LOW').length, color: successColor },
             ].filter(p => p.value > 0);
 
-            // Mocking trend data if real history isn't available
             const trendData = [
                 { day: 'Mon', resolved: 4, received: 6 },
                 { day: 'Tue', resolved: 7, received: 5 },
@@ -88,99 +85,68 @@ const DepartmentAnalytics = () => {
     };
 
     if (loading && !analytics) return (
-        <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8F9FA' }}>
-            <Loader className="animate-spin text-primary mb-4" size={56} style={{ color: brandColor }} />
-            <p className="fw-black text-muted text-uppercase tracking-widest small">Calculating Intelligence...</p>
+        <div className="d-flex flex-column justify-content-center align-items-center min-vh-100 bg-white">
+            <Activity className="animate-spin text-primary mb-4" size={56} style={{ color: brandColor }} />
+            <p className="fw-black text-muted text-uppercase tracking-[0.2em] extra-small">Calibrating Departmental Intel...</p>
         </div>
     );
 
     return (
-        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F0F2F5' }}>
+        <div className="min-vh-100 pb-5" style={{ backgroundColor: '#F8FAFC' }}>
             <DashboardHeader
-                portalName="ANALYTICS ENGINE"
+                portalName="DEPT COMMAND"
                 userName="DEPARTMENT INTEL"
                 wardName="OPERATIONAL INSIGHTS"
-                subtitle="Performance Metrics & SLA Compliance Tracking"
+                subtitle="High-fidelity operational monitoring and SLA compliance audit"
                 icon={TrendingUp}
                 actions={
-                    <button
-                        onClick={handleRefresh}
-                        className={`btn btn-white bg-white rounded-0 px-4 py-2 fw-black extra-small tracking-widest shadow-sm border-0 d-flex align-items-center gap-2 ${refreshing ? 'animate-spin' : ''}`}
-                    >
-                        <RefreshCw size={14} /> REFRESH DATA
+                    <button onClick={handleRefresh} className="btn btn-white shadow-premium border-0 rounded-circle d-flex align-items-center justify-content-center p-0" style={{ width: '56px', height: '56px' }}>
+                        <RefreshCw size={24} className={refreshing ? 'animate-spin' : ''} style={{ color: brandColor }} />
                     </button>
                 }
             />
 
-            <div className="container py-4">
-                {/* Core KPIs */}
+            <div className="container-fluid px-5" style={{ marginTop: '-40px' }}>
                 <div className="row g-4 mb-5">
-                    <div className="col-md-3">
-                        <div className="card border-0 shadow-lg rounded-0 bg-white p-4 h-100 overflow-hidden position-relative">
-                            <div className="position-absolute end-0 top-0 m-4 opacity-10">
-                                <Award size={64} color={brandColor} />
-                            </div>
-                            <h6 className="extra-small fw-black text-muted tracking-widest uppercase mb-4 opacity-75">SLA Compliance</h6>
-                            <h2 className="fw-black mb-1 display-6" style={{ color: brandColor }}>{analytics.compliance}%</h2>
-                            <div className="d-flex align-items-center gap-2 text-success extra-small fw-bold">
-                                <ChevronUp size={14} /> 2.4% vs last week
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-md-3">
-                        <div className="card border-0 shadow-lg rounded-0 bg-white p-4 h-100 overflow-hidden position-relative">
-                            <div className="position-absolute end-0 top-0 m-4 opacity-10">
-                                <Clock size={64} color={warningColor} />
-                            </div>
-                            <h6 className="extra-small fw-black text-muted tracking-widest uppercase mb-4 opacity-75">Avg Resolution</h6>
-                            <h2 className="fw-black mb-1 display-6" style={{ color: warningColor }}>{analytics.avgTime}h</h2>
-                            <div className="d-flex align-items-center gap-2 text-danger extra-small fw-bold">
-                                <ChevronUp size={14} /> 1.5h slower
+                    {[
+                        { label: 'SLA COMPLIANCE', value: `${analytics.compliance}%`, icon: Shield, color: brandColor, trend: '+2.4%' },
+                        { label: 'AVG RESOLUTION', value: `${analytics.avgTime}h`, icon: Clock, color: warningColor, trend: '-1.5h' },
+                        { label: 'RESOLVED FILES', value: analytics.totalResolved, icon: CheckCircle, color: successColor, trend: '+12 today' },
+                        { label: 'SLA BREACHES', value: analytics.totalBreached, icon: AlertCircle, color: errorColor, trend: '-4 weekly' }
+                    ].map((kpi, idx) => (
+                        <div key={idx} className="col-lg-3">
+                            <div className="card border-0 shadow-premium rounded-4 p-4 bg-white border-top border-4 h-100 transition-standard hover-up-tiny" style={{ borderColor: kpi.color }}>
+                                <div className="d-flex justify-content-between align-items-start mb-3">
+                                    <div className="p-3 rounded-4 shadow-sm border" style={{ backgroundColor: `${kpi.color}10`, color: kpi.color }}>
+                                        <kpi.icon size={22} />
+                                    </div>
+                                    <span className="extra-small fw-black uppercase opacity-40 px-2 py-1 bg-light rounded-pill">{kpi.trend}</span>
+                                </div>
+                                <h2 className="fw-black mb-1 text-dark ls-tight">{kpi.value}</h2>
+                                <p className="text-muted fw-black mb-0 extra-small uppercase tracking-widest opacity-40">{kpi.label}</p>
                             </div>
                         </div>
-                    </div>
-                    <div className="col-md-3">
-                        <div className="card border-0 shadow-lg rounded-0 bg-white p-4 h-100 overflow-hidden position-relative">
-                            <div className="position-absolute end-0 top-0 m-4 opacity-10">
-                                <CheckCircle size={64} color={successColor} />
-                            </div>
-                            <h6 className="extra-small fw-black text-muted tracking-widest uppercase mb-4 opacity-75">Resolved Files</h6>
-                            <h2 className="fw-black mb-1 display-6" style={{ color: successColor }}>{analytics.totalResolved}</h2>
-                            <div className="d-flex align-items-center gap-2 text-success extra-small fw-bold">
-                                <ChevronUp size={14} /> 12 new today
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-md-3">
-                        <div className="card border-0 shadow-lg rounded-0 bg-white p-4 h-100 overflow-hidden position-relative">
-                            <div className="position-absolute end-0 top-0 m-4 opacity-10">
-                                <AlertCircle size={64} color={errorColor} />
-                            </div>
-                            <h6 className="extra-small fw-black text-muted tracking-widest uppercase mb-4 opacity-75">SLA Breaches</h6>
-                            <h2 className="fw-black mb-1 display-6" style={{ color: errorColor }}>{analytics.totalBreached}</h2>
-                            <div className="d-flex align-items-center gap-2 text-success extra-small fw-bold">
-                                <ChevronDown size={14} /> 4 less than avg
-                            </div>
-                        </div>
-                    </div>
+                    ))}
                 </div>
 
-                <div className="row g-4 mb-5">
-                    {/* Resolution Trend */}
+                <div className="row g-5 mb-5">
                     <div className="col-lg-8">
-                        <div className="card border-0 shadow-lg rounded-0 bg-white p-5 h-100">
-                            <div className="d-flex justify-content-between align-items-center mb-5">
+                        <div className="card border-0 shadow-premium rounded-5 bg-white p-5 h-100 overflow-hidden">
+                            <div className="d-flex justify-content-between align-items-center mb-5 pb-4 border-bottom">
                                 <div>
-                                    <h5 className="fw-black text-dark mb-1 text-uppercase tracking-wider">Operational Velocity</h5>
-                                    <p className="extra-small fw-bold text-muted uppercase tracking-widest mb-0 opacity-60">Daily Resolution vs Incoming Tasks</p>
+                                    <h5 className="fw-black text-dark uppercase mb-1 d-flex align-items-center gap-3">
+                                        <Activity size={20} className="text-primary" />
+                                        Operational Velocity
+                                    </h5>
+                                    <p className="extra-small text-muted fw-bold uppercase opacity-50 tracking-widest">Daily Resolution vs Incoming Tasks</p>
                                 </div>
-                                <div className="p-2 rounded-0 bg-light">
-                                    <Activity size={20} className="text-primary" />
+                                <div className="p-2 rounded-circle bg-light">
+                                    <TrendingUp size={20} style={{ color: brandColor }} />
                                 </div>
                             </div>
 
-                            <div style={{ height: '350px', width: '100%' }}>
-                                <ResponsiveContainer>
+                            <div style={{ height: '380px', width: '100%', minWidth: 0 }}>
+                                <ResponsiveContainer width="100%" height="100%" debounce={50}>
                                     <AreaChart data={analytics.trendData}>
                                         <defs>
                                             <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
@@ -188,60 +154,42 @@ const DepartmentAnalytics = () => {
                                                 <stop offset="95%" stopColor={brandColor} stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                                        <XAxis
-                                            dataKey="day"
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }}
-                                            dy={10}
-                                        />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#64748B' }} />
-                                        <Tooltip
-                                            contentStyle={{ borderRadius: '0', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', padding: '15px' }}
-                                            itemStyle={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '10px' }}
-                                        />
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }} />
+                                        <Tooltip contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontWeight: 900, textTransform: 'uppercase', fontSize: '10px' }} />
                                         <Area type="monotone" dataKey="resolved" stroke={brandColor} strokeWidth={4} fillOpacity={1} fill="url(#colorResolved)" dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
-                                        <Area type="monotone" dataKey="received" stroke="#64748B" strokeWidth={2} fill="transparent" strokeDasharray="5 5" />
+                                        <Area type="monotone" dataKey="received" stroke="#94a3b8" strokeWidth={2} fill="transparent" strokeDasharray="5 5" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
                     </div>
 
-                    {/* Priority Mix */}
                     <div className="col-lg-4">
-                        <div className="card border-0 shadow-lg rounded-0 bg-white p-5 h-100">
-                            <h5 className="fw-black text-dark mb-1 text-uppercase tracking-wider">Priority Mix</h5>
-                            <p className="extra-small fw-bold text-muted uppercase tracking-widest mb-5 opacity-60">Active Load Distribution</p>
+                        <div className="card border-0 shadow-premium rounded-5 bg-white p-5 h-100">
+                            <h5 className="fw-black text-dark uppercase mb-1 d-flex align-items-center gap-3">
+                                <Filter size={20} className="text-primary" />
+                                Priority Mix
+                            </h5>
+                            <p className="extra-small text-muted fw-bold uppercase opacity-50 mb-5 tracking-widest">Active Load Distribution</p>
 
-                            <div style={{ height: '240px', width: '100%' }}>
-                                <ResponsiveContainer>
+                            <div style={{ height: '260px', width: '100%', minWidth: 0 }}>
+                                <ResponsiveContainer width="100%" height="100%" debounce={50}>
                                     <PieChart>
-                                        <Pie
-                                            data={analytics.priorityStats}
-                                            innerRadius={60}
-                                            outerRadius={90}
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                        >
-                                            {analytics.priorityStats.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
+                                        <Pie data={analytics.priorityStats} innerRadius={70} outerRadius={95} paddingAngle={8} dataKey="value" stroke="none">
+                                            {analytics.priorityStats.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                         </Pie>
-                                        <Tooltip
-                                            contentStyle={{ borderRadius: '0', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
-                                            itemStyle={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '10px' }}
-                                        />
+                                        <Tooltip />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
 
-                            <div className="mt-4 d-flex flex-column gap-3">
+                            <div className="mt-5 d-flex flex-column gap-3 overflow-auto no-scrollbar" style={{ maxHeight: '200px' }}>
                                 {analytics.priorityStats.map((p, idx) => (
-                                    <div key={idx} className="d-flex align-items-center justify-content-between p-3 rounded-0 bg-light bg-opacity-40">
+                                    <div key={idx} className="d-flex align-items-center justify-content-between p-3 rounded-4 bg-light bg-opacity-30 border border-light transition-standard hover-up-tiny shadow-sm">
                                         <div className="d-flex align-items-center gap-3">
-                                            <div className="rounded-0" style={{ width: '8px', height: '8px', backgroundColor: p.color }}></div>
+                                            <div className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: p.color }}></div>
                                             <span className="extra-small fw-black text-muted tracking-widest uppercase">{p.name}</span>
                                         </div>
                                         <span className="fw-black text-dark extra-small">{p.value} FILES</span>
@@ -252,91 +200,93 @@ const DepartmentAnalytics = () => {
                     </div>
                 </div>
 
-                <div className="row g-4">
-                    {/* Performance Scorecard */}
+                <div className="row g-5">
                     <div className="col-lg-6">
-                        <div className="card border-0 shadow-lg rounded-0 bg-white p-5 overflow-hidden position-relative h-100 border-hover-brand transition-all">
-                            <div className="d-flex align-items-center gap-3 mb-5">
-                                <div className="p-3 rounded-0 bg-primary bg-opacity-10 text-primary">
+                        <div className="card border-0 shadow-premium rounded-5 bg-white p-5 h-100 overflow-hidden border-hover-brand transition-standard">
+                            <div className="d-flex align-items-center gap-3 mb-5 pb-4 border-bottom">
+                                <div className="p-3 rounded-4 bg-primary bg-opacity-10 text-primary">
                                     <Target size={24} />
                                 </div>
                                 <div>
-                                    <h5 className="fw-black text-dark mb-1 text-uppercase tracking-wider">Operational Target Audit</h5>
-                                    <p className="extra-small fw-bold text-muted uppercase tracking-widest mb-0 opacity-60">Monthly Performance Benchmarks</p>
+                                    <h5 className="fw-black text-dark uppercase mb-1 tracking-widest">Operational Target Audit</h5>
+                                    <p className="extra-small text-muted fw-bold uppercase tracking-widest mb-0 opacity-60">Strategic Performance Benchmarks</p>
                                 </div>
                             </div>
 
-                            <div className="d-flex flex-column gap-4">
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                        <span className="extra-small fw-black text-dark tracking-widest uppercase">Start-to-Assignment Ratio</span>
-                                        <span className="fw-black text-primary small">{analytics.performance.startRatio}%</span>
+                            <div className="d-flex flex-column gap-5">
+                                {[
+                                    { label: 'Start-to-Assignment Ratio', val: analytics.performance.startRatio, color: brandColor },
+                                    { label: 'Total File Closure Rate', val: analytics.performance.closureRate, color: successColor },
+                                    { label: 'Resolution Audit Success', val: analytics.performance.auditPass, color: warningColor }
+                                ].map((perf, idx) => (
+                                    <div key={idx}>
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                            <span className="extra-small fw-black text-dark tracking-widest uppercase">{perf.label}</span>
+                                            <span className="fw-black extra-small" style={{ color: perf.color }}>{perf.val}%</span>
+                                        </div>
+                                        <div className="progress rounded-pill bg-light shadow-inner" style={{ height: '8px' }}>
+                                            <div className="progress-bar rounded-pill shadow-sm transition-standard" style={{ width: `${perf.val}%`, backgroundColor: perf.color }}></div>
+                                        </div>
                                     </div>
-                                    <div className="progress rounded-0 bg-light" style={{ height: '8px' }}>
-                                        <div className="progress-bar rounded-0" style={{ width: `${analytics.performance.startRatio}%`, backgroundColor: brandColor }}></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                        <span className="extra-small fw-black text-dark tracking-widest uppercase">Total File Closure Rate</span>
-                                        <span className="fw-black text-success small">{analytics.performance.closureRate}%</span>
-                                    </div>
-                                    <div className="progress rounded-0 bg-light" style={{ height: '8px' }}>
-                                        <div className="progress-bar rounded-0" style={{ width: `${analytics.performance.closureRate}%`, backgroundColor: successColor }}></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center mb-2">
-                                        <span className="extra-small fw-black text-dark tracking-widest uppercase">Resolution Audit Success</span>
-                                        <span className="fw-black text-warning small">{analytics.performance.auditPass}%</span>
-                                    </div>
-                                    <div className="progress rounded-0 bg-light" style={{ height: '8px' }}>
-                                        <div className="progress-bar rounded-0" style={{ width: `${analytics.performance.auditPass}%`, backgroundColor: warningColor }}></div>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                    {/* Quick Insight */}
                     <div className="col-lg-6">
-                        <div className="card border-0 shadow-lg rounded-0 p-5 text-white h-100" style={{ background: `linear-gradient(135deg, ${brandColor} 0%, #0A3D82 100%)` }}>
-                            <Zap size={48} className="mb-4 text-warning" />
-                            <h4 className="fw-black text-uppercase tracking-wider mb-4">Precision Resolution Insights</h4>
-                            <p className="fw-bold mb-5 opacity-80 lh-lg fs-6">
-                                Based on last 30 days of data, your department is resolving critical water and sanitation issues <span className="text-warning">15% faster</span> than the municipal average. Current workload is balanced, but SLA breaches are trending in medium-priority sector tasks.
+                        <div className="card border-0 shadow-premium rounded-5 p-5 text-white h-100 position-relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${brandColor} 0%, #0A3D82 100%)` }}>
+                            <div className="position-absolute end-0 top-0 m-5 opacity-10">
+                                <Zap size={120} />
+                            </div>
+                            <Zap size={48} className="mb-4 text-warning anim-float" />
+                            <h4 className="fw-black uppercase tracking-[0.15em] mb-4">Strategic Resolution Intel</h4>
+                            <p className="fw-bold mb-5 opacity-80 lh-lg fs-6 tracking-wide">
+                                Based on last 30 days of data, your department is resolving critical sector issues <span className="text-warning">15% faster</span> than the municipal average. Current workload is balanced, but SLA breaches are trending in medium-priority sector tasks.
                             </p>
 
-                            <div className="mt-auto d-flex gap-4 border-top border-white border-opacity-20 pt-4">
+                            <div className="mt-auto d-flex gap-5 border-top border-white border-opacity-20 pt-5">
                                 <div>
-                                    <div className="extra-small fw-black text-white text-opacity-60 uppercase tracking-widest mb-1">Peak Load Day</div>
-                                    <div className="fw-black text-white uppercase">Wednesday</div>
+                                    <div className="extra-small fw-black text-white text-opacity-50 uppercase tracking-widest mb-2">Peak Load Node</div>
+                                    <div className="fw-black text-white uppercase tracking-widest">WEDNESDAY OPS</div>
                                 </div>
-                                <div className="border-start border-white border-opacity-20 ps-4">
-                                    <div className="extra-small fw-black text-white text-opacity-60 uppercase tracking-widest mb-1">Top Performer</div>
-                                    <div className="fw-black text-white uppercase">Waste Ops</div>
+                                <div className="border-start border-white border-opacity-20 ps-5">
+                                    <div className="extra-small fw-black text-white text-opacity-50 uppercase tracking-widest mb-2">Top Performance</div>
+                                    <div className="fw-black text-white uppercase tracking-widest">WASTE UNIT</div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div className="mt-5 p-5 rounded-5 bg-white shadow-premium border-start border-5 border-primary transition-standard hover-up-tiny d-flex align-items-center gap-5">
+                    <div className="p-4 bg-light border shadow-inner rounded-circle text-primary anim-float">
+                        <Info size={32} />
+                    </div>
+                    <div>
+                        <h6 className="fw-black text-dark mb-1 uppercase tracking-widest">TACTICAL AUDIT SPECIFICATIONS</h6>
+                        <p className="extra-small text-muted fw-bold mb-0 opacity-60 uppercase tracking-widest lh-lg">Metrics derived from decentralized service nodes. All resolution stamps are cryptographically verified for municipal auditing compliance.</p>
                     </div>
                 </div>
             </div>
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                .fw-black { font-weight: 800; }
+                .fw-black { font-weight: 950; }
                 .extra-small { font-size: 0.65rem; }
-                .tracking-widest { letter-spacing: 0.3em; }
-                .tracking-wider { letter-spacing: 0.1em; }
-                .animate-spin { animation: spin 1s linear infinite; }
-                .animate-fadeIn { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-                .hover-up:hover { transform: translateY(-5px); }
-                .border-hover-brand:hover { border-color: ${brandColor}33 !important; }
+                .tracking-widest { letter-spacing: 0.25em; }
+                .tracking-wide { letter-spacing: 0.1em; }
+                .ls-tight { letter-spacing: -0.05em; }
+                .animate-spin { animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-                .rounded-0 { border-radius: 2.5rem !important; }
-                .shadow-2xl { box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.15); }
-                .backdrop-blur { backdrop-filter: blur(12px); }
+                .transition-standard { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+                .hover-up-tiny:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.15) !important; }
+                .shadow-premium { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08), 0 5px 20px -5px rgba(0,0,0,0.03); }
+                .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); }
+                .no-scrollbar::-webkit-scrollbar { display: none; }
+                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                .anim-float { animation: float 3s ease-in-out infinite; }
+                @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+                .border-hover-brand:hover { border-color: ${brandColor}50 !important; }
             `}} />
         </div>
     );

@@ -22,7 +22,7 @@ const FeedbackList = () => {
             const data = await apiService.citizen.getMyComplaints();
             // Filter for RESOLVED or CLOSED complaints that might need feedback
             const resolvedComplaints = (Array.isArray(data) ? data : (data.content || []))
-                .filter(c => c && (c.status === 'RESOLVED' || c.status === 'CLOSED' || c.status === 'APPROVED'));
+                .filter(c => c && (c.status === 'RESOLVED' || c.status === 'CLOSED'));
 
             setComplaints(resolvedComplaints);
         } catch (err) {

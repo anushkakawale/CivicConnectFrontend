@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import './styles/professional-layout.css';
 
 /* 
  * CivicConnect - Unified Premium Design System (Elite Blue Edition)
@@ -74,24 +75,36 @@ h6 {
 
 /* ========== UNIFIED THEME UTILITIES ========== */
 
-/* High Contrast: Blue Background -> White Text */
-.theme-dark-bg {
+/* Institutional Contrast: Background vs Text */
+.institutional-white {
+  background-color: #FFFFFF !important;
+  color: var(--text-main) !important;
+}
+
+.institutional-white .text-muted {
+  color: var(--text-muted) !important;
+}
+
+.institutional-dark {
   background: var(--primary) !important;
   color: #FFFFFF !important;
 }
 
-.theme-dark-bg .text-details {
-  color: #FFFFFF !important;
+.institutional-dark .text-muted,
+.institutional-dark .opacity-60,
+.institutional-dark span.extra-small {
+  color: rgba(255, 255, 255, 0.6) !important;
 }
 
-/* High Contrast: White Background -> Blue Text */
-.theme-light-bg {
-  background: #FFFFFF !important;
-  color: var(--primary) !important;
-}
-
-.theme-light-bg .text-details {
-  color: var(--primary) !important;
+.institutional-dark h1,
+.institutional-dark h2,
+.institutional-dark h3,
+.institutional-dark h4,
+.institutional-dark h5,
+.institutional-dark h6,
+.institutional-dark p,
+.institutional-dark div {
+  color: #FFFFFF;
 }
 
 /* Circular Icon/Initials Containers */
@@ -127,6 +140,7 @@ h6 {
   font-size: 0.65rem;
   letter-spacing: normal;
   text-transform: uppercase;
+  border: 1px solid rgba(23, 52, 112, 0.1);
 }
 
 .badge-rect-blue {
@@ -138,6 +152,51 @@ h6 {
   font-size: 0.65rem;
   letter-spacing: normal;
   text-transform: uppercase;
+}
+
+/* High Contrast Tacticals */
+.tactical-dark {
+  background: var(--primary);
+  color: white;
+}
+
+.tactical-dark .text-muted {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.tactical-dark .icon-wrap {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.tactical-light {
+  background: white;
+  color: var(--primary);
+}
+
+.tactical-light .text-muted {
+  color: var(--text-muted) !important;
+}
+
+.tactical-light .icon-wrap {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.strategic-border {
+  border-left: 4px solid var(--primary);
+}
+
+.success-border {
+  border-left: 4px solid var(--success);
+}
+
+.danger-border {
+  border-left: 4px solid var(--danger);
+}
+
+.warning-border {
+  border-left: 4px solid var(--warning);
 }
 
 .badge-rect-green {
@@ -251,8 +310,15 @@ h6 {
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-slideUp {
@@ -264,7 +330,7 @@ h6 {
 }
 
 .text-shiny {
-  background: linear-gradient(120deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 70%);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 70%);
   background-size: 200% 100%;
   animation: shine 3s infinite;
   -webkit-background-clip: text;
@@ -272,8 +338,13 @@ h6 {
 }
 
 @keyframes shine {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .glass-card {

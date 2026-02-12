@@ -27,7 +27,8 @@ const WardChangeRequest = ({ currentWard, onSuccess }) => {
                 apiService.common.getWards(),
                 apiService.wardChange.getMyRequests()
             ]);
-            setWards(wardsData || []);
+            const wardsDataList = Array.isArray(wardsData) ? wardsData : (wardsData.data || []);
+            setWards(wardsDataList || []);
             setMyRequests(requestsData || []);
         } catch (err) {
             console.error('Failed to load data:', err);

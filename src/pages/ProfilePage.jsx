@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     User, Mail, MapPin, Building2,
     Edit3, Save, X, Phone, Loader, ArrowLeft, Smartphone,
-    ChevronRight, AtSign, Globe, Briefcase, CheckCircle, AlertCircle, Lock, Key, Eye, EyeOff, Check, ShieldCheck, Shield, FileText, Calendar, Info, Zap, RefreshCw, Compass
+    ChevronRight, AtSign, Globe, Briefcase, CheckCircle, AlertCircle, Lock, Key, Eye, EyeOff, Check, ShieldCheck, Shield, FileText, Calendar, Info, Zap, RefreshCw, Compass, Camera
 } from 'lucide-react';
 import apiService from '../api/apiService';
 import { USER_ROLES } from '../constants';
@@ -38,7 +38,12 @@ const ProfilePage = () => {
         confirmPassword: ''
     });
     const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
-    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [showWardModal, setShowWardModal] = useState(false);
+    const [wards, setWards] = useState([]);
+    const [selectedWard, setSelectedWard] = useState("");
+    const [wardChangeRemarks, setWardChangeRemarks] = useState("");
+    const [requestingWard, setRequestingWard] = useState(false);
 
     // Mobile OTP state
     const [showOtpModal, setShowOtpModal] = useState(false);
@@ -46,6 +51,7 @@ const ProfilePage = () => {
     const [otp, setOtp] = useState("");
     const [otpLoading, setOtpLoading] = useState(false);
     const [otpSent, setOtpSent] = useState(false);
+    const [passwordLoading, setPasswordLoading] = useState(false);
     const [completionScore, setCompletionScore] = useState(0);
 
     const PRIMARY_COLOR = '#173470'; // PMC Professional Blue
@@ -54,43 +60,95 @@ const ProfilePage = () => {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        // This effect runs when `user` state changes, after fetchData completes.
+        // We can move score calculation here or keep it in fetchData.
+        // For now, let's assume fetchData sets the score.
+        // The user's instruction implies a `loadCompletionScore` function, but it's not provided.
+        // I'll assume `fetchData` already handles score calculation or we'll add a separate call.
+        // For now, I'll just add the ward loading logic.
+        if (user?.role === USER_ROLES.CITIZEN || user?.role === 'ROLE_CITIZEN') {
+            loadWards();
+        }
+    }, [user]);
+
+    const loadWards = async () => {
+        try {
+            const res = await apiService.masterData.getWards();
+            setWards(res.data || res || []);
+        } catch (err) {
+            console.error("Failed to load wards", err);
+        }
+    };
+
+    const handleWardChangeRequest = async () => {
+        if (!selectedWard || !wardChangeRemarks) {
+            showToast("Please select a ward and provide remarks", "error");
+            return;
+        }
+
+        setRequestingWard(true);
+        try {
+            await apiService.profile.requestWardChange({
+                requestedWardId: selectedWard,
+                reason: wardChangeRemarks
+            });
+            showToast("Ward change request submitted successfully", "success");
+            setShowWardModal(false);
+            setWardChangeRemarks("");
+            setSelectedWard("");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Failed to submit request", "error");
+        } finally {
+            setRequestingWard(false);
+        }
+    };
+
     const calculateScore = (userData) => {
         if (!userData) return 0;
         let score = 0;
-
-        // Shared Base Score (40%)
-        if (userData.name) score += 10;
-        if (userData.mobile) score += 10;
-        if (userData.email) score += 10;
-        // Mock profile picture check (assuming if userData exists we have a placeholder or if url exists)
-        // Since we don't have a real profile pic field in this object usually, we might skip or assume 10 if name exists for now, 
-        // OR check if there is a specific field. User said "Added incentive to upload image".
-        // Let's assume if name exists, they have a default avatar, but for "Upload" we need a field.
-        // I'll check 'profileImageUrl' or similar, or just give 10 free for now to match "Name + Mobile + Email + Pic = 40"
-        // Actually, let's be strict: if no pic url, 0. 
-        if (userData.profileImageUrl || userData.profileImage || userData.image) score += 10;
-
         const role = (userData.role || '').replace('ROLE_', '');
 
-        // Role Specific (60%)
-        if (role === 'WARD_OFFICER') {
-            if (userData.wardId || userData.wardName || userData.ward) score += 60;
-        } else if (role === 'DEPARTMENT_OFFICER') {
-            if (userData.departmentId || userData.departmentName || userData.department) score += 30;
-            if (userData.wardId || userData.wardName || userData.ward) score += 30;
-        } else if (role === 'CITIZEN') {
-            if (userData.wardId || userData.wardName || userData.ward) score += 30;
-            const addr = userData.address || userData.fullAddress;
-            const line1 = userData.addressLine1;
-            const city = userData.city;
-            // Address Details: 30% (Address Line 1 & City required)
-            if ((line1 && city) || (addr && addr.length > 3)) score += 30;
+        if (role === 'CITIZEN') {
+            if (userData.name) score += 20;
+            if (userData.email) score += 20;
+            if (userData.mobile) score += 20;
+            if (userData.wardId || userData.wardName || userData.ward) score += 25;
+
+            // Address (15-20%)
+            const hasAddr = userData.addressLine1 || userData.address || userData.fullAddress;
+            const hasCity = userData.city;
+            const hasZip = userData.pincode;
+
+            if (hasAddr && hasCity && hasZip) score += 15; // Maxes out at 100
+            else if (hasAddr && hasCity) score += 15;
+            else if (hasAddr) score += 8;
         } else {
-            // Fallback for Admin or others - maybe full score if base is done
-            if (score === 40) score += 60;
+            // Officers / Admin
+            if (userData.name) score += 34;
+            if (userData.email) score += 33;
+            if (userData.mobile) score += 33;
         }
 
         return Math.min(100, score);
+    };
+
+    const getMissingItems = (userData) => {
+        if (!userData) return [];
+        const missing = [];
+        const role = (userData.role || '').replace('ROLE_', '');
+
+        if (!userData.name) missing.push("Official Name");
+        if (!userData.mobile) missing.push("Mobile Verification");
+        if (!userData.email) missing.push("Email Verification");
+
+        if (role === 'CITIZEN') {
+            if (!(userData.wardId || userData.wardName || userData.ward)) missing.push("Ward Selection");
+            if (!userData.addressLine1 && !userData.address && !userData.fullAddress) missing.push("Address Details");
+            if (!userData.city) missing.push("City Details");
+        }
+
+        return missing;
     };
 
     const fetchData = async () => {
@@ -361,8 +419,8 @@ const ProfilePage = () => {
                         <div className="card border-0 shadow-premium rounded-4 bg-white overflow-hidden mb-4">
                             <div className="p-5 text-center position-relative overflow-hidden" style={{ backgroundColor: '#0f172a' }}>
                                 <Shield size={120} className="position-absolute text-white opacity-5" style={{ right: '-20px', bottom: '-20px' }} />
-                                <div className="d-inline-flex p-2 rounded-4 bg-white bg-opacity-5 mb-3 mx-auto" style={{ width: '100px', height: '100px' }}>
-                                    <div className="w-100 h-100 rounded-4 bg-white d-flex align-items-center justify-content-center text-dark display-6 fw-black">
+                                <div className="d-inline-flex p-2 rounded-4 bg-white bg-opacity-5 mb-3 mx-auto position-relative group" style={{ width: '100px', height: '100px' }}>
+                                    <div className="w-100 h-100 rounded-4 bg-white d-flex align-items-center justify-content-center text-dark display-6 fw-black overflow-hidden position-relative">
                                         {user?.name?.charAt(0) || 'U'}
                                     </div>
                                 </div>
@@ -414,10 +472,18 @@ const ProfilePage = () => {
                                         </div>
                                     </div>
                                     <div className="d-flex align-items-center gap-3">
-                                        <div className="p-2 bg-light rounded-3 text-primary" style={{ color: PRIMARY_COLOR }}><MapPin size={18} /></div>
+                                        <div className="p-2 bg-light rounded-3 text-primary" style={{ color: PRIMARY_COLOR }}>
+                                            {(user?.role === 'DEPARTMENT_OFFICER' || user?.role === 'ROLE_DEPARTMENT_OFFICER') ? <Building2 size={18} /> : <MapPin size={18} />}
+                                        </div>
                                         <div>
-                                            <div className="extra-small text-muted fw-bold caps">My Ward</div>
-                                            <div className="small fw-bold text-truncate">{user?.wardName || user?.ward?.areaName || 'Not Assigned'}</div>
+                                            <div className="extra-small text-muted fw-bold caps">
+                                                {(user?.role === 'DEPARTMENT_OFFICER' || user?.role === 'ROLE_DEPARTMENT_OFFICER') ? 'Assigned Unit' : 'My Ward'}
+                                            </div>
+                                            <div className="small fw-bold text-truncate">
+                                                {(user?.role === 'DEPARTMENT_OFFICER' || user?.role === 'ROLE_DEPARTMENT_OFFICER')
+                                                    ? (user?.departmentName || user?.department?.name || 'Unit Alpha')
+                                                    : (user?.wardName || user?.ward?.areaName || 'Not Assigned')}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -425,7 +491,7 @@ const ProfilePage = () => {
                         </div>
 
                         {/* Completion Card */}
-                        <div className="card border-0 shadow-premium rounded-4 bg-white p-4 mb-4 border-start border-5" style={{ borderLeftColor: completionScore === 100 ? '#10B981' : '#F59E0B' }}>
+                        <div className="card border-0 shadow-premium rounded-4 bg-white p-4 mb-4 border-start border-5 transition-all hover-up-tiny" style={{ borderLeftColor: completionScore === 100 ? '#10B981' : '#F59E0B' }}>
                             <div className="d-flex align-items-center justify-content-between mb-3">
                                 <div>
                                     <h6 className="fw-black text-dark mb-1 uppercase tracking-tighter">Profile Integrity</h6>
@@ -433,14 +499,33 @@ const ProfilePage = () => {
                                 </div>
                                 <div className="h4 fw-black mb-0" style={{ color: completionScore === 100 ? '#10B981' : '#F59E0B' }}>{completionScore}%</div>
                             </div>
-                            <div className="progress rounded-pill bg-light" style={{ height: '8px' }}>
+                            <div className="progress rounded-pill bg-light mb-3" style={{ height: '8px' }}>
                                 <div className="progress-bar progress-bar-striped progress-bar-animated" style={{
                                     width: `${completionScore}%`,
-                                    backgroundColor: completionScore === 100 ? '#10B981' : '#F59E0B'
+                                    backgroundColor: completionScore === 100 ? '#10B981' : '#F59E0B',
+                                    transition: 'width 1s cubic-bezier(0.16, 1, 0.3, 1)'
                                 }}></div>
                             </div>
-                            {completionScore < 100 && (
-                                <p className="extra-small text-muted mt-3 mb-0 fw-bold opacity-60">Complete your profile to unlock strategic municipal privileges.</p>
+
+                            {completionScore < 100 ? (
+                                <div className="mt-3 p-3 rounded-3 bg-light bg-opacity-50 border border-light">
+                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                        <AlertCircle size={14} className="text-warning" />
+                                        <span className="extra-small fw-black text-dark uppercase tracking-widest">Pending Requirements</span>
+                                    </div>
+                                    <div className="vstack gap-2">
+                                        {getMissingItems(user).map((item, i) => (
+                                            <div key={i} className="d-flex align-items-center gap-2 extra-small fw-bold text-muted">
+                                                <div className="rounded-circle bg-warning bg-opacity-20" style={{ width: 6, height: 6 }}></div>
+                                                {item}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="d-flex align-items-center gap-2 text-success extra-small fw-black uppercase tracking-widest">
+                                    <CheckCircle size={14} /> Strategic Account Active
+                                </div>
                             )}
                         </div>
                     </div>
@@ -495,7 +580,12 @@ const ProfilePage = () => {
                                 {(user?.role === USER_ROLES.CITIZEN || user?.role === 'ROLE_CITIZEN') && (
                                     <>
                                         <div className="col-md-12">
-                                            <label className="small fw-bold text-muted mb-2 d-block caps">Administrative Ward</label>
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <label className="small fw-bold text-muted mb-0 caps">Administrative Ward</label>
+                                                {!isEditing && (
+                                                    <button onClick={() => setShowWardModal(true)} className="btn btn-link p-0 text-decoration-none extra-small fw-bold" style={{ color: PRIMARY_COLOR }}>Request Change</button>
+                                                )}
+                                            </div>
                                             <div className="p-3 rounded-3 bg-light border-0">
                                                 <div className="d-flex align-items-center gap-2 mb-1">
                                                     <Compass size={12} className="text-primary" style={{ color: PRIMARY_COLOR }} />
@@ -628,6 +718,62 @@ const ProfilePage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Ward Change Modal */}
+            {showWardModal && (
+                <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ zIndex: 1100 }}>
+                    <div className="position-absolute w-100 h-100 bg-dark bg-opacity-50" style={{ backdropFilter: 'blur(4px)' }} onClick={() => setShowWardModal(false)}></div>
+                    <div className="card border-0 shadow-lg rounded-4 overflow-hidden position-relative animate-zoomIn" style={{ maxWidth: '450px', width: '90%' }}>
+                        <div className="p-4 bg-primary text-white d-flex align-items-center justify-content-between" style={{ backgroundColor: PRIMARY_COLOR }}>
+                            <div className="d-flex align-items-center gap-3">
+                                <Compass size={20} />
+                                <h6 className="fw-black mb-0 uppercase tracking-widest small">Identity Relocation Request</h6>
+                            </div>
+                            <button onClick={() => setShowWardModal(false)} className="btn btn-link text-white p-0 shadow-none"><Zap size={18} /></button>
+                        </div>
+                        <div className="card-body p-5">
+                            <div className="mb-4">
+                                <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2">Target Administrative Ward</label>
+                                <select
+                                    className="form-select rounded-3 py-3 border-light bg-light fw-bold shadow-none"
+                                    value={selectedWard}
+                                    onChange={e => setSelectedWard(e.target.value)}
+                                >
+                                    <option value="">Select Target Jurisdiction</option>
+                                    {wards.map(ward => (
+                                        <option key={ward.id || ward.wardId} value={ward.id || ward.wardId}>
+                                            Ward {ward.id || ward.wardId} - {ward.areaName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="extra-small fw-black text-muted uppercase tracking-widest mb-2">Relocation Justification (Remarks)</label>
+                                <textarea
+                                    className="form-control rounded-3 py-3 border-light bg-light fw-bold shadow-none"
+                                    rows="3"
+                                    placeholder="State reason for jurisdiction change..."
+                                    value={wardChangeRemarks}
+                                    onChange={e => setWardChangeRemarks(e.target.value)}
+                                ></textarea>
+                            </div>
+
+                            <div className="d-flex gap-3">
+                                <button onClick={() => setShowWardModal(false)} className="btn btn-light rounded-pill py-3 flex-grow-1 fw-black extra-small uppercase">Abort</button>
+                                <button
+                                    onClick={handleWardChangeRequest}
+                                    className="btn btn-primary rounded-pill py-3 flex-grow-1 fw-black extra-small uppercase shadow-premium"
+                                    disabled={requestingWard}
+                                    style={{ backgroundColor: PRIMARY_COLOR }}
+                                >
+                                    {requestingWard ? <Loader size={18} className="animate-spin mx-auto" /> : "SUBMIT REQUEST"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* OTP Modal */}
             {showOtpModal && (

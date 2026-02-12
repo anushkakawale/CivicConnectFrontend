@@ -1,11 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import ModernLogin from "./auth/ModernLogin";
-import RegisterCitizen from "./auth/RegisterCitizen";
+import EnhancedLogin from "./auth/EnhancedLogin";
+import EnhancedRegister from "./auth/EnhancedRegister";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import Support from "./pages/Support";
+import BackendDiagnostic from "./pages/BackendDiagnostic";
+import BackendSecurityDiagnostic from "./pages/BackendSecurityDiagnostic";
 import EnhancedComplaintRegistration from "./components/complaint/EnhancedComplaintRegistration";
 import CitizenLayout from './layouts/CitizenLayout';
 import CitizenDashboard from './pages/citizen/CitizenDashboard';
-import RegisterComplaint from './pages/citizen/RegisterComplaint';
+import RegisterComplaintEnhanced from './pages/citizen/RegisterComplaintEnhanced';
 import MyComplaints from './pages/citizen/MyComplaints';
 import ComplaintDetail from './pages/citizen/ComplaintDetail';
 import ProfilePage from './pages/ProfilePage';
@@ -15,6 +20,7 @@ import FeedbackList from './pages/citizen/FeedbackList';
 import Notifications from './pages/citizen/Notifications';
 import SlaStatus from './pages/citizen/SlaStatus';
 import CitizenMap from './pages/citizen/CitizenMap';
+import CitizenWardAnalytics from './pages/citizen/CitizenWardAnalytics';
 import OfficerDirectory from './pages/citizen/OfficerDirectory';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import DepartmentLayout from './layouts/DepartmentLayout';
@@ -40,6 +46,7 @@ import AdminLayout from './layouts/AdminLayout';
 import ProfessionalAdminDashboard from './pages/admin/ProfessionalAdminDashboard';
 import AdminComplaints from './pages/admin/AdminComplaints';
 import AdminCloseComplaints from './pages/admin/AdminCloseComplaints';
+import AdminClosureQueue from './pages/admin/AdminClosureQueue';
 import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminComplaintDetail from './pages/admin/AdminComplaintDetail';
 import AdminUserManagement from './pages/admin/AdminUserManagement';
@@ -70,8 +77,13 @@ function App() {
             <Router>
               <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<ModernLogin />} />
-                <Route path="/register" element={<RegisterCitizen />} />
+                <Route path="/" element={<EnhancedLogin />} />
+                <Route path="/register" element={<EnhancedRegister />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/backend-diagnostic" element={<BackendDiagnostic />} />
+                <Route path="/security-diagnostic" element={<BackendSecurityDiagnostic />} />
                 <Route path="/register-complaint" element={<EnhancedComplaintRegistration />} />
                 <Route path="/diagnostic" element={<ApiDiagnostic />} />
 
@@ -86,11 +98,10 @@ function App() {
                 >
                   <Route path="dashboard" element={<CitizenDashboard />} />
                   <Route path="complaints" element={<MyComplaints />} />
-                  <Route path="register-complaint" element={<RegisterComplaint />} />
+                  <Route path="register-complaint" element={<RegisterComplaintEnhanced />} />
                   <Route path="complaints/:id" element={<ComplaintDetail />} />
                   <Route path="area-complaints" element={<AreaComplaints />} />
                   <Route path="notifications" element={<Notifications />} />
-                  <Route path="sla" element={<SlaStatus />} />
                   <Route path="feedback/pending" element={<FeedbackList />} />
                   <Route path="feedback/:id" element={<SubmitFeedback />} />
                   <Route path="profile" element={<ProfilePage />} />
@@ -158,12 +169,13 @@ function App() {
                   <Route path="dashboard" element={<ProfessionalAdminDashboard />} />
                   <Route path="complaints" element={<AdminComplaints />} />
                   <Route path="close-complaints" element={<AdminCloseComplaints />} />
+                  <Route path="closure-queue" element={<AdminClosureQueue />} />
                   <Route path="departments" element={<AdminDepartments />} />
                   <Route path="notifications" element={<AdminNotifications />} />
                   <Route path="complaints/:id" element={<AdminComplaintDetail />} />
                   <Route path="users" element={<AdminUserManagement />} />
                   <Route path="officers" element={<AdminOfficerDirectory />} />
-                  <Route path="register-ward-officer" element={<AdminWardOfficerRegistration />} />
+                  <Route path="register-officer" element={<AdminWardOfficerRegistration />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="map" element={<AdminMap />} />
                   <Route path="reports" element={<AdminReports />} />

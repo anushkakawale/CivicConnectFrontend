@@ -76,6 +76,41 @@ const AdminUserManagement = () => {
         return attributes[role] || { color: '#64748B', icon: <Users size={14} /> };
     };
 
+
+    const handleExportCSV = () => {
+        if (!filteredUsers.length) {
+            showToast('No records to export.', 'warning');
+            return;
+        }
+
+        const headers = ["User ID,Full Name,Role,Email,Mobile Number,Active Status,Assigned Ward/Dept"];
+        const rows = filteredUsers.map(u => {
+            const ward = u.wardByWardId?.areaName || u.wardName || '';
+            const dept = u.departmentByDepartmentId?.departmentName || u.departmentName || '';
+            const location = ward || dept || 'N/A';
+            return [
+                u.userId || u.id,
+                `"${u.name || ''}"`,
+                u.role,
+                u.email || '',
+                u.mobile || u.phoneNumber || '',
+                u.active ? 'Active' : 'Locked',
+                `"${location.replace(/_/g, ' ')}"`
+            ].join(',');
+        });
+
+        const csvContent = headers.concat(rows).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `personnel_ledger_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     if (loading && users.length === 0) {
         return (
             <div className="d-flex flex-column justify-content-center align-items-center min-vh-100" style={{ backgroundColor: '#F8FAFC' }}>
@@ -100,7 +135,12 @@ const AdminUserManagement = () => {
                 }
             />
 
-            <div className="container-fluid px-3 px-lg-5" style={{ marginTop: '-30px' }}>
+            <div className="tactical-grid-overlay"></div>
+
+            <div className="container-fluid px-3 px-lg-5 position-relative" style={{ marginTop: '-30px', zIndex: 1 }}>
+                <div className="vertical-divider-guide" style={{ left: '33%' }}></div>
+                <div className="vertical-divider-guide" style={{ left: '66%' }}></div>
+
                 {/* Filtration Hub */}
                 <div className="card border-0 shadow-premium rounded-4 mb-5 bg-white">
                     <div className="card-body p-4 p-lg-5">
@@ -134,7 +174,7 @@ const AdminUserManagement = () => {
                                         </select>
                                     </div>
                                     <div className="vr d-none d-md-block mx-2" style={{ height: '24px', opacity: 0.1 }}></div>
-                                    <button className="btn btn-white bg-white shadow-sm extra-small fw-black px-4 py-2 rounded-pill border d-flex align-items-center gap-2">
+                                    <button onClick={handleExportCSV} className="btn btn-white bg-white shadow-sm extra-small fw-black px-4 py-2 rounded-pill border d-flex align-items-center gap-2 transition-all hover-up-tiny">
                                         <FileDown size={14} /> EXPORT CSV
                                     </button>
                                 </div>
@@ -152,6 +192,7 @@ const AdminUserManagement = () => {
                                     <th className="px-5 py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Operative</th>
                                     <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Security Role</th>
                                     <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Contact Identity</th>
+                                    <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Mobile</th>
                                     <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Sector / Dept</th>
                                     <th className="py-4 border-0 extra-small fw-black text-muted uppercase tracking-widest">Status</th>
                                     <th className="px-5 py-4 border-0 text-end extra-small fw-black text-muted uppercase">Actions</th>
@@ -208,6 +249,11 @@ const AdminUserManagement = () => {
                                                 </td>
                                                 <td>
                                                     <div className="d-flex align-items-center gap-2 extra-small fw-bold text-muted">
+                                                        <span className="text-dark fw-black">{user.mobile || user.phoneNumber || 'N/A'}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="d-flex align-items-center gap-2 extra-small fw-bold text-muted">
                                                         <assignment.icon size={12} className="opacity-40" />
                                                         <span className="text-dark uppercase">{assignment.label}</span>
                                                     </div>
@@ -256,12 +302,40 @@ const AdminUserManagement = () => {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
+                .admin-personnel-premium { font-family: 'Outfit', 'Inter', sans-serif; }
+                .fw-black { font-weight: 900; }
                 .extra-small { font-size: 0.65rem; }
                 .shadow-premium { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); }
                 .hover-light:hover { background-color: #F8FAFC !important; }
                 .hover-shadow-md:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
                 .animate-spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .btn-outline-primary { color: ${PRIMARY_COLOR}; border-color: ${PRIMARY_COLOR}; }
+                .btn-outline-primary:hover { background-color: ${PRIMARY_COLOR}; color: white; }
+
+                .tactical-grid-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-image: 
+                        linear-gradient(rgba(23, 52, 112, 0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(23, 52, 112, 0.02) 1px, transparent 1px);
+                    background-size: 50px 50px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                .vertical-divider-guide {
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    width: 1px;
+                    background: linear-gradient(to bottom, transparent, rgba(23, 52, 112, 0.03), transparent);
+                    pointer-events: none;
+                    z-index: -1;
+                }
             `}} />
         </div>
     );

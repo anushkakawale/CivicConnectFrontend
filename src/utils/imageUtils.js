@@ -22,38 +22,44 @@ export const getImageUrl = (imageUrl, complaintId = null) => {
     const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8083/api').replace(/\/+$/, '');
     const origin = baseUrl.replace(/\/api$/, '');
 
-    // 1.5 Special check: If it already starts with /api/images or /images and has path segments, return absolute baseUrl
+    // 2. NEW BACKEND STRUCTURE (PRIORITY): Static uploads path
+    // Backend now returns clean /uploads/complaints/{id}/{uuid}.jpg paths
+    // This is mapped via WebConfig to C:/civicconnect/uploads/
+    if (imageUrl.startsWith('/uploads/')) {
+        return `${origin}${imageUrl}`;
+    }
+
+    // 3. Handle paths that already have uploads in the middle (legacy)
+    if (imageUrl.includes('/uploads/')) {
+        const uploadsIndex = imageUrl.indexOf('/uploads/');
+        return `${origin}${imageUrl.substring(uploadsIndex)}`;
+    }
+
+    // 4. Special check: API image endpoints (/api/images or /images)
     if (imageUrl.startsWith('/api/images/') || imageUrl.startsWith('/images/')) {
         const pathPart = imageUrl.startsWith('/api') ? imageUrl : `/api${imageUrl}`;
         return `${origin}${pathPart}`;
     }
 
-    const filename = imageUrl.split(/[\\/]/).pop();
+    const filename = imageUrl.split(/[\\\/]/).pop();
 
-    // Strategy B: Resource Controller based on Complaint ID - PRIORITIZED
+    // 5. Resource Controller based on Complaint ID (Fallback for secured endpoints)
+    // Use when backend returns secured URLs through role-based controllers
     if (complaintId && filename && !imageUrl.startsWith('http')) {
-        return `${baseUrl}/complaints/${complaintId}/images/${filename}`;
+        const isCitizenRoute = window.location.pathname.includes('/citizen') || window.location.pathname.includes('/citizens');
+        let pathPrefix = '/complaints';
+        if (isCitizenRoute) pathPrefix = '/citizens/complaints';
+
+        return `${baseUrl}${pathPrefix}/${complaintId}/images/${filename}`;
     }
 
-    // Strategy A: Direct API Image Proxy (Most common for secured apps)
-    // ONLY if it's just a filename, otherwise we prefer the existing path
+    // 6. Direct API Image Proxy (Legacy secured apps)
     if (filename && filename.length > 5 && !imageUrl.includes('/')) {
         return `${baseUrl}/images/${filename}`;
     }
 
-    // Strategy C: Static Uploads path (Unsecured/Public assets)
-    if (imageUrl.startsWith('/uploads')) {
-        return `${origin}${imageUrl}`;
-    }
-
-    // Strategy D: Relative to API base
-    const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-    if (imageUrl.includes('complaint')) {
-        return `${baseUrl}${cleanPath}`;
-    }
-
-    // Default Fallback
-    return `${origin}/uploads/${filename}`;
+    // 7. Default Fallback - assume it's in uploads
+    return `${origin}/uploads/${filename || imageUrl}`;
 };
 
 /**
